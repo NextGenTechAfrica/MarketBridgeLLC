@@ -753,7 +753,7 @@ export default function SellerDashboardPage() {
     const openChat = async (order: Order) => {
         try {
             const conversationId = await startConversation(user!.id, order.buyer_id, order.listing_id);
-            router.push(`/chats/${conversationId}`);
+            router.push(`/seller/chats/${conversationId}`);
         } catch (err) {
             console.error('Failed to open chat:', err);
         }
@@ -1099,7 +1099,7 @@ export default function SellerDashboardPage() {
                     {[
                         { label: "New Listing", desc: "List new item on marketplace", href: "/seller/listings/new", icon: Package, primary: true },
                         { label: "Inventory", desc: "Manage and update your items", href: "/seller/listings", icon: Eye },
-                        { label: "Messages", desc: "Check incoming customer chats", href: "/chats", icon: MessageCircle },
+                        { label: "Messages", desc: "Check incoming customer chats", href: "/seller/chats", icon: MessageCircle },
                         { label: "Upgrade Plan", desc: "Unlock pro features & visibility", href: "/seller/upgrade", icon: Crown, highlight: true },
                     ].map((action, i) => (
                         <Link key={i} href={action.href} className="group h-full">
@@ -1263,7 +1263,7 @@ export default function SellerDashboardPage() {
                                                 <Button
                                                     onClick={async () => {
                                                         const conversationId = await startConversation(user!.id, offer.buyer_id, offer.listing_id);
-                                                        router.push(`/chats/${conversationId}`);
+                                                        router.push(`/seller/chats/${conversationId}`);
                                                     }}
                                                     variant="ghost"
                                                     className="flex-1 md:w-32 h-12 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white font-black uppercase tracking-widest text-[10px] gap-2 transition-colors"

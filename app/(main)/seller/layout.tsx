@@ -21,10 +21,10 @@ const sellerItems = [
     { label: 'Overview', href: '/seller/dashboard', icon: LayoutDashboard },
     { label: 'New Listing', href: '/seller/listings/new', icon: PlusCircle },
     { label: 'My Inventory', href: '/seller/listings', icon: Package },
-    { label: 'Buyer Messages', href: '/chats', icon: MessageSquare },
-    { label: 'Sales & Orders', href: '/orders', icon: DollarSign },
-    { label: 'Subscription', href: '/pricing', icon: CreditCard },
-    { label: 'Settings', href: '/settings', icon: Settings },
+    { label: 'Buyer Messages', href: '/seller/chats', icon: MessageSquare },
+    { label: 'Sales & Orders', href: '/seller/orders', icon: DollarSign },
+    { label: 'Subscription', href: '/seller/subscription', icon: CreditCard },
+    { label: 'Settings', href: '/seller/settings', icon: Settings },
 ];
 
 export default function SellerLayout({
