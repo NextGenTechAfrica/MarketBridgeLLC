@@ -16,7 +16,7 @@ import { CATEGORIES } from '@/lib/categories';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
-import { intelligentSearch, trackSearch } from '@/lib/ai-search';
+import { intelligentSearch, trackSearch, getSearchSuggestions } from '@/lib/ai-search';
 import { SponsoredBadge } from '@/components/listings/SponsoredBadge';
 
 const UNIVERSITIES = [
@@ -72,6 +72,25 @@ function ListingsContent() {
     const [minPrice, setMinPrice] = useState('');
     const [maxPrice, setMaxPrice] = useState('');
     const [condition, setCondition] = useState('all');
+    const [suggestions, setSuggestions] = useState<string[]>([]);
+
+    useEffect(() => {
+        if (!search || search.trim().length < 2) {
+            setSuggestions([]);
+            return;
+        }
+
+        const delayDebounceFn = setTimeout(async () => {
+            try {
+                const res = await getSearchSuggestions(search);
+                setSuggestions(res);
+            } catch (e) {
+                console.error('Failed to get suggestions:', e);
+            }
+        }, 300);
+
+        return () => clearTimeout(delayDebounceFn);
+    }, [search]);
 
     useEffect(() => {
         // Feed defaults to user's university
@@ -254,6 +273,23 @@ function ListingsContent() {
                             onChange={(e) => setSearch(e.target.value)}
                             className="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 pl-10 md:pl-16 pr-4 md:pr-6 h-14 md:h-16 text-zinc-900 dark:text-white placeholder:text-zinc-500 focus:outline-none focus:border-[#FF6200]/50 rounded-2xl font-medium italic text-xs md:text-sm transition-all"
                         />
+                        {suggestions.length > 0 && (
+                            <div className="absolute left-0 right-0 top-full mt-2 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-xl z-50 overflow-hidden max-h-60 overflow-y-auto">
+                                {suggestions.map((suggestion, idx) => (
+                                    <button
+                                        key={idx}
+                                        type="button"
+                                        onClick={() => {
+                                            setSearch(suggestion);
+                                            setSuggestions([]);
+                                        }}
+                                        className="w-full text-left px-6 py-4 hover:bg-zinc-50 dark:hover:bg-zinc-900/80 text-xs md:text-sm font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 transition-colors border-b border-zinc-100 dark:border-zinc-800 last:border-none"
+                                    >
+                                        {suggestion}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-3">

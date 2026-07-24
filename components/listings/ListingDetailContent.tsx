@@ -16,6 +16,7 @@ import { startConversation } from '@/lib/chat';
 import { ReviewsSection } from '@/components/ReviewsSection';
 import { cn } from '@/lib/utils';
 import { useSystem } from '@/contexts/SystemContext';
+import { getRelatedListings } from '@/lib/ai-search';
 import {
 
     Dialog,
@@ -84,6 +85,8 @@ export default function ListingDetailContent() {
     const [reportDetails, setReportDetails] = useState('');
     const [isFavorite, setIsFavorite] = useState(false);
     const { isDemoMode } = useSystem();
+    const [relatedListings, setRelatedListings] = useState<any[]>([]);
+    const [recentlyViewed, setRecentlyViewed] = useState<any[]>([]);
 
     const toggleFavorite = () => {
         if (!user) {
@@ -105,6 +108,46 @@ export default function ListingDetailContent() {
             setOfferPrice(listing.current_offered_price || listing.price);
         }
     }, [listing]);
+
+    useEffect(() => {
+        if (listing && listing.id) {
+            try {
+                const KEY = 'mb-recently-viewed';
+                const stored = localStorage.getItem(KEY);
+                let list: any[] = stored ? JSON.parse(stored) : [];
+                list = list.filter((item: any) => item.id !== listing.id);
+                const minimalItem = {
+                    id: listing.id,
+                    title: listing.title,
+                    price: listing.price,
+                    images: listing.images,
+                    category: listing.category,
+                    location: listing.location,
+                    condition: listing.condition,
+                    created_at: listing.created_at
+                };
+                list.unshift(minimalItem);
+                list = list.slice(0, 6);
+                localStorage.setItem(KEY, JSON.stringify(list));
+            } catch (err) {
+                console.error('Failed to update recently viewed:', err);
+            }
+        }
+    }, [listing]);
+
+    useEffect(() => {
+        try {
+            const KEY = 'mb-recently-viewed';
+            const stored = localStorage.getItem(KEY);
+            if (stored) {
+                const parsed = JSON.parse(stored);
+                const listingId = Array.isArray(params?.id) ? params?.id[0] : params?.id;
+                setRecentlyViewed(parsed.filter((item: any) => item.id !== listingId).slice(0, 5));
+            }
+        } catch (e) {
+            console.error('Failed to load recently viewed:', e);
+        }
+    }, [listing, params?.id]);
 
     const adjustPrice = (amount: number) => {
         setOfferPrice(prev => Math.max(0, prev + amount));
@@ -252,12 +295,17 @@ export default function ListingDetailContent() {
                         .eq('id', simpleListing.dealer_id)
                         .single();
 
-                    setListing({ ...simpleListing, dealer: dealerData || {} });
+                    const fullListing = { ...simpleListing, dealer: dealerData || {} };
+                    setListing(fullListing);
+                    getRelatedListings(fullListing.id).then(res => setRelatedListings(res)).catch(e => console.error(e));
                     return;
                 }
             }
 
             setListing(data);
+            if (data) {
+                getRelatedListings(data.id).then(res => setRelatedListings(res)).catch(e => console.error(e));
+            }
         } catch (err: unknown) {
             console.error('Error fetching listing:', err);
             setError('Asset Signal Lost');
@@ -771,6 +819,57 @@ export default function ListingDetailContent() {
                     </h2>
                     <ReviewsSection listingId={listing.id} sellerId={listing.dealer.id} />
                 </div>
+
+                {/* Similar Listings Section */}
+                {relatedListings.length > 0 && (
+                    <div className="mt-16 pt-16 border-t border-zinc-200 dark:border-zinc-800">
+                        <h2 className="text-2xl font-black uppercase tracking-tighter italic font-heading mb-8 flex items-center gap-3">
+                            <span className="h-2 w-2 rounded-full bg-[#FF6200]" />
+                            Similar <span className="text-[#FF6200]">Listings</span>
+                        </h2>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                            {relatedListings.map((item) => (
+                                <Link key={item.id} href={`/listings/${item.id}`} className="group block bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] p-4 shadow-sm hover:border-[#FF6200]/20 transition-all">
+                                    <div className="aspect-[4/3] rounded-[1.5rem] overflow-hidden bg-zinc-100 dark:bg-zinc-800 relative mb-4">
+                                        {item.images && item.images.length > 0 ? (
+                                            <Image src={item.images[0]} alt={item.title} fill className="object-cover group-hover:scale-105 transition-transform duration-300" />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center text-zinc-500 font-bold uppercase text-[10px]">No Image</div>
+                                        )}
+                                    </div>
+                                    <h3 className="font-black uppercase tracking-tighter italic text-zinc-900 dark:text-white group-hover:text-[#FF6200] transition-colors truncate">{item.title}</h3>
+                                    <p className="text-[#FF6200] font-black italic mt-1">₦{item.price.toLocaleString()}</p>
+                                    <p className="text-[9px] text-zinc-500 font-bold uppercase tracking-widest mt-2">{item.location || 'Campus'}</p>
+                                </Link>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* Recently Viewed Section */}
+                {recentlyViewed.length > 0 && (
+                    <div className="mt-16 pt-16 border-t border-zinc-200 dark:border-zinc-800">
+                        <h2 className="text-2xl font-black uppercase tracking-tighter italic font-heading mb-8 flex items-center gap-3">
+                            <span className="h-2 w-2 rounded-full bg-[#FF6200]" />
+                            Recently <span className="text-[#FF6200]">Viewed</span>
+                        </h2>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
+                            {recentlyViewed.map((item) => (
+                                <Link key={item.id} href={`/listings/${item.id}`} className="group block bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[1.5rem] p-3 shadow-sm hover:border-[#FF6200]/20 transition-all">
+                                    <div className="aspect-[4/3] rounded-[1rem] overflow-hidden bg-zinc-100 dark:bg-zinc-800 relative mb-3">
+                                        {item.images && item.images.length > 0 ? (
+                                            <Image src={item.images[0]} alt={item.title} fill className="object-cover group-hover:scale-105 transition-transform duration-300" />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center text-zinc-500 font-bold uppercase text-[9px]">No Image</div>
+                                        )}
+                                    </div>
+                                    <h3 className="font-black uppercase tracking-tighter italic text-xs text-zinc-900 dark:text-white group-hover:text-[#FF6200] transition-colors truncate">{item.title}</h3>
+                                    <p className="text-[#FF6200] font-black italic text-xs mt-0.5">₦{item.price.toLocaleString()}</p>
+                                </Link>
+                            ))}
+                        </div>
+                    </div>
+                )}
                         {/* Offer Dialog */}
             <Dialog open={isOfferOpen} onOpenChange={setIsOfferOpen}>
                 <DialogContent className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white sm:max-w-sm rounded-[2.5rem] overflow-hidden p-0">
