@@ -22,9 +22,9 @@ export default function CartPage() {
                     <EmptyState
                         icon={<ShoppingBag className="w-12 h-12 text-[#FF6200]" />}
                         title="Cart Empty"
-                        description="No active assets detected in your current acquisition cycle."
-                        actionLabel="Scan Marketplace"
-                        actionHref="/listings"
+                        description="No active items in your cart."
+                        actionLabel="Browse Marketplace"
+                        actionHref="/marketplace"
                     />
                 </div>
             </div>
@@ -35,7 +35,18 @@ export default function CartPage() {
         <div className="min-h-screen pt-40 pb-20 bg-black text-white relative selection:bg-[#FF6200] selection:text-black">
             <div className="fixed inset-0 bg-[url('/grid-pattern.svg')] opacity-10 pointer-events-none z-0" />
 
-            <div className="container px-6 mx-auto relative z-10 space-y-12">
+            <div className="container px-6 mx-auto relative z-10 space-y-8">
+                {/* Back Button */}
+                <div>
+                    <button
+                        type="button"
+                        onClick={() => router.back()}
+                        className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-sm font-semibold text-white/80 hover:text-white border border-white/10 transition-all active:scale-95"
+                    >
+                        <ArrowLeft className="h-4 w-4 text-[#FF6200]" /> Back to Marketplace
+                    </button>
+                </div>
+
                 {/* Header Section */}
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-white/5 pb-12">
                     <div className="space-y-4">

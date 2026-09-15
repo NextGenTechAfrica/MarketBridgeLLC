@@ -27,7 +27,7 @@ export default function RefundPage() {
                         Last Updated: February 16, 2026 | Version: 1.0 (Beta)
                     </p>
                     <p className="text-white text-sm font-medium mt-2">
-                        MarketBridge NG Limited (RC [RC number]) processes refunds via Paystack.
+                        MarketBridge, a platform operated by NextGen Tech, processes refunds via Paystack.
                     </p>
                 </div>
 

@@ -3,7 +3,8 @@
 import React, { Suspense, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Loader2, MailCheck, ArrowRight } from 'lucide-react';
+import { Loader2, MailCheck, ArrowRight, ArrowLeft } from 'lucide-react';
+import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { useToast } from '@/contexts/ToastContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -105,6 +106,15 @@ function VerifyEmailContent() {
                     >
                         {cooldown > 0 ? `Resend Link (${cooldown}s)` : 'Resend Link'}
                     </Button>
+
+                    <div className="pt-2">
+                        <Link
+                            href="/login"
+                            className="inline-flex items-center gap-1.5 text-xs text-gray-400 hover:text-white transition-colors"
+                        >
+                            <ArrowLeft className="h-3.5 w-3.5" /> Return to Login
+                        </Link>
+                    </div>
                 </div>
             </div>
         </div>

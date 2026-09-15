@@ -27,7 +27,7 @@ export default function TermsPage() {
                         Last Updated: February 16, 2026 | Version: 1.0 (Beta)
                     </p>
                     <p className="text-white text-sm font-medium mt-2">
-                        These Terms are between you and MarketBridge NG Limited (RC [RC number]).
+                        These Terms are between you and MarketBridge, a platform operated by NextGen Tech.
                     </p>
                 </div>
 

@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Mail, Phone, MapPin } from 'lucide-react';
+import { Mail, Phone, MapPin, ArrowLeft } from 'lucide-react';
+import Link from 'next/link';
 
 export default function ContactPage() {
     const [formData, setFormData] = useState({
@@ -65,6 +66,16 @@ export default function ContactPage() {
     return (
         <div className="container mx-auto px-4 py-16">
             <div className="max-w-5xl mx-auto">
+                {/* Back to Home Button */}
+                <div className="mb-8">
+                    <Link
+                        href="/"
+                        className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-sm font-semibold text-white/80 hover:text-white border border-white/10 transition-all active:scale-95"
+                    >
+                        <ArrowLeft className="h-4 w-4 text-[#FF6200]" /> Back to Home
+                    </Link>
+                </div>
+
                 <div className="text-center mb-12">
                     <h1 className="text-4xl md:text-5xl font-bold mb-6">Get in Touch</h1>
                     <p className="text-xl text-muted-foreground">

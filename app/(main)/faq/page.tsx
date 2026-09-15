@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { Shield, Eye, MessageSquare, TrendingUp, Users, Lock } from 'lucide-react';
+import { Shield, Eye, MessageSquare, TrendingUp, Users, Lock, ArrowLeft } from 'lucide-react';
 
 export default function FAQPage() {
     const faqs = [
@@ -51,6 +51,16 @@ export default function FAQPage() {
     return (
         <div className="min-h-screen py-16">
             <div className="container mx-auto px-4 max-w-4xl">
+                {/* Back to Home Button */}
+                <div className="mb-8">
+                    <Link
+                        href="/"
+                        className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-sm font-semibold text-white/80 hover:text-white border border-white/10 transition-all active:scale-95"
+                    >
+                        <ArrowLeft className="h-4 w-4 text-[#FF6200]" /> Back to Home
+                    </Link>
+                </div>
+
                 {/* Header */}
                 <div className="text-center mb-12">
                     <h1 className="text-4xl font-black uppercase tracking-tighter italic mb-4 text-white">Frequently Asked <span className="text-[#FF6200]">Questions</span></h1>

@@ -19,6 +19,7 @@ import {
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { useAuth } from '@/contexts/AuthContext';
+import { HeroInteractivePhone } from '@/components/HeroInteractivePhone';
 
 export default function HomePage() {
     const { user } = useAuth();
@@ -40,7 +41,7 @@ export default function HomePage() {
                                 <span className="text-[#FF6200]">built for students.</span>
                             </h1>
                             <p className="text-base sm:text-lg text-slate-700 dark:text-slate-200 font-normal leading-relaxed pt-1">
-                                Buy and sell with verified students at Baze, Nile, and Veritas. Order food, find textbooks, and book campus services — every transaction protected by escrow, every seller ID-checked.
+                                Buy and sell securely with verified student sellers and campus community. Order food, find textbooks, and book services — every transaction protected by escrow, every seller ID-checked.
                             </p>
                         </div>
 
@@ -94,50 +95,9 @@ export default function HomePage() {
                         </div>
                     </div>
 
-                    {/* Right Column: Student Hero Visual matching Screen 1 (Rock-solid Picture Display) */}
-                    <div className="flex-1 w-full flex items-center justify-center relative min-h-[380px] sm:min-h-[460px] max-w-lg">
-                        {/* Ambient Glow */}
-                        <div className="absolute w-[320px] sm:w-[400px] h-[320px] sm:h-[400px] rounded-full bg-[#FF6200]/15 blur-3xl pointer-events-none" />
-
-                        {/* Hero Student Composite with pop-out 3D effect */}
-                        <div className="relative z-10 w-full max-w-[420px] aspect-square flex items-center justify-center transition-transform hover:scale-[1.02] duration-500">
-                            <picture>
-                                <source srcSet="/images/hero_student.webp" type="image/webp" />
-                                <img
-                                    src="/images/hero_student.png"
-                                    alt="MarketBridge verified university student smiling and holding study materials in Abuja"
-                                    width={500}
-                                    height={500}
-                                    className="w-full h-auto object-contain drop-shadow-2xl select-none"
-                                    loading="eager"
-                                />
-                            </picture>
-                        </div>
-
-                        {/* Floating Trust Badge (Top Right) */}
-                        <div className="absolute -top-2 right-2 sm:right-4 z-20 bg-white dark:bg-[#0F172A] px-4 py-2.5 rounded-2xl shadow-xl border border-slate-200 dark:border-white/10 flex items-center gap-2.5 animate-float">
-                            <div className="w-7 h-7 rounded-xl bg-[#FF6200]/10 flex items-center justify-center text-[#FF6200] shrink-0">
-                                <Sparkles className="w-4 h-4 text-[#FF6200]" />
-                            </div>
-                            <div className="text-left leading-tight">
-                                <p className="text-xs font-black text-slate-900 dark:text-white">Real students. Real deals.</p>
-                                <p className="text-[10px] font-bold text-[#FF6200] uppercase tracking-wider">Safe & secure</p>
-                            </div>
-                        </div>
-
-                        {/* Lively Floating Campus Badge (Bottom Left) */}
-                        <div 
-                            className="absolute -bottom-3 -left-2 sm:left-4 z-20 bg-white dark:bg-[#0F172A] px-4 py-2.5 rounded-2xl shadow-xl border border-slate-200 dark:border-white/10 flex items-center gap-2.5 hidden sm:flex animate-float"
-                            style={{ animationDelay: '2s' }}
-                        >
-                            <span className="flex h-2.5 w-2.5 relative">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-                            </span>
-                            <p className="text-xs font-bold text-slate-800 dark:text-slate-100">
-                                Live on 3 Abuja Campuses
-                            </p>
-                        </div>
+                    {/* Right Column: Interactive Phone UI Mockup */}
+                    <div className="flex-1 w-full flex items-center justify-center relative min-h-[420px] sm:min-h-[580px]">
+                        <HeroInteractivePhone />
                     </div>
 
                 </section>
@@ -249,7 +209,7 @@ export default function HomePage() {
                             </div>
 
                             {/* Card 3: Active Campuses */}
-                            <div className="flex items-center justify-between gap-2 pt-1 text-[11px] font-medium text-slate-300 px-1">
+                            <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-[11px] font-medium text-slate-300 px-1">
                                 <span className="flex items-center gap-1.5">
                                     <span className="h-2 w-2 rounded-full bg-emerald-400"></span> Baze
                                 </span>
@@ -258,6 +218,9 @@ export default function HomePage() {
                                 </span>
                                 <span className="flex items-center gap-1.5">
                                     <span className="h-2 w-2 rounded-full bg-emerald-400"></span> Veritas
+                                </span>
+                                <span className="flex items-center gap-1.5">
+                                    <span className="h-2 w-2 rounded-full bg-emerald-400"></span> UniAbuja
                                 </span>
                             </div>
                         </div>

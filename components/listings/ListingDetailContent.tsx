@@ -561,22 +561,31 @@ export default function ListingDetailContent() {
     return (
         <div className="min-h-screen bg-background text-foreground pt-16 md:pt-20 pb-20">
             <div className="container max-w-7xl mx-auto px-4 sm:px-6 space-y-8">
-                {/* Breadcrumb Navigation */}
-                <nav className="flex items-center gap-2 text-xs text-muted-foreground pt-4">
-                    <Link href="/" className="hover:text-foreground">Home</Link>
-                    <ChevronRight className="h-3 w-3" />
-                    <Link href="/marketplace" className="hover:text-foreground">Marketplace</Link>
-                    {listing.category && (
-                        <>
-                            <ChevronRight className="h-3 w-3" />
-                            <Link href={`/marketplace?category=${encodeURIComponent(listing.category)}`} className="hover:text-foreground">
-                                {listing.category}
-                            </Link>
-                        </>
-                    )}
-                    <ChevronRight className="h-3 w-3" />
-                    <span className="text-foreground truncate max-w-[200px] font-medium">{listing.title}</span>
-                </nav>
+                {/* Back Button & Breadcrumb Navigation */}
+                <div className="flex items-center justify-between gap-4 pt-4">
+                    <button
+                        type="button"
+                        onClick={() => router.back()}
+                        className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-card border border-border text-sm font-semibold text-foreground/80 hover:text-foreground hover:bg-muted/60 transition-all shadow-sm active:scale-95"
+                    >
+                        <ArrowLeft className="h-4 w-4 text-[#FF6200]" /> Back
+                    </button>
+                    <nav className="hidden sm:flex items-center gap-2 text-xs text-muted-foreground">
+                        <Link href="/" className="hover:text-foreground">Home</Link>
+                        <ChevronRight className="h-3 w-3" />
+                        <Link href="/marketplace" className="hover:text-foreground">Marketplace</Link>
+                        {listing.category && (
+                            <>
+                                <ChevronRight className="h-3 w-3" />
+                                <Link href={`/marketplace?category=${encodeURIComponent(listing.category)}`} className="hover:text-foreground">
+                                    {listing.category}
+                                </Link>
+                            </>
+                        )}
+                        <ChevronRight className="h-3 w-3" />
+                        <span className="text-foreground truncate max-w-[200px] font-medium">{listing.title}</span>
+                    </nav>
+                </div>
 
                 {/* Main Product Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
