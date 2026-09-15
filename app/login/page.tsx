@@ -10,6 +10,7 @@ import { normalizeIdentifier } from '@/lib/auth/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import { Logo } from '@/components/logo';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 type Step = 'role' | 'buyer-credentials' | 'seller-google';
 type Role = 'buyer' | 'seller';
@@ -164,7 +165,10 @@ function LoginContent() {
             </div>
 
             {/* Right panel — form */}
-            <div className="flex-1 flex flex-col items-center justify-center p-6 md:p-10 overflow-y-auto">
+            <div className="flex-1 flex flex-col items-center justify-center p-6 md:p-10 overflow-y-auto relative">
+                <div className="absolute top-5 right-5 z-20">
+                    <ThemeToggle />
+                </div>
                 <div className="w-full max-w-[420px]">
                     {/* Mobile logo */}
                     <div className="lg:hidden mb-8 flex justify-center">
@@ -223,7 +227,7 @@ function LoginContent() {
                                 type="button"
                                 onClick={() => handleGoogleLogin('buyer')}
                                 disabled={googleLoadingRole === 'buyer'}
-                                className="w-full h-11 bg-white hover:bg-zinc-50 text-zinc-800 border border-zinc-200 shadow-sm font-semibold text-sm rounded-xl flex items-center justify-center gap-2.5 transition-all"
+                                className="w-full h-11 bg-white hover:bg-zinc-50 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-zinc-900 dark:text-white border border-zinc-200 dark:border-zinc-800 shadow-sm font-semibold text-sm rounded-xl flex items-center justify-center gap-2.5 transition-all"
                             >
                                 {googleLoadingRole === 'buyer' ? <Loader2 className="animate-spin h-4 w-4" /> : (
                                     <>
@@ -242,7 +246,7 @@ function LoginContent() {
                                 type="button"
                                 onClick={() => { setRole('buyer'); setCurrentStep('buyer-credentials'); }}
                                 variant="outline"
-                                className="w-full h-11 font-semibold text-sm rounded-xl border-zinc-200 dark:border-white/10 hover:bg-zinc-50 dark:hover:bg-white/5"
+                                className="w-full h-11 font-semibold text-sm rounded-xl text-zinc-900 dark:text-white border-zinc-300 dark:border-white/15 bg-white dark:bg-white/5 hover:bg-zinc-100 dark:hover:bg-white/10"
                             >
                                 Sign in with Email
                             </Button>
@@ -349,15 +353,6 @@ function LoginContent() {
                     <p className="text-sm text-muted-foreground">Enter your email and password</p>
                 </div>
 
-                {/* Beta notice — preserved from original */}
-                <div className="p-3.5 bg-[#FF6200]/5 border border-[#FF6200]/20 rounded-xl flex items-start gap-3">
-                    <ShieldAlert className="h-4 w-4 text-[#FF6200] shrink-0 mt-0.5" />
-                    <div>
-                        <p className="text-xs font-semibold text-[#FF6200] mb-0.5">Private Beta Active</p>
-                        <p className="text-xs text-foreground/60 leading-relaxed">No real transactions will be processed during beta.</p>
-                    </div>
-                </div>
-
                 {error && (
                     <div className="p-3.5 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl flex items-center gap-3">
                         <AlertTriangle className="h-4 w-4 text-red-500 shrink-0" />
@@ -441,7 +436,7 @@ function LoginContent() {
                     type="button"
                     onClick={() => handleGoogleLogin(role)}
                     disabled={googleLoadingRole !== null}
-                    className="w-full h-11 bg-white hover:bg-zinc-50 text-zinc-800 border border-zinc-200 shadow-sm font-semibold text-sm rounded-xl flex items-center justify-center gap-2.5 transition-all"
+                    className="w-full h-11 bg-white hover:bg-zinc-50 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-zinc-900 dark:text-white border border-zinc-200 dark:border-zinc-800 shadow-sm font-semibold text-sm rounded-xl flex items-center justify-center gap-2.5 transition-all"
                 >
                     {googleLoadingRole ? <Loader2 className="animate-spin h-4 w-4" /> : (
                         <>

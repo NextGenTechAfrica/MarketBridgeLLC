@@ -12,6 +12,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { Logo } from '@/components/logo';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 type Step = 'role' | 'buyer-form' | 'seller-google';
 type Role = 'student_buyer' | 'student_seller';
@@ -237,7 +238,10 @@ function SignupContent() {
             </div>
 
             {/* Right form panel */}
-            <div className="flex-1 flex flex-col items-center justify-center p-6 md:p-10 overflow-y-auto">
+            <div className="flex-1 flex flex-col items-center justify-center p-6 md:p-10 overflow-y-auto relative">
+                <div className="absolute top-5 right-5 z-20">
+                    <ThemeToggle />
+                </div>
                 <div className="w-full max-w-[440px] py-8">
                     <div className="lg:hidden mb-8 flex justify-center">
                         <Logo size="lg" />
@@ -311,7 +315,7 @@ function SignupContent() {
                                 type="button"
                                 onClick={() => handleGoogleAuth('student_buyer')}
                                 disabled={loadingBuyerGoogle || loadingSellerGoogle}
-                                className="w-full h-11 bg-white hover:bg-zinc-50 text-zinc-800 border border-zinc-200 shadow-sm font-semibold text-sm rounded-xl flex items-center justify-center gap-2.5 transition-all"
+                                className="w-full h-11 bg-white hover:bg-zinc-50 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-zinc-900 dark:text-white border border-zinc-200 dark:border-zinc-800 shadow-sm font-semibold text-sm rounded-xl flex items-center justify-center gap-2.5 transition-all"
                             >
                                 {loadingBuyerGoogle ? <Loader2 className="animate-spin h-4 w-4" /> : (
                                     <>
@@ -330,7 +334,7 @@ function SignupContent() {
                                 type="button"
                                 onClick={() => { setRole('student_buyer'); setCurrentStep('buyer-form'); }}
                                 variant="outline"
-                                className="w-full h-11 font-semibold text-sm rounded-xl border-zinc-200 dark:border-white/10 hover:bg-zinc-50 dark:hover:bg-white/5"
+                                className="w-full h-11 font-semibold text-sm rounded-xl text-zinc-900 dark:text-white border-zinc-300 dark:border-white/15 bg-white dark:bg-white/5 hover:bg-zinc-100 dark:hover:bg-white/10"
                             >
                                 Sign up with Email
                             </Button>
@@ -554,7 +558,7 @@ function SignupContent() {
                 type="button"
                 onClick={() => handleGoogleAuth('student_buyer')}
                 disabled={loadingBuyerGoogle}
-                className="w-full h-11 bg-white hover:bg-zinc-50 text-zinc-800 border border-zinc-200 shadow-sm font-semibold text-sm rounded-xl flex items-center justify-center gap-2.5 transition-all"
+                className="w-full h-11 bg-white hover:bg-zinc-50 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-zinc-900 dark:text-white border border-zinc-200 dark:border-zinc-800 shadow-sm font-semibold text-sm rounded-xl flex items-center justify-center gap-2.5 transition-all"
             >
                 {loadingBuyerGoogle ? <Loader2 className="animate-spin h-4 w-4" /> : (
                     <>

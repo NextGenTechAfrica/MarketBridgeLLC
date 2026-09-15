@@ -5,20 +5,20 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-sm font-bold uppercase tracking-widest transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive glow-on-hover",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-bold transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-[#FF6200] focus-visible:ring-offset-2",
   {
     variants: {
       variant: {
-        default: "bg-gold-gradient text-black border-none hover:brightness-110",
+        default: "bg-[#FF6200] hover:bg-[#E55800] text-white shadow-sm shadow-[#FF6200]/25 active:scale-95",
         destructive:
-          "bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
+          "bg-red-600 text-white hover:bg-red-700 active:scale-95",
         outline:
-          "border-2 border-white/20 bg-transparent text-white hover:bg-white/10 hover:border-white/40",
+          "border border-zinc-300 dark:border-white/15 bg-white dark:bg-white/5 text-zinc-900 dark:text-white hover:bg-zinc-100 dark:hover:bg-white/10 shadow-sm active:scale-95",
         secondary:
-          "bg-white/10 text-white hover:bg-white/20 glass-border",
+          "bg-zinc-100 dark:bg-white/10 text-zinc-900 dark:text-white hover:bg-zinc-200 dark:hover:bg-white/20 active:scale-95",
         ghost:
-          "hover:bg-white/10 text-white",
-        link: "text-primary underline-offset-4 hover:underline",
+          "hover:bg-zinc-100 dark:hover:bg-white/10 text-zinc-900 dark:text-white active:scale-95",
+        link: "text-[#FF6200] underline-offset-4 hover:underline",
       },
       size: {
         default: "h-11 px-8",
