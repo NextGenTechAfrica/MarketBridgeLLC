@@ -300,29 +300,25 @@ export default function OrderDetailPage() {
     ];
 
     return (
-        <div className="min-h-screen bg-[#FAFAFA] text-zinc-900 relative selection:bg-[#FF6200] selection:text-black pt-28 pb-32">
-            <div className="fixed inset-0 bg-[url('/grid-pattern.svg')] opacity-10 pointer-events-none z-0" />
-
-            <div className="container mx-auto px-6 max-w-4xl relative z-10">
-                
+        <div className="min-h-screen bg-background text-foreground pt-16 md:pt-20 pb-24">
+            <div className="container max-w-4xl mx-auto px-4 sm:px-6 space-y-8">
                 {/* Header Navigation */}
-                <div className="mb-10 flex items-center justify-between">
-                    <Button variant="ghost" asChild className="pl-0 hover:bg-transparent hover:text-[#FF6200] transition-colors group">
-                        <Link href="/orders" className="flex items-center gap-2 font-heading font-black text-[10px] uppercase tracking-widest text-zinc-500">
-                            <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
+                <div className="flex items-center justify-between pt-4 border-b border-border pb-4">
+                    <Button variant="ghost" asChild className="pl-0 hover:bg-transparent hover:text-[#FF6200] transition-colors">
+                        <Link href="/orders" className="flex items-center gap-2 text-xs font-semibold text-muted-foreground hover:text-foreground">
+                            <ArrowLeft className="h-4 w-4" />
                             Back to Orders
                         </Link>
                     </Button>
-                    <Badge className="bg-[#FF6200]/10 border border-[#FF6200]/25 text-[#FF6200] text-[10px] px-4 py-1.5 rounded-full font-black uppercase tracking-wider">
+                    <Badge className="bg-[#FF6200]/10 border border-[#FF6200]/25 text-[#FF6200] text-xs px-3 py-1 font-semibold">
                         {getStatusText(order.status)}
                     </Badge>
                 </div>
 
                 {/* Main Grid: Info Cards & Vertical Timeline */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-                    
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     {/* Left Column: Order Details & Escrow Box */}
-                    <div className="md:col-span-2 space-y-8">
+                    <div className="md:col-span-2 space-y-6">
                         
                         {/* Title & Metadata */}
                         <div className="space-y-2">

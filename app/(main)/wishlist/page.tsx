@@ -1,24 +1,25 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, Heart, MapPin, Trash2, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Loader2, Heart, MapPin, Trash2, ArrowLeft, ArrowRight, Store } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import Image from 'next/image';
+import { useToast } from '@/contexts/ToastContext';
 
 export default function WishlistPage() {
     const { user, loading, refreshUser } = useAuth();
+    const { toast } = useToast();
     const router = useRouter();
     const [wishlistItems, setWishlistItems] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         if (!loading && !user) {
-            router.push('/login');
+            router.push('/login?redirect=/wishlist');
             return;
         }
 
@@ -32,7 +33,7 @@ export default function WishlistPage() {
             try {
                 const { data, error } = await supabase
                     .from('listings')
-                    .select('*')
+                    .select('*, seller:users!listings_seller_id_fkey(display_name, is_verified)')
                     .in('id', user.wishlist);
 
                 if (error) throw error;
@@ -54,7 +55,7 @@ export default function WishlistPage() {
 
         try {
             const newWishlist = (user.wishlist || []).filter(id => id !== listingId);
-            
+
             const { error } = await supabase
                 .from('users')
                 .update({ wishlist: newWishlist })
@@ -62,114 +63,126 @@ export default function WishlistPage() {
 
             if (error) throw error;
 
-            // Update local state
             setWishlistItems(prev => prev.filter(item => item.id !== listingId));
-            
-            // Refresh user context to update wishlist array
             await refreshUser();
-            
+            toast('Item removed from wishlist', 'info');
         } catch (error) {
             console.error('Failed to remove from wishlist', error);
+            toast('Failed to remove item', 'error');
         }
     };
 
     if (loading || isLoading) {
         return (
-            <div className="flex min-h-screen items-center justify-center bg-[#FAFAFA]">
-                <Loader2 className="h-8 w-8 animate-spin text-red-500" />
+            <div className="min-h-screen flex items-center justify-center bg-background">
+                <Loader2 className="h-8 w-8 animate-spin text-[#FF6200]" />
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-[#FAFAFA] text-zinc-900 relative selection:bg-red-500 selection:text-white pt-28 pb-32">
-            <div className="fixed inset-0 bg-[url('/grid-pattern.svg')] opacity-10 pointer-events-none z-0" />
-
-            <div className="container mx-auto px-6 max-w-7xl relative z-10">
-                <div className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-8">
-                    <div className="space-y-4">
-                        <div className="flex items-center gap-3">
-                            <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.8)]" />
-                            <span className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-500 font-heading">Archived Desires</span>
+        <div className="min-h-screen bg-background text-foreground pt-16 md:pt-20 pb-24">
+            <div className="container max-w-7xl mx-auto px-4 sm:px-6 space-y-8">
+                {/* Header */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-b border-border pb-6">
+                    <div>
+                        <div className="flex items-center gap-2 mb-1">
+                            <span className="h-2 w-2 rounded-full bg-[#FF6200] animate-pulse" />
+                            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Saved Items</span>
                         </div>
-                        <h1 className="text-5xl md:text-7xl font-black uppercase tracking-tighter italic font-heading">
-                            My <span className="text-red-500">Wishlist</span>
+                        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+                            My Wishlist
                         </h1>
-                        <p className="text-zinc-500 font-medium italic">
-                            Tracking <span className="text-zinc-900 font-bold">{wishlistItems.length} saved assets</span> in the marketplace.
+                        <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+                            {wishlistItems.length} saved {wishlistItems.length === 1 ? 'item' : 'items'} in your wishlist.
                         </p>
                     </div>
 
                     <Link href="/buyer/dashboard">
-                        <Button variant="outline" className="h-12 border-zinc-200 text-zinc-500 hover:text-zinc-900 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all font-heading bg-white shadow-sm hover:shadow-md">
+                        <Button variant="outline" size="sm" className="rounded-xl text-xs">
                             <ArrowLeft className="mr-2 h-3 w-3" /> Dashboard
                         </Button>
                     </Link>
                 </div>
 
+                {/* Empty State */}
                 {wishlistItems.length === 0 ? (
-                    <div className="relative text-center py-40 bg-white/50 backdrop-blur-md border border-zinc-200 rounded-[3rem] shadow-sm overflow-hidden group hover:border-red-500/20 transition-all duration-700">
-                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-red-500/5 rounded-full blur-[60px] pointer-events-none group-hover:bg-red-500/10 transition-colors duration-700" />
-                        
-                        <div className="relative z-10 space-y-8">
-                            <div className="h-24 w-24 rounded-full bg-red-500/10 flex items-center justify-center mx-auto border border-red-500/20 group-hover:scale-110 transition-transform duration-500">
-                                <Heart className="h-10 w-10 text-red-500 fill-red-500/50" />
-                            </div>
-                            <div>
-                                <h3 className="text-2xl font-black uppercase tracking-tighter italic font-heading text-zinc-900">Wishlist is empty</h3>
-                                <p className="text-zinc-500 font-medium mt-2 max-w-sm mx-auto">Start browsing the marketplace and save items you want to keep track of.</p>
-                            </div>
-                            <Button asChild className="h-14 px-10 bg-red-500 text-white hover:bg-red-600 rounded-2xl font-black uppercase tracking-widest font-heading border-none shadow-[0_10px_30px_rgba(239,68,68,0.3)] transition-all hover:-translate-y-1">
-                                <Link href="/marketplace">Launch Marketplace <ArrowRight className="ml-2 h-4 w-4" /></Link>
-                            </Button>
+                    <div className="bg-card border border-border rounded-3xl p-12 sm:p-16 text-center space-y-4 shadow-sm max-w-xl mx-auto">
+                        <div className="h-16 w-16 rounded-2xl bg-rose-500/10 text-rose-500 flex items-center justify-center mx-auto">
+                            <Heart className="h-8 w-8" />
                         </div>
+                        <h3 className="text-lg font-bold text-foreground">Your Wishlist is Empty</h3>
+                        <p className="text-xs sm:text-sm text-muted-foreground max-w-sm mx-auto">
+                            Save products you love while browsing the marketplace to track prices and buy later.
+                        </p>
+                        <Link href="/marketplace">
+                            <Button className="bg-[#FF6200] hover:bg-[#FF7A29] text-white font-semibold text-xs rounded-xl mt-2">
+                                Explore Marketplace <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                            </Button>
+                        </Link>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                    /* Wishlist Grid */
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
                         {wishlistItems.map((item) => (
-                            <Card key={item.id} className="overflow-hidden border border-zinc-200 shadow-sm rounded-[2rem] hover:border-red-500/30 transition-all duration-500 group bg-white relative hover:-translate-y-2 hover:shadow-xl">
-                                <Button
-                                    variant="destructive"
-                                    size="icon"
-                                    className="absolute top-4 right-4 z-20 h-10 w-10 rounded-full bg-red-500/90 text-white shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110"
+                            <div
+                                key={item.id}
+                                className="group relative bg-card border border-border hover:border-[#FF6200]/40 rounded-2xl overflow-hidden transition-all shadow-sm hover:shadow-md flex flex-col justify-between"
+                            >
+                                {/* Remove button */}
+                                <button
                                     onClick={(e) => {
                                         e.preventDefault();
                                         handleRemove(item.id);
                                     }}
+                                    className="absolute top-3 right-3 z-20 h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm border border-border hover:bg-red-500 hover:text-white text-muted-foreground flex items-center justify-center transition-colors shadow-sm"
+                                    title="Remove from wishlist"
                                 >
-                                    <Trash2 className="h-4 w-4" />
-                                </Button>
-                                
-                                <Link href={`/marketplace/${item.id}`} className="block h-full flex flex-col">
-                                    <div className="aspect-[4/3] bg-zinc-100 relative overflow-hidden shrink-0">
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                </button>
+
+                                <Link href={`/listings/${item.id}`} className="block">
+                                    <div className="relative aspect-[4/3] bg-muted overflow-hidden">
                                         {item.images?.[0] ? (
                                             <Image
                                                 src={item.images[0]}
                                                 alt={item.title}
                                                 fill
-                                                className="object-cover group-hover:scale-110 transition-transform duration-700"
+                                                className="object-cover group-hover:scale-105 transition-transform duration-500"
                                             />
                                         ) : (
-                                            <div className="w-full h-full flex items-center justify-center">
-                                                <Heart className="h-8 w-8 text-zinc-300" />
+                                            <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                                                <Store className="h-10 w-10 opacity-30" />
                                             </div>
                                         )}
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10" />
                                     </div>
-                                    <CardContent className="p-6 flex-1 flex flex-col justify-between border-t border-zinc-100 bg-white relative z-20">
-                                        <div className="mb-4">
-                                            <CardTitle className="text-lg font-black uppercase tracking-tighter italic font-heading line-clamp-2 text-zinc-900 group-hover:text-red-500 transition-colors">
-                                                {item.title}
-                                            </CardTitle>
-                                            <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-zinc-400 mt-3">
-                                                <MapPin className="h-3 w-3 text-red-500" />
-                                                {item.location || 'Location missing'}
-                                            </div>
+
+                                    <div className="p-4 space-y-2">
+                                        <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                                            <span className="font-semibold uppercase text-[#FF6200]">
+                                                {item.category || 'General'}
+                                            </span>
+                                            <span className="flex items-center gap-1 truncate max-w-[100px]">
+                                                <MapPin className="h-3 w-3 shrink-0" />
+                                                {item.location || 'Campus'}
+                                            </span>
                                         </div>
-                                        <p className="text-2xl font-black text-red-500 italic tracking-tighter">₦{item.price.toLocaleString()}</p>
-                                    </CardContent>
+
+                                        <h3 className="font-bold text-sm text-foreground leading-snug line-clamp-2 group-hover:text-[#FF6200] transition-colors">
+                                            {item.title}
+                                        </h3>
+
+                                        <div className="pt-2 border-t border-border flex items-center justify-between">
+                                            <span className="text-base font-extrabold text-[#FF6200]">
+                                                ₦{item.price.toLocaleString()}
+                                            </span>
+                                            <span className="text-xs font-semibold text-muted-foreground group-hover:text-[#FF6200] flex items-center gap-1">
+                                                View <ArrowRight className="h-3 w-3" />
+                                            </span>
+                                        </div>
+                                    </div>
                                 </Link>
-                            </Card>
+                            </div>
                         ))}
                     </div>
                 )}
