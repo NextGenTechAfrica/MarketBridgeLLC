@@ -6,39 +6,29 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { createClient } from '@/lib/supabase/client';
 import {
-    LayoutDashboard,
-    MessageCircle,
     ShoppingBag,
     ShieldCheck,
-    Clock,
     ArrowRight,
-    MapPin,
-    AlertCircle,
-    Heart,
-    Search,
-    Wallet,
+    Star,
+    Laptop,
+    Shirt,
+    BookOpen,
+    Glasses,
+    Home as HomeIcon,
+    FileText,
+    Wrench,
+    Grid,
+    CheckCircle2,
+    Clock,
     Package,
-    TrendingUp,
-    CheckCircle2
+    Sparkles,
+    ChevronRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { DashboardHeader } from '@/components/dashboard-header';
-import { FeaturedListings } from '@/components/FeaturedListings';
-import { Input } from '@/components/ui/input';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
 
 const supabase = createClient();
-
-const buyerItems = [
-    { label: 'Overview', href: '/buyer/dashboard', icon: LayoutDashboard },
-    { label: 'My Orders & Escrow', href: '/orders', icon: Package },
-    { label: 'Wishlist', href: '/wishlist', icon: Heart },
-    { label: 'Messages', href: '/chats', icon: MessageCircle },
-    { label: 'Wallet', href: '/wallet', icon: Wallet },
-    { label: 'Disputes', href: '/disputes', icon: AlertCircle },
-];
 
 interface BuyerStats {
     activeOrdersCount: number;
@@ -64,10 +54,106 @@ interface OrderSummary {
     };
 }
 
+const categories = [
+    { label: 'Electronics', icon: Laptop, color: 'bg-blue-50 text-blue-600', href: '/marketplace?category=Electronics' },
+    { label: 'Fashion', icon: Shirt, color: 'bg-pink-50 text-pink-600', href: '/marketplace?category=Fashion' },
+    { label: 'Books', icon: BookOpen, color: 'bg-emerald-50 text-emerald-600', href: '/marketplace?category=Books' },
+    { label: 'Accessories', icon: Glasses, color: 'bg-orange-50 text-[#FF5500]', href: '/marketplace?category=Accessories' },
+    { label: 'Home & Living', icon: HomeIcon, color: 'bg-indigo-50 text-indigo-600', href: '/marketplace?category=Home' },
+    { label: 'Study Materials', icon: FileText, color: 'bg-teal-50 text-teal-600', href: '/marketplace?category=Study' },
+    { label: 'Services', icon: Wrench, color: 'bg-amber-50 text-amber-600', href: '/marketplace?category=Services' },
+    { label: 'More', icon: Grid, color: 'bg-slate-100 text-slate-600', href: '/marketplace' },
+];
+
+const hotDeals = [
+    {
+        id: '1',
+        title: 'HP Laptop 15',
+        price: 380000,
+        originalPrice: 450000,
+        rating: 4.8,
+        reviews: 12,
+        seller: 'Chioma',
+        isVerified: true,
+        image: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=500&auto=format&fit=crop&q=60'
+    },
+    {
+        id: '2',
+        title: 'Nike Air Force 1',
+        price: 55000,
+        originalPrice: 70000,
+        rating: 4.7,
+        reviews: 36,
+        seller: 'Tobi',
+        isVerified: true,
+        image: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=500&auto=format&fit=crop&q=60'
+    },
+    {
+        id: '3',
+        title: 'Calculus Textbook',
+        price: 12000,
+        originalPrice: null,
+        rating: 4.9,
+        reviews: 15,
+        seller: 'David',
+        isVerified: true,
+        image: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=500&auto=format&fit=crop&q=60'
+    },
+    {
+        id: '4',
+        title: 'Bluetooth Headphones',
+        price: 25000,
+        originalPrice: 30000,
+        rating: 4.6,
+        reviews: 18,
+        seller: 'Blessing',
+        isVerified: true,
+        image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&auto=format&fit=crop&q=60'
+    },
+];
+
+const recommendedItems = [
+    {
+        id: '5',
+        title: 'Portable Charger',
+        price: 10000,
+        rating: 4.5,
+        reviews: 12,
+        seller: 'Emmanuel',
+        image: 'https://images.unsplash.com/photo-1609592424364-754f923b723a?w=500&auto=format&fit=crop&q=60'
+    },
+    {
+        id: '6',
+        title: 'Gaming Mouse',
+        price: 15000,
+        rating: 4.7,
+        reviews: 14,
+        seller: 'Samuel',
+        image: 'https://images.unsplash.com/photo-1615663245857-ac93bb7c39e7?w=500&auto=format&fit=crop&q=60'
+    },
+    {
+        id: '7',
+        title: 'Backpack',
+        price: 28000,
+        rating: 4.8,
+        reviews: 22,
+        seller: 'Grace',
+        image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=500&auto=format&fit=crop&q=60'
+    },
+    {
+        id: '8',
+        title: 'Wireless Earbuds',
+        price: 22000,
+        rating: 4.6,
+        reviews: 18,
+        seller: 'Kelvin',
+        image: 'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=500&auto=format&fit=crop&q=60'
+    },
+];
+
 export default function BuyerDashboardPage() {
     const { user, loading: authLoading } = useAuth();
     const router = useRouter();
-    const [searchQuery, setSearchQuery] = useState('');
     const [stats, setStats] = useState<BuyerStats>({
         activeOrdersCount: 0,
         wishlistCount: 0,
@@ -82,7 +168,7 @@ export default function BuyerDashboardPage() {
         setLoadingData(true);
 
         try {
-            // 1. Fetch active orders
+            // 1. Fetch orders from Supabase
             const { data: ordersData } = await supabase
                 .from('orders')
                 .select(`
@@ -92,7 +178,7 @@ export default function BuyerDashboardPage() {
                 `)
                 .eq('buyer_id', user.id)
                 .order('created_at', { ascending: false })
-                .limit(5);
+                .limit(4);
 
             const activeOrders = (ordersData || []).filter(
                 (o: any) => o.status === 'pending' || o.status === 'paid' || o.status === 'confirmed'
@@ -118,12 +204,9 @@ export default function BuyerDashboardPage() {
                 // non-critical
             }
 
-            // 4. Wishlist count
-            const wishlistItemsCount = user.wishlist ? user.wishlist.length : 0;
-
             setStats({
                 activeOrdersCount: activeOrders.length,
-                wishlistCount: wishlistItemsCount,
+                wishlistCount: user.wishlist?.length || 0,
                 unreadMessagesCount: unreadCount,
                 walletBalance: walletData?.balance || 0,
             });
@@ -145,313 +228,308 @@ export default function BuyerDashboardPage() {
         }
     }, [user, authLoading, router, fetchBuyerData]);
 
-    const handleSearch = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (searchQuery.trim()) {
-            router.push(`/marketplace?q=${encodeURIComponent(searchQuery)}`);
-        }
-    };
-
-    const getStatusBadge = (status: string) => {
-        switch (status) {
-            case 'completed':
-                return <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-xs">Completed</Badge>;
-            case 'paid':
-                return <Badge className="bg-blue-500/10 text-blue-600 border-blue-500/20 text-xs">In Escrow</Badge>;
-            case 'confirmed':
-                return <Badge className="bg-amber-500/10 text-amber-600 border-amber-500/20 text-xs">Shipped</Badge>;
-            case 'disputed':
-                return <Badge className="bg-red-500/10 text-red-600 border-red-500/20 text-xs">Disputed</Badge>;
-            case 'cancelled':
-                return <Badge className="bg-zinc-500/10 text-zinc-500 border-zinc-500/20 text-xs">Cancelled</Badge>;
-            default:
-                return <Badge className="bg-zinc-100 text-zinc-700 border-zinc-200 text-xs capitalize">{status}</Badge>;
-        }
-    };
-
     return (
-        <div className="flex min-h-screen bg-background text-foreground">
-            <div className="flex-1 flex flex-col max-w-[100vw] overflow-x-hidden">
-                <DashboardHeader title="Buyer Dashboard" sidebarItems={buyerItems} />
+        <div className="space-y-8 pb-12">
+            {/* ─── 1. TOP HERO BANNER (1:1 with Image 2 Left) ─── */}
+            <div className="relative overflow-hidden rounded-[2rem] bg-[#0B0F19] text-white p-7 sm:p-10 shadow-xl flex flex-col md:flex-row items-center justify-between gap-8 border border-white/5">
+                <div className="space-y-4 max-w-lg z-10">
+                    <h1 className="text-3xl sm:text-4xl font-black tracking-tight leading-tight">
+                        Everything You Need <br />
+                        <span className="text-[#FF5500]">All in One Place</span>
+                    </h1>
+                    <p className="text-slate-400 text-sm sm:text-base leading-relaxed">
+                        Buy from verified student sellers. Get great deals, safe transactions and fast support.
+                    </p>
+                    <div className="pt-2">
+                        <Link
+                            href="/marketplace"
+                            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#FF5500] hover:bg-[#FF6611] text-white font-bold text-sm rounded-xl transition-all shadow-md shadow-[#FF5500]/30 active:scale-95"
+                        >
+                            Explore Now <ArrowRight className="h-4 w-4" />
+                        </Link>
+                    </div>
+                </div>
 
-                <main className="flex-1 p-4 sm:p-6 md:p-8 max-w-7xl mx-auto w-full space-y-8">
-                    {/* Welcome Hero Banner */}
-                    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 text-white border border-slate-800 p-6 sm:p-8 md:p-10 shadow-lg">
-                        <div className="absolute top-0 right-0 w-96 h-96 bg-[#FF6200]/15 rounded-full blur-3xl pointer-events-none -translate-y-1/2 translate-x-1/3" />
+                {/* Tech Workspace Cutout Illustration */}
+                <div className="relative z-10 w-full sm:w-[320px] h-[180px] sm:h-[200px] flex items-center justify-center">
+                    <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-2xl border border-white/10">
+                        <Image
+                            src="https://images.unsplash.com/photo-1522199755839-a2bacb67c546?w=600&auto=format&fit=crop&q=80"
+                            alt="Student workspace with laptop, books, phone and headphones"
+                            fill
+                            className="object-cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#0B0F19]/80 via-transparent to-transparent" />
+                    </div>
+                </div>
 
-                        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-                            <div className="space-y-3 max-w-xl">
-                                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FF6200]/20 border border-[#FF6200]/30 text-xs font-semibold text-[#FF6200]">
-                                    <ShieldCheck className="h-3.5 w-3.5" /> Escrow-Protected Marketplace
-                                </div>
-                                <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight">
-                                    Welcome back, <span className="text-[#FF6200]">{user?.display_name || 'Buyer'}</span>!
-                                </h1>
-                                <p className="text-sm text-slate-300 leading-relaxed">
-                                    Manage your orders, track escrow payments, save favorites, and connect with verified sellers across Nigeria.
-                                </p>
-                            </div>
+                {/* Subtle Orange Backdrop Glow */}
+                <div className="absolute top-0 right-0 w-80 h-80 bg-[#FF5500]/15 rounded-full blur-[90px] pointer-events-none" />
+            </div>
 
-                            {/* Search and Action Buttons */}
-                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                                <Link href="/marketplace">
-                                    <Button className="w-full sm:w-auto h-11 px-6 bg-[#FF6200] hover:bg-[#FF7A29] text-white font-semibold text-sm rounded-xl shadow-md">
-                                        Explore Marketplace
-                                    </Button>
-                                </Link>
-                                <Link href="/orders">
-                                    <Button variant="outline" className="w-full sm:w-auto h-11 px-6 border-slate-700 bg-slate-800/60 hover:bg-slate-800 text-slate-200 font-semibold text-sm rounded-xl">
-                                        View Orders
-                                    </Button>
-                                </Link>
-                            </div>
+            {/* ─── 2. CATEGORY ICONS ROW (Image 2 Left) ─── */}
+            <div className="grid grid-cols-4 sm:grid-cols-8 gap-3 sm:gap-4">
+                {categories.map((cat, i) => (
+                    <Link
+                        key={i}
+                        href={cat.href}
+                        className="bg-white hover:bg-slate-50 border border-slate-200/80 rounded-2xl p-3.5 flex flex-col items-center justify-center gap-2 text-center transition-all hover:shadow-sm hover:-translate-y-0.5 group"
+                    >
+                        <div className={`w-11 h-11 rounded-xl ${cat.color} flex items-center justify-center transition-transform group-hover:scale-105`}>
+                            <cat.icon className="h-5 w-5" />
                         </div>
+                        <span className="text-xs font-semibold text-slate-700 group-hover:text-slate-900 truncate w-full">
+                            {cat.label}
+                        </span>
+                    </Link>
+                ))}
+            </div>
 
-                        {/* Search Bar inside Hero */}
-                        <form onSubmit={handleSearch} className="relative mt-6 max-w-2xl">
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                            <Input
-                                type="text"
-                                placeholder="Search products, textbooks, electronics, gadgets, or services..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="h-12 pl-11 pr-24 bg-slate-800/80 border-slate-700 rounded-xl text-sm text-white placeholder:text-slate-400 focus-visible:ring-[#FF6200] focus-visible:border-[#FF6200]"
-                            />
-                            <Button
-                                type="submit"
-                                size="sm"
-                                className="absolute right-1.5 top-1/2 -translate-y-1/2 h-9 px-4 bg-[#FF6200] hover:bg-[#FF7A29] text-white font-semibold text-xs rounded-lg"
+            {/* ─── 3. HOT DEALS SECTION (Image 2 Left) ─── */}
+            <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                    <h2 className="text-xl font-black text-slate-900 tracking-tight">
+                        Hot Deals
+                    </h2>
+                    <Link href="/marketplace" className="text-xs font-bold text-slate-500 hover:text-[#FF5500] flex items-center gap-1 transition-colors">
+                        View All <ArrowRight className="h-3 w-3" />
+                    </Link>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {hotDeals.map((item) => (
+                        <Link
+                            key={item.id}
+                            href={`/marketplace`}
+                            className="bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col group"
+                        >
+                            <div className="relative w-full h-44 bg-slate-100 overflow-hidden">
+                                <Image
+                                    src={item.image}
+                                    alt={item.title}
+                                    fill
+                                    className="object-cover group-hover:scale-105 transition-transform duration-300"
+                                />
+                            </div>
+                            <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
+                                <div>
+                                    <h3 className="text-sm font-bold text-slate-900 group-hover:text-[#FF5500] transition-colors truncate">
+                                        {item.title}
+                                    </h3>
+                                    <div className="flex items-baseline gap-2 mt-1">
+                                        <span className="text-base font-black text-slate-900">
+                                            ₦{item.price.toLocaleString()}
+                                        </span>
+                                        {item.originalPrice && (
+                                            <span className="text-xs text-slate-400 line-through">
+                                                ₦{item.originalPrice.toLocaleString()}
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="space-y-1.5 pt-2 border-t border-slate-100">
+                                    <div className="flex items-center gap-1 text-xs font-bold text-amber-500">
+                                        <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                                        <span>{item.rating}</span>
+                                        <span className="text-slate-400 font-normal">({item.reviews})</span>
+                                    </div>
+                                    <div className="flex items-center justify-between text-xs text-slate-500">
+                                        <span className="truncate">by {item.seller}</span>
+                                        {item.isVerified && (
+                                            <span className="text-[10px] font-bold text-emerald-600 flex items-center gap-1 shrink-0">
+                                                <CheckCircle2 className="h-3 w-3" /> Verified Seller
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        </Link>
+                    ))}
+                </div>
+            </div>
+
+            {/* ─── 4. RECOMMENDED FOR YOU & SAFE & SECURE (Image 2 Left) ─── */}
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                {/* Left 3 cols: Recommended Grid */}
+                <div className="lg:col-span-3 space-y-4">
+                    <div className="flex items-center justify-between">
+                        <h2 className="text-xl font-black text-slate-900 tracking-tight">
+                            Recommended For You
+                        </h2>
+                        <Link href="/marketplace" className="text-xs font-bold text-slate-500 hover:text-[#FF5500] flex items-center gap-1 transition-colors">
+                            View All <ArrowRight className="h-3 w-3" />
+                        </Link>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                        {recommendedItems.map((item) => (
+                            <Link
+                                key={item.id}
+                                href={`/marketplace`}
+                                className="bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col group"
                             >
-                                Search
-                            </Button>
-                        </form>
+                                <div className="relative w-full h-32 bg-slate-100 overflow-hidden">
+                                    <Image
+                                        src={item.image}
+                                        alt={item.title}
+                                        fill
+                                        className="object-cover group-hover:scale-105 transition-transform duration-300"
+                                    />
+                                </div>
+                                <div className="p-3 flex-1 flex flex-col justify-between space-y-2">
+                                    <div>
+                                        <h3 className="text-xs font-bold text-slate-900 truncate">
+                                            {item.title}
+                                        </h3>
+                                        <p className="text-sm font-black text-slate-900 mt-0.5">
+                                            ₦{item.price.toLocaleString()}
+                                        </p>
+                                    </div>
+                                    <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1 border-t border-slate-100">
+                                        <span className="flex items-center gap-0.5 font-bold text-amber-500">
+                                            ★ {item.rating}
+                                        </span>
+                                        <span className="truncate">by {item.seller}</span>
+                                    </div>
+                                </div>
+                            </Link>
+                        ))}
                     </div>
+                </div>
 
-                    {/* Stats KPI Cards */}
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
-                        {/* Active Orders */}
-                        <Link href="/orders" className="group">
-                            <div className="bg-card border border-border hover:border-[#FF6200]/40 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all space-y-2">
-                                <div className="flex items-center justify-between text-muted-foreground">
-                                    <span className="text-xs font-semibold uppercase tracking-wider">Active Orders</span>
-                                    <div className="h-8 w-8 rounded-lg bg-blue-500/10 text-blue-600 flex items-center justify-center">
-                                        <Package className="h-4 w-4" />
-                                    </div>
-                                </div>
-                                <div className="text-2xl font-bold text-foreground">
-                                    {loadingData ? <Skeleton className="h-8 w-12" /> : stats.activeOrdersCount}
-                                </div>
-                                <p className="text-[11px] text-muted-foreground">Secured with Escrow</p>
-                            </div>
-                        </Link>
+                {/* Right 1 col: Safe & Secure Card (Image 2 Left) */}
+                <div className="bg-white rounded-2xl border border-slate-200/80 p-6 flex flex-col justify-between shadow-sm space-y-4">
+                    <div className="space-y-3">
+                        <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                            <ShieldCheck className="h-6 w-6" />
+                        </div>
+                        <h3 className="text-base font-bold text-slate-900">
+                            Safe & Secure
+                        </h3>
+                        <p className="text-xs text-slate-500 leading-relaxed">
+                            Payments are protected, sellers are verified, and your data is safe.
+                        </p>
+                    </div>
+                    <Link
+                        href="/faq"
+                        className="inline-flex items-center justify-center w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition-all"
+                    >
+                        Learn More
+                    </Link>
+                </div>
+            </div>
 
-                        {/* Wallet Balance */}
-                        <Link href="/wallet" className="group">
-                            <div className="bg-card border border-border hover:border-[#FF6200]/40 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all space-y-2">
-                                <div className="flex items-center justify-between text-muted-foreground">
-                                    <span className="text-xs font-semibold uppercase tracking-wider">Wallet Balance</span>
-                                    <div className="h-8 w-8 rounded-lg bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
-                                        <Wallet className="h-4 w-4" />
-                                    </div>
-                                </div>
-                                <div className="text-2xl font-bold text-[#FF6200]">
-                                    {loadingData ? <Skeleton className="h-8 w-20" /> : `₦${stats.walletBalance.toLocaleString()}`}
-                                </div>
-                                <p className="text-[11px] text-muted-foreground">Available for purchases</p>
-                            </div>
-                        </Link>
-
-                        {/* Saved Wishlist */}
-                        <Link href="/wishlist" className="group">
-                            <div className="bg-card border border-border hover:border-[#FF6200]/40 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all space-y-2">
-                                <div className="flex items-center justify-between text-muted-foreground">
-                                    <span className="text-xs font-semibold uppercase tracking-wider">Wishlist</span>
-                                    <div className="h-8 w-8 rounded-lg bg-rose-500/10 text-rose-500 flex items-center justify-center">
-                                        <Heart className="h-4 w-4" />
-                                    </div>
-                                </div>
-                                <div className="text-2xl font-bold text-foreground">
-                                    {loadingData ? <Skeleton className="h-8 w-12" /> : stats.wishlistCount}
-                                </div>
-                                <p className="text-[11px] text-muted-foreground">Saved products</p>
-                            </div>
-                        </Link>
-
-                        {/* Unread Chats */}
-                        <Link href="/chats" className="group">
-                            <div className="bg-card border border-border hover:border-[#FF6200]/40 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all space-y-2">
-                                <div className="flex items-center justify-between text-muted-foreground">
-                                    <span className="text-xs font-semibold uppercase tracking-wider">Messages</span>
-                                    <div className="h-8 w-8 rounded-lg bg-amber-500/10 text-amber-600 flex items-center justify-center">
-                                        <MessageCircle className="h-4 w-4" />
-                                    </div>
-                                </div>
-                                <div className="text-2xl font-bold text-foreground">
-                                    {loadingData ? <Skeleton className="h-8 w-12" /> : stats.unreadMessagesCount}
-                                </div>
-                                <p className="text-[11px] text-muted-foreground">Conversations with sellers</p>
-                            </div>
+            {/* ─── 5. RECENT ORDERS & POST A REQUEST (Image 2 Left) ─── */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Recent Orders (2 cols) */}
+                <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm space-y-4">
+                    <div className="flex items-center justify-between">
+                        <h2 className="text-base font-bold text-slate-900">
+                            Your Recent Orders
+                        </h2>
+                        <Link href="/orders" className="text-xs font-bold text-slate-500 hover:text-[#FF5500] flex items-center gap-1 transition-colors">
+                            See All <ArrowRight className="h-3 w-3" />
                         </Link>
                     </div>
 
-                    {/* Featured Listings Section */}
-                    <FeaturedListings />
-
-                    {/* Recent Orders / Escrow Activity Grid */}
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        {/* Recent Orders Column */}
-                        <div className="lg:col-span-2 space-y-4">
-                            <div className="flex items-center justify-between">
-                                <h2 className="text-lg font-bold text-foreground">Recent Orders</h2>
-                                <Link href="/orders" className="text-xs font-semibold text-[#FF6200] hover:underline flex items-center gap-1">
-                                    View All Orders <ArrowRight className="h-3 w-3" />
-                                </Link>
-                            </div>
-
-                            {loadingData ? (
-                                <div className="space-y-3">
-                                    {[1, 2].map((i) => (
-                                        <div key={i} className="bg-card border border-border rounded-2xl p-4 space-y-2">
-                                            <Skeleton className="h-4 w-32" />
-                                            <Skeleton className="h-6 w-full" />
+                    <div className="space-y-3">
+                        {recentOrders.length > 0 ? (
+                            recentOrders.map((order) => (
+                                <div
+                                    key={order.id}
+                                    className="flex items-center justify-between p-3.5 rounded-xl border border-slate-100 hover:bg-slate-50 transition-colors gap-4"
+                                >
+                                    <div className="flex items-center gap-3 min-w-0">
+                                        <div className="w-12 h-12 rounded-lg bg-slate-100 relative overflow-hidden shrink-0">
+                                            {order.listing?.images?.[0] ? (
+                                                <Image
+                                                    src={order.listing.images[0]}
+                                                    alt={order.listing.title}
+                                                    fill
+                                                    className="object-cover"
+                                                />
+                                            ) : (
+                                                <Package className="w-6 h-6 text-slate-400 m-3" />
+                                            )}
                                         </div>
-                                    ))}
-                                </div>
-                            ) : recentOrders.length === 0 ? (
-                                <div className="bg-card border border-dashed border-border rounded-2xl p-8 text-center space-y-3">
-                                    <ShieldCheck className="h-10 w-10 text-muted-foreground mx-auto opacity-50" />
-                                    <h3 className="text-sm font-semibold text-foreground">No Orders Yet</h3>
-                                    <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-                                        When you purchase an item on MarketBridge, payment is held safely in escrow until you confirm delivery.
-                                    </p>
-                                    <Link href="/marketplace">
-                                        <Button size="sm" className="bg-[#FF6200] hover:bg-[#FF7A29] text-white font-semibold text-xs rounded-xl mt-2">
-                                            Start Shopping
-                                        </Button>
-                                    </Link>
-                                </div>
-                            ) : (
-                                <div className="space-y-3">
-                                    {recentOrders.map((order) => (
+                                        <div className="min-w-0">
+                                            <p className="text-sm font-bold text-slate-900 truncate">
+                                                {order.listing?.title || `Order #${order.id.slice(0, 8)}`}
+                                            </p>
+                                            <p className="text-xs text-slate-500">
+                                                ₦{order.amount?.toLocaleString()} • <span className="capitalize font-semibold text-[#FF5500]">{order.status}</span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-3 shrink-0">
+                                        <span className="text-xs text-slate-400 hidden sm:inline">
+                                            {new Date(order.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                        </span>
                                         <Link
-                                            key={order.id}
-                                            href={`/orders/${order.id}`}
-                                            className="block bg-card border border-border hover:border-[#FF6200]/40 rounded-2xl p-4 transition-all shadow-sm hover:shadow-md"
+                                            href={`/orders`}
+                                            className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition-colors"
                                         >
-                                            <div className="flex items-center justify-between gap-4">
-                                                <div className="flex items-center gap-3 min-w-0">
-                                                    <div className="relative h-14 w-14 rounded-xl bg-muted overflow-hidden shrink-0 border border-border">
-                                                        {order.listing?.images?.[0] ? (
-                                                            <Image
-                                                                src={order.listing.images[0]}
-                                                                alt={order.listing.title || 'Order item'}
-                                                                fill
-                                                                className="object-cover"
-                                                            />
-                                                        ) : (
-                                                            <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                                                                <Package className="h-6 w-6 opacity-30" />
-                                                            </div>
-                                                        )}
-                                                    </div>
-
-                                                    <div className="min-w-0">
-                                                        <h4 className="font-semibold text-sm text-foreground truncate">
-                                                            {order.listing?.title || `Order #${order.id.slice(0, 8)}`}
-                                                        </h4>
-                                                        <p className="text-xs text-muted-foreground truncate">
-                                                            Seller: {order.seller?.display_name || 'Verified Merchant'}
-                                                        </p>
-                                                        <span className="text-xs font-bold text-[#FF6200]">
-                                                            ₦{order.amount.toLocaleString()}
-                                                        </span>
-                                                    </div>
-                                                </div>
-
-                                                <div className="flex flex-col items-end gap-1.5 shrink-0">
-                                                    {getStatusBadge(order.status)}
-                                                    <span className="text-[10px] text-muted-foreground">
-                                                        {new Date(order.created_at).toLocaleDateString()}
-                                                    </span>
-                                                </div>
-                                            </div>
+                                            View Details
                                         </Link>
-                                    ))}
+                                    </div>
                                 </div>
-                            )}
-                        </div>
-
-                        {/* Quick Shortcuts & Trust Sidebar */}
-                        <div className="space-y-6">
-                            {/* Quick Shortcuts */}
-                            <div className="bg-card border border-border rounded-2xl p-5 space-y-4 shadow-sm">
-                                <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                                    Quick Shortcuts
-                                </h3>
-
-                                <div className="space-y-2">
-                                    <Link
-                                        href="/marketplace"
-                                        className="flex items-center justify-between p-3 rounded-xl hover:bg-muted text-xs font-medium transition-colors"
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <ShoppingBag className="h-4 w-4 text-[#FF6200]" />
-                                            <span>Explore Marketplace</span>
+                            ))
+                        ) : (
+                            // Default reference preview orders when user hasn't ordered yet
+                            [
+                                { title: 'HP Laptop 15', price: '₦380,000', status: 'Delivered', date: '12 Sep 2025' },
+                                { title: 'Nike Air Force 1', price: '₦55,000', status: 'In Transit', date: '10 Sep 2025' },
+                                { title: 'Calculus Textbook', price: '₦12,000', status: 'Delivered', date: '5 Sep 2025' },
+                            ].map((o, idx) => (
+                                <div key={idx} className="flex items-center justify-between p-3.5 rounded-xl border border-slate-100 hover:bg-slate-50 transition-colors gap-4">
+                                    <div className="flex items-center gap-3 min-w-0">
+                                        <div className="w-11 h-11 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400 shrink-0">
+                                            <Package className="h-5 w-5" />
                                         </div>
-                                        <ArrowRight className="h-3 w-3 text-muted-foreground" />
-                                    </Link>
-
-                                    <Link
-                                        href="/wallet"
-                                        className="flex items-center justify-between p-3 rounded-xl hover:bg-muted text-xs font-medium transition-colors"
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <Wallet className="h-4 w-4 text-emerald-500" />
-                                            <span>Deposit & Wallet</span>
+                                        <div className="min-w-0">
+                                            <p className="text-xs sm:text-sm font-bold text-slate-900 truncate">{o.title}</p>
+                                            <p className="text-[11px] sm:text-xs text-slate-500">
+                                                {o.price} • <span className="font-semibold text-emerald-600">{o.status}</span>
+                                            </p>
                                         </div>
-                                        <ArrowRight className="h-3 w-3 text-muted-foreground" />
-                                    </Link>
-
-                                    <Link
-                                        href="/chats"
-                                        className="flex items-center justify-between p-3 rounded-xl hover:bg-muted text-xs font-medium transition-colors"
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <MessageCircle className="h-4 w-4 text-blue-500" />
-                                            <span>Seller Conversations</span>
-                                        </div>
-                                        <ArrowRight className="h-3 w-3 text-muted-foreground" />
-                                    </Link>
-
-                                    <Link
-                                        href="/wishlist"
-                                        className="flex items-center justify-between p-3 rounded-xl hover:bg-muted text-xs font-medium transition-colors"
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <Heart className="h-4 w-4 text-rose-500" />
-                                            <span>Saved Wishlist</span>
-                                        </div>
-                                        <ArrowRight className="h-3 w-3 text-muted-foreground" />
-                                    </Link>
+                                    </div>
+                                    <div className="flex items-center gap-3 shrink-0">
+                                        <span className="text-[11px] text-slate-400 hidden sm:inline">{o.date}</span>
+                                        <Link href="/orders" className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition-colors">
+                                            View Details
+                                        </Link>
+                                    </div>
                                 </div>
-                            </div>
-
-                            {/* Escrow Guarantee Card */}
-                            <div className="bg-[#FF6200]/5 border border-[#FF6200]/20 rounded-2xl p-5 space-y-2.5">
-                                <div className="flex items-center gap-2 text-[#FF6200]">
-                                    <ShieldCheck className="h-5 w-5" />
-                                    <span className="text-xs font-bold uppercase tracking-wider">How Escrow Protects You</span>
-                                </div>
-                                <ul className="text-xs text-muted-foreground space-y-1.5 list-disc list-inside leading-relaxed">
-                                    <li>Pay safely via card, bank transfer, or wallet.</li>
-                                    <li>Funds are held in secure escrow.</li>
-                                    <li>Inspect the item before confirming receipt.</li>
-                                    <li>If any issue arises, raise a dispute for full resolution.</li>
-                                </ul>
-                            </div>
-                        </div>
+                            ))
+                        )}
                     </div>
-                </main>
+                </div>
+
+                {/* Need something specific? Post a Request (Image 2 Left) */}
+                <div className="bg-[#0B0F19] text-white rounded-2xl p-6 flex flex-col justify-between shadow-sm space-y-6 border border-white/5 relative overflow-hidden">
+                    <div className="space-y-3 z-10">
+                        <div className="w-10 h-10 rounded-xl bg-[#FF5500]/15 text-[#FF5500] flex items-center justify-center">
+                            <Sparkles className="h-5 w-5" />
+                        </div>
+                        <h3 className="text-base font-bold text-white">
+                            Need something specific?
+                        </h3>
+                        <p className="text-xs text-slate-400 leading-relaxed">
+                            Post a request and let verified campus sellers find it for you.
+                        </p>
+                    </div>
+                    <div className="z-10">
+                        <Link
+                            href="/marketplace"
+                            className="inline-flex items-center justify-center w-full py-3 bg-[#FF5500] hover:bg-[#FF6611] text-white font-bold text-xs rounded-xl transition-all shadow-md shadow-[#FF5500]/30 active:scale-95"
+                        >
+                            Post a Request
+                        </Link>
+                    </div>
+
+                    <div className="absolute top-0 right-0 w-48 h-48 bg-[#FF5500]/10 rounded-full blur-3xl pointer-events-none" />
+                </div>
             </div>
         </div>
     );

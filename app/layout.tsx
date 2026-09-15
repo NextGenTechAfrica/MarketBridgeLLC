@@ -110,7 +110,7 @@ export default function RootLayout({
         <AppErrorBoundary>
           <ThemeProvider
             attribute="class"
-            defaultTheme="dark"
+            defaultTheme="light"
             enableSystem
           >
             <SystemProvider>

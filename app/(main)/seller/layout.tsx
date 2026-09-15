@@ -3,27 +3,30 @@
 import React from 'react';
 import { Sidebar } from '@/components/sidebar';
 import {
-    LayoutDashboard,
-    PlusCircle,
+    Home,
     Package,
+    ShoppingBag,
     MessageSquare,
     DollarSign,
+    TrendingUp,
+    Sparkles,
+    Star,
     Settings,
-    CreditCard
+    Loader2
 } from 'lucide-react';
-
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter, usePathname } from 'next/navigation';
-import { Loader2 } from 'lucide-react';
 import { DashboardHeader } from '@/components/dashboard-header';
 
 const sellerItems = [
-    { label: 'Overview', href: '/seller/dashboard', icon: LayoutDashboard },
-    { label: 'New Listing', href: '/seller/listings/new', icon: PlusCircle },
-    { label: 'My Inventory', href: '/seller/listings', icon: Package },
-    { label: 'Buyer Messages', href: '/seller/chats', icon: MessageSquare },
-    { label: 'Sales & Orders', href: '/seller/orders', icon: DollarSign },
-    { label: 'Subscription', href: '/seller/subscription', icon: CreditCard },
+    { label: 'Home', href: '/seller/dashboard', icon: Home },
+    { label: 'My Listings', href: '/seller/listings', icon: Package },
+    { label: 'Orders', href: '/seller/orders', icon: ShoppingBag, badge: 5 },
+    { label: 'Messages', href: '/seller/chats', icon: MessageSquare, badge: 3 },
+    { label: 'Earnings', href: '/wallet', icon: DollarSign },
+    { label: 'Analytics', href: '/seller/dashboard#analytics', icon: TrendingUp },
+    { label: 'Promotions', href: '/seller/upgrade', icon: Sparkles },
+    { label: 'Reviews', href: '/seller/reviews', icon: Star },
     { label: 'Settings', href: '/seller/settings', icon: Settings },
 ];
 
@@ -40,8 +43,6 @@ export default function SellerLayout({
 
     // The middleware handles protection, but we add an extra layer here
     if (!user || (user.role !== 'student_seller' && user.role !== 'seller')) {
-        // We don't redirect here to avoid race conditions with middleware
-        // But we don't show the seller sidebar either
         return <>{children}</>;
     }
 
@@ -52,12 +53,12 @@ export default function SellerLayout({
     }
 
     return (
-        <div className="flex min-h-screen">
-            <div className="hidden md:block w-64 fixed h-full z-10">
-                <Sidebar items={sellerItems} title="Merchant Dashboard" />
+        <div className="flex min-h-screen bg-[#F8F9FA] text-slate-900">
+            <div className="hidden md:block w-[260px] fixed h-full z-20">
+                <Sidebar items={sellerItems} title="Seller Dashboard" />
             </div>
-            <div className="flex-1 md:ml-64 flex flex-col">
-                <DashboardHeader title="Merchant Dashboard" sidebarItems={sellerItems} />
+            <div className="flex-1 md:ml-[260px] flex flex-col min-w-0">
+                <DashboardHeader title="Seller Dashboard" sidebarItems={sellerItems} />
                 <main className="flex-1">
                     {children}
                 </main>

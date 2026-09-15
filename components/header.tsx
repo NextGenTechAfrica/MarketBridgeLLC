@@ -74,41 +74,58 @@ export const Header = () => {
                         <Logo size="sm" />
                     </div>
 
-                    {/* Search Bar */}
-                    <form onSubmit={handleSearch} className="flex-1 max-w-xl hidden sm:block">
-                        <div className="relative">
-                            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
-                            <input
-                                type="text"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                placeholder="Search products, sellers, or categories..."
-                                className="w-full pl-10 pr-4 py-2.5 bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 rounded-xl text-sm text-foreground placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#FF6200]/30 focus:border-[#FF6200]/50 transition-all"
-                            />
-                        </div>
-                    </form>
+                    {/* Center Navigation: Screen 1 Navigation Links on Homepage, Search bar on other pages */}
+                    {pathname === '/' ? (
+                        <nav className="hidden md:flex items-center gap-8 ml-8">
+                            <Link href="/marketplace" className="text-sm font-medium text-slate-600 hover:text-[#FF5500] transition-colors">
+                                Browse
+                            </Link>
+                            <Link href="/#how-it-works" className="text-sm font-medium text-slate-600 hover:text-[#FF5500] transition-colors">
+                                How It Works
+                            </Link>
+                            <Link href="/seller-onboarding" className="text-sm font-medium text-slate-600 hover:text-[#FF5500] transition-colors">
+                                Sell on MarketBridge
+                            </Link>
+                        </nav>
+                    ) : (
+                        /* Search Bar for Marketplace / Inner Pages */
+                        <form onSubmit={handleSearch} className="flex-1 max-w-xl hidden sm:block">
+                            <div className="relative">
+                                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+                                <input
+                                    type="text"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    placeholder="Search products, sellers, or categories..."
+                                    className="w-full pl-10 pr-4 py-2.5 bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 rounded-xl text-sm text-foreground placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#FF5500]/30 focus:border-[#FF5500]/50 transition-all"
+                                />
+                            </div>
+                        </form>
+                    )}
 
                     {/* Right side actions */}
-                    <div className="flex items-center gap-2 shrink-0 ml-auto">
+                    <div className="flex items-center gap-3 shrink-0 ml-auto">
 
-                        {/* Location Selector */}
-                        <button
-                            className="hidden lg:flex items-center gap-1.5 px-3 py-2 bg-zinc-100 dark:bg-white/5 hover:bg-zinc-200 dark:hover:bg-white/10 border border-zinc-200 dark:border-white/10 rounded-xl transition-all group"
-                            onClick={() => setShowDialog(true)}
-                        >
-                            <MapPin className="h-3.5 w-3.5 text-[#FF6200]" />
-                            <span className="text-xs font-medium text-zinc-600 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors">
-                                {currentNode}
-                            </span>
-                            <ChevronDown className="h-3 w-3 text-zinc-400" />
-                        </button>
+                        {/* Location Selector (Shown on inner pages) */}
+                        {pathname !== '/' && (
+                            <button
+                                className="hidden lg:flex items-center gap-1.5 px-3 py-2 bg-zinc-100 dark:bg-white/5 hover:bg-zinc-200 dark:hover:bg-white/10 border border-zinc-200 dark:border-white/10 rounded-xl transition-all group"
+                                onClick={() => setShowDialog(true)}
+                            >
+                                <MapPin className="h-3.5 w-3.5 text-[#FF5500]" />
+                                <span className="text-xs font-medium text-zinc-600 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors">
+                                    {currentNode}
+                                </span>
+                                <ChevronDown className="h-3 w-3 text-zinc-400" />
+                            </button>
+                        )}
 
-                        <ThemeToggle />
+                        {pathname !== '/' && <ThemeToggle />}
 
                         {user && <NotificationBell />}
 
-                        {/* Cart Link (for buyers / unauthenticated) */}
-                        {(!user || user.role === 'student_buyer' || user.role === 'buyer') && (
+                        {/* Cart Link (for buyers / unauthenticated on inner pages) */}
+                        {pathname !== '/' && (!user || user.role === 'student_buyer' || user.role === 'buyer') && (
                             <Link
                                 href="/cart"
                                 className="relative p-2.5 rounded-xl bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 hover:bg-zinc-200 dark:hover:bg-white/10 transition-all hidden sm:flex"
@@ -117,13 +134,18 @@ export const Header = () => {
                             </Link>
                         )}
 
-                        {/* Sign In Button */}
+                        {/* Unauthenticated Actions */}
                         {!user && !loading && (
-                            <Link href="/login" className="hidden md:block">
-                                <Button size="sm" className="bg-[#FF6200] hover:bg-[#FF7A29] text-white font-semibold text-sm rounded-xl px-5 h-10 transition-all">
-                                    Get Started
-                                </Button>
-                            </Link>
+                            <div className="flex items-center gap-3">
+                                <Link href="/login" className="text-sm font-semibold text-slate-700 hover:text-[#FF5500] transition-colors px-2 py-1">
+                                    Login
+                                </Link>
+                                <Link href="/signup">
+                                    <Button size="sm" className="bg-[#FF5500] hover:bg-[#FF6611] text-white font-bold text-sm rounded-xl px-5 h-10 transition-all shadow-md shadow-[#FF5500]/25 active:scale-95">
+                                        Get Started
+                                    </Button>
+                                </Link>
+                            </div>
                         )}
 
                         {/* User Menu (Desktop) */}

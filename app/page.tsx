@@ -2,232 +2,228 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { ArrowRight, ShoppingBag, Store, MapPin, Zap, CheckCircle2, Shield, Users, Star, Smartphone } from 'lucide-react';
+import Image from 'next/image';
+import { 
+    ArrowRight, 
+    CheckCircle2, 
+    ShieldCheck, 
+    MapPin, 
+    Smartphone, 
+    GraduationCap, 
+    Clock, 
+    Store,
+    Sparkles,
+    Check
+} from 'lucide-react';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { useAuth } from '@/contexts/AuthContext';
-import QRCode from 'react-qr-code';
 
 export default function HomePage() {
     const { user } = useAuth();
 
     return (
-        <div className="flex flex-col min-h-screen bg-background text-foreground selection:bg-[#FF6200] selection:text-white">
+        <div className="flex flex-col min-h-screen bg-white text-slate-900 selection:bg-[#FF5500] selection:text-white">
             <Header />
-            <main className="flex-1 w-full flex flex-col items-center pt-16">
 
-                {/* ─── Hero Section ─── */}
-                <section className="w-full max-w-7xl mx-auto px-6 md:px-10 lg:px-16 pt-16 md:pt-24 pb-20 md:pb-28 flex flex-col md:flex-row items-center gap-10 lg:gap-20 relative">
-                    <div className="flex-1 flex flex-col space-y-6 z-10 relative">
-                        <div className="inline-flex items-center gap-2 mb-1">
-                            <span className="w-2 h-2 rounded-full bg-[#FF6200] animate-pulse" />
-                            <span className="text-xs font-semibold tracking-wide text-[#FF6200]">Live in Abuja</span>
+            <main className="flex-1 w-full flex flex-col items-center">
+
+                {/* ─── 1. HERO SECTION (1:1 with Master Board Screen 1) ─── */}
+                <section className="w-full max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 pt-12 md:pt-16 pb-16 md:pb-24 flex flex-col lg:flex-row items-center justify-between gap-12 lg:gap-16">
+                    
+                    {/* Left Column: Copy & Actions */}
+                    <div className="flex-1 flex flex-col space-y-6 max-w-xl z-10">
+                        <div className="space-y-3">
+                            <h1 className="text-4xl sm:text-5xl lg:text-[3.75rem] font-black leading-[1.08] tracking-tight text-slate-900">
+                                Abuja&apos;s campus marketplace,{' '}
+                                <span className="text-[#FF5500]">built for students.</span>
+                            </h1>
+                            <p className="text-base sm:text-lg text-slate-600 font-normal leading-relaxed pt-1">
+                                Buy and sell with verified students at Baze, Nile, and Veritas. Order food, find textbooks, and book campus services — every transaction protected by escrow, every seller ID-checked.
+                            </p>
                         </div>
-                        <h1 className="text-[clamp(2.5rem,5.5vw,4.5rem)] font-black leading-[1] tracking-tight text-foreground">
-                            Everything You Need{' '}
-                            <span className="text-[#FF6200]">All in One Place</span>
-                        </h1>
-                        <p className="text-base md:text-lg text-muted-foreground font-medium max-w-lg leading-relaxed">
-                            Buy from verified sellers. Get great deals, safe transactions and fast support.
-                        </p>
 
-                        {!user ? (
-                            <div className="pt-2 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                        {/* CTA Buttons */}
+                        <div className="pt-2 flex flex-wrap items-center gap-3.5">
+                            {!user ? (
+                                <>
+                                    <Link
+                                        href="/signup"
+                                        className="inline-flex items-center justify-center px-7 py-3.5 bg-[#FF5500] hover:bg-[#FF6611] text-white font-bold text-sm rounded-xl transition-all shadow-md shadow-[#FF5500]/25 active:scale-95"
+                                    >
+                                        Get Started
+                                    </Link>
+                                    <Link
+                                        href="/marketplace"
+                                        className="inline-flex items-center justify-center px-7 py-3.5 bg-white hover:bg-slate-50 text-slate-800 font-bold text-sm rounded-xl transition-all border border-slate-200 shadow-sm active:scale-95"
+                                    >
+                                        Browse the Market
+                                    </Link>
+                                </>
+                            ) : (
+                                <Link
+                                    href={user.role === 'student_seller' || user.role === 'seller' ? '/seller/dashboard' : '/buyer/dashboard'}
+                                    className="inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-[#FF5500] hover:bg-[#FF6611] text-white font-bold text-sm rounded-xl transition-all shadow-md shadow-[#FF5500]/25 active:scale-95"
+                                >
+                                    Go to Dashboard <ArrowRight className="h-4 w-4" />
+                                </Link>
+                            )}
+                        </div>
+
+                        {/* Trust Badges Strip */}
+                        <div className="flex flex-wrap items-center gap-6 pt-4 text-xs font-semibold text-slate-600">
+                            <span className="flex items-center gap-2">
+                                <span className="h-4 w-4 rounded-full bg-[#FF5500]/10 flex items-center justify-center">
+                                    <Check className="w-2.5 h-2.5 text-[#FF5500] stroke-[3]" />
+                                </span>
+                                Verified student sellers
+                            </span>
+                            <span className="flex items-center gap-2">
+                                <span className="h-4 w-4 rounded-full bg-[#FF5500]/10 flex items-center justify-center">
+                                    <ShieldCheck className="w-2.5 h-2.5 text-[#FF5500]" />
+                                </span>
+                                Escrow-protected payments
+                            </span>
+                            <span className="flex items-center gap-2">
+                                <span className="h-4 w-4 rounded-full bg-[#FF5500]/10 flex items-center justify-center">
+                                    <MapPin className="w-2.5 h-2.5 text-[#FF5500]" />
+                                </span>
+                                Live in Abuja
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* Right Column: Student Hero Visual with Orange Circle Backdrop */}
+                    <div className="flex-1 w-full flex items-center justify-center relative min-h-[380px] sm:min-h-[440px] max-w-lg">
+                        {/* Circular energetic orange background glow */}
+                        <div className="absolute w-[320px] sm:w-[380px] h-[320px] sm:h-[380px] rounded-full bg-gradient-to-tr from-[#FF5500] to-orange-400 opacity-95 pointer-events-none" />
+                        
+                        {/* Cutout student image */}
+                        <div className="relative z-10 w-[300px] sm:w-[360px] h-[400px] sm:h-[480px]">
+                            <Image
+                                src="/images/hero_student.jpg"
+                                alt="Smiling Nigerian university student holding a laptop"
+                                fill
+                                priority
+                                className="object-contain drop-shadow-2xl"
+                            />
+                        </div>
+
+                        {/* Floating Sticker / Badge */}
+                        <div className="absolute -top-2 right-2 sm:right-6 z-20 bg-white/95 backdrop-blur-md px-4 py-2.5 rounded-2xl shadow-xl border border-slate-100 flex items-center gap-2">
+                            <Sparkles className="w-4 h-4 text-[#FF5500]" />
+                            <div className="text-left leading-tight">
+                                <p className="text-[11px] font-black text-slate-900">Real students. Real deals.</p>
+                                <p className="text-[9px] font-semibold text-[#FF5500] uppercase tracking-wider">Safe & secure</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </section>
+
+                {/* ─── 2. HOW IT WORKS ON CAMPUS ─── */}
+                <section id="how-it-works" className="w-full bg-[#F8F9FA] py-20 border-y border-slate-100">
+                    <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
+                        <div className="mb-12">
+                            <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
+                                How It Works on Campus
+                            </h2>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            {/* Card 1 */}
+                            <div className="bg-white p-8 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow space-y-4">
+                                <div className="w-12 h-12 rounded-xl bg-orange-50 flex items-center justify-center text-[#FF5500]">
+                                    <GraduationCap className="w-6 h-6" />
+                                </div>
+                                <h3 className="text-lg font-bold text-slate-900">
+                                    Verified Students Only
+                                </h3>
+                                <p className="text-sm text-slate-500 leading-relaxed font-normal">
+                                    Every seller passes ID verification against their university enrollment. You&apos;re always trading with a real, verified classmate — never a stranger.
+                                </p>
+                            </div>
+
+                            {/* Card 2 */}
+                            <div className="bg-white p-8 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow space-y-4">
+                                <div className="w-12 h-12 rounded-xl bg-orange-50 flex items-center justify-center text-[#FF5500]">
+                                    <Clock className="w-6 h-6" />
+                                </div>
+                                <h3 className="text-lg font-bold text-slate-900">
+                                    Delivered From Campus
+                                </h3>
+                                <p className="text-sm text-slate-500 leading-relaxed font-normal">
+                                    Sellers are already in your hostel or faculty. Orders move in minutes, not hours.
+                                </p>
+                            </div>
+
+                            {/* Card 3 */}
+                            <div className="bg-white p-8 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow space-y-4">
+                                <div className="w-12 h-12 rounded-xl bg-orange-50 flex items-center justify-center text-[#FF5500]">
+                                    <Store className="w-6 h-6" />
+                                </div>
+                                <h3 className="text-lg font-bold text-slate-900">
+                                    Turn Your Hustle into a Storefront
+                                </h3>
+                                <p className="text-sm text-slate-500 leading-relaxed font-normal">
+                                    Set up shop in minutes. List textbooks, gadgets, fashion, or food, and start taking orders the same day.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                {/* ─── 3. JOIN MARKETBRIDGE BANNER ─── */}
+                <section className="w-full max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-16">
+                    <div className="w-full bg-[#0B0F19] rounded-[2.5rem] p-10 md:p-14 text-white flex flex-col md:flex-row items-center justify-between gap-10 relative overflow-hidden shadow-2xl">
+                        <div className="space-y-4 max-w-lg z-10">
+                            <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-white">
+                                Join MarketBridge
+                            </h2>
+                            <p className="text-slate-400 text-sm sm:text-base leading-relaxed">
+                                Create a free account and start browsing what your campus is selling — food, textbooks, tech, and more, all from verified students near you.
+                            </p>
+                            <div className="pt-2">
                                 <Link
                                     href="/signup"
-                                    className="flex items-center justify-center gap-2.5 px-7 py-3.5 bg-[#FF6200] hover:bg-[#FF7A29] text-white font-semibold text-sm rounded-xl transition-all hover:shadow-lg hover:shadow-[#FF6200]/20 group"
+                                    className="inline-flex items-center justify-center px-8 py-4 bg-[#FF5500] hover:bg-[#FF6611] text-white font-bold text-sm rounded-xl transition-all shadow-lg shadow-[#FF5500]/30 active:scale-95"
                                 >
-                                    Get Started <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
-                                </Link>
-                                <Link
-                                    href="/marketplace"
-                                    className="flex items-center justify-center gap-2.5 px-7 py-3.5 bg-zinc-100 hover:bg-zinc-200 dark:bg-white/5 dark:hover:bg-white/10 text-foreground font-semibold text-sm rounded-xl transition-all border border-zinc-200 dark:border-white/10"
-                                >
-                                    Browse the Market
+                                    Get Started — It&apos;s Free
                                 </Link>
                             </div>
-                        ) : (
-                            <div className="pt-2 flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                                <Link
-                                    href={user.role === 'seller' || user.role === 'student_seller' ? '/seller/dashboard' : '/marketplace'}
-                                    className="flex items-center justify-center gap-2.5 px-7 py-3.5 bg-[#FF6200] hover:bg-[#FF7A29] text-white font-semibold text-sm rounded-xl transition-all hover:shadow-lg hover:shadow-[#FF6200]/20 group"
-                                >
-                                    {user.role === 'seller' || user.role === 'student_seller' ? 'Seller Dashboard' : 'Explore Now'} <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
-                                </Link>
-                            </div>
-                        )}
-
-                        {/* Trust badges */}
-                        <div className="flex flex-wrap items-center gap-5 pt-4">
-                            <span className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                                <CheckCircle2 className="w-4 h-4 text-[#FF6200]" /> Verified Sellers
-                            </span>
-                            <span className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                                <Shield className="w-4 h-4 text-[#FF6200]" /> Escrow Protected
-                            </span>
-                            <span className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                                <MapPin className="w-4 h-4 text-[#FF6200]" /> Local Delivery
-                            </span>
                         </div>
-                    </div>
 
-                    {/* Hero Visual */}
-                    <div className="flex-1 w-full relative h-[420px] lg:h-[500px] flex items-center justify-center">
-                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-[#FF6200]/8 rounded-full blur-[100px] pointer-events-none" />
-                        
-                        {/* Phone Mockup */}
-                        <div className="relative z-10 w-[260px] h-[520px] bg-zinc-50 dark:bg-[#0B1120] border-[6px] border-zinc-200 dark:border-white/10 rounded-[3rem] shadow-2xl overflow-hidden flex flex-col items-center">
-                            <div className="absolute top-0 w-28 h-5 bg-zinc-200 dark:bg-white/10 rounded-b-2xl z-20" />
-                            <div className="flex-1 w-full h-full bg-gradient-to-br from-zinc-100 to-zinc-50 dark:from-[#0F1A2E] dark:to-[#0B1120] p-4 pt-10 space-y-3">
-                                <div className="h-5 w-1/3 bg-zinc-200 dark:bg-white/10 rounded-full mb-4 mt-2" />
-                                
-                                {/* Product Card in Phone */}
-                                <div className="bg-white dark:bg-white/5 p-3.5 rounded-2xl shadow-sm border border-zinc-100 dark:border-white/5 w-full">
-                                    <div className="flex items-center gap-3 mb-3">
-                                        <div className="w-11 h-11 bg-[#FF6200]/10 rounded-xl flex items-center justify-center shrink-0">
-                                            <ShoppingBag className="w-5 h-5 text-[#FF6200]" />
-                                        </div>
-                                        <div>
-                                            <p className="text-[9px] font-semibold text-muted-foreground">Delivering</p>
-                                            <h4 className="font-bold text-foreground text-sm leading-tight">Jollof & Chicken</h4>
-                                        </div>
-                                    </div>
-                                    <div className="flex justify-between items-center border-t border-zinc-50 dark:border-white/5 pt-2.5">
-                                        <p className="text-[#FF6200] font-bold">₦3,500</p>
-                                        <div className="w-7 h-7 rounded-full bg-zinc-50 dark:bg-white/5 flex items-center justify-center">
-                                            <ArrowRight className="w-3.5 h-3.5 text-zinc-400" />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Service Card in Phone */}
-                                <div className="bg-white dark:bg-white/5 p-3.5 rounded-2xl shadow-sm border border-zinc-100 dark:border-white/5 w-full">
-                                    <div className="flex items-center gap-3 mb-3">
-                                        <div className="w-11 h-11 bg-zinc-100 dark:bg-white/5 rounded-xl flex items-center justify-center shrink-0">
-                                            <Store className="w-5 h-5 text-foreground" />
-                                        </div>
-                                        <div>
-                                            <p className="text-[9px] font-semibold text-muted-foreground">Service</p>
-                                            <h4 className="font-bold text-foreground text-sm leading-tight">MacBook Repair</h4>
-                                        </div>
-                                    </div>
-                                    <div className="flex justify-between items-center border-t border-zinc-50 dark:border-white/5 pt-2.5">
-                                        <p className="text-muted-foreground font-medium text-xs">Campus A</p>
-                                        <div className="w-7 h-7 rounded-full bg-zinc-50 dark:bg-white/5 flex items-center justify-center">
-                                            <ArrowRight className="w-3.5 h-3.5 text-zinc-400" />
-                                        </div>
-                                    </div>
+                        {/* Visual Badge / Mobile Graphic */}
+                        <div className="relative z-10 flex items-center justify-center">
+                            <div className="w-48 h-48 sm:w-56 sm:h-56 rounded-full bg-[#FF5500]/10 border border-[#FF5500]/20 flex items-center justify-center p-6 shadow-[0_0_80px_rgba(255,85,0,0.15)]">
+                                <div className="w-24 h-24 rounded-full bg-[#FF5500] flex items-center justify-center shadow-2xl">
+                                    <span className="text-3xl font-black text-white italic">MB</span>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Floating Badges */}
-                        <div className="absolute right-0 bottom-20 z-20 bg-card text-foreground px-5 py-3.5 rounded-2xl shadow-xl rotate-[4deg] animate-float border border-border hidden sm:block">
-                            <div className="flex items-center gap-3">
-                                <Zap className="w-5 h-5 text-[#FF6200]" />
-                                <div>
-                                    <p className="text-[10px] font-medium text-muted-foreground">ETA To You</p>
-                                    <p className="font-bold text-lg leading-none mt-0.5">15 Mins</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="absolute -left-2 top-36 z-20 bg-card text-foreground px-4 py-3 rounded-2xl shadow-xl -rotate-[5deg] animate-float border border-border hidden sm:flex items-center gap-2.5" style={{ animationDelay: '1s' }}>
-                            <div className="h-6 w-6 rounded-full bg-[#FF6200]/10 flex items-center justify-center">
-                                <CheckCircle2 className="w-4 h-4 text-[#FF6200]" />
-                            </div>
-                            <p className="font-bold text-sm">Verified Seller</p>
-                        </div>
+                        {/* Subtle background glow */}
+                        <div className="absolute top-0 right-0 w-96 h-96 bg-[#FF5500]/10 rounded-full blur-[100px] pointer-events-none" />
                     </div>
                 </section>
 
-                {/* ─── How It Works ─── */}
-                <section className="w-full bg-card border-y border-border py-20 md:py-24">
-                    <div className="max-w-6xl mx-auto px-6 md:px-10 text-center">
-                        <h2 className="text-2xl md:text-4xl font-bold text-foreground mb-4">
-                            How It Works
+                {/* ─── 4. MARKETBRIDGE IN YOUR POCKET (Coming Soon) ─── */}
+                <section className="w-full max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-12 md:py-16 text-center">
+                    <div className="max-w-2xl mx-auto space-y-4">
+                        <span className="inline-block px-3.5 py-1 bg-orange-50 text-[#FF5500] border border-orange-200/60 rounded-full text-xs font-bold uppercase tracking-wider">
+                            Coming Soon
+                        </span>
+                        <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-slate-900">
+                            MarketBridge, in your pocket.
                         </h2>
-                        <p className="text-muted-foreground max-w-xl mx-auto mb-14">
-                            Simple, secure, and designed for your community
+                        <p className="text-slate-500 text-sm sm:text-base leading-relaxed">
+                            Our mobile app is on the way. For now, MarketBridge works great right in your browser — no install needed.
                         </p>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            {[
-                                { title: "Verified Sellers", icon: Shield, bg: "bg-[#FF6200]/10", iconColor: "text-[#FF6200]", desc: "Every seller is verified through our ID verification process. Trade with confidence knowing your peers are authenticated." },
-                                { title: "Fast Local Delivery", icon: Zap, bg: "bg-blue-500/10", iconColor: "text-blue-500", desc: "Sellers are nearby — from campus to community. Quick delivery for food, gadgets, fashion, and more." },
-                                { title: "Start Your Storefront", icon: Store, bg: "bg-emerald-500/10", iconColor: "text-emerald-500", desc: "Set up a storefront, list your products, and start taking orders. Build your reputation with reviews." }
-                            ].map((feat, i) => (
-                                <div key={i} className="flex flex-col items-center p-8 bg-background rounded-2xl border border-border hover:border-primary/20 hover:shadow-md transition-all">
-                                    <div className={`w-16 h-16 rounded-2xl ${feat.bg} flex items-center justify-center mb-5`}>
-                                        <feat.icon className={`w-8 h-8 ${feat.iconColor}`} />
-                                    </div>
-                                    <h3 className="text-lg font-bold text-foreground mb-2">{feat.title}</h3>
-                                    <p className="text-sm text-muted-foreground leading-relaxed">{feat.desc}</p>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </section>
-
-                {/* ─── Join CTA ─── */}
-                <section className="w-full max-w-5xl mx-auto px-6 py-20 md:py-28">
-                    <div className="bg-[#0A1628] p-10 md:p-16 rounded-3xl shadow-2xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-10">
-                        <div className="absolute top-0 right-0 w-64 h-64 bg-[#FF6200]/15 rounded-full blur-[80px]" />
-                        <div className="relative z-10 flex-1 flex flex-col items-start text-left">
-                            <h2 className="text-2xl md:text-4xl font-bold text-white mb-4">
-                                Join <span className="text-[#FF6200]">MarketBridge</span>
-                            </h2>
-                            <p className="text-white/50 text-base max-w-xl mb-6 leading-relaxed">
-                                Create a free account and start browsing what your community is selling — food, textbooks, tech, and more, all from verified sellers near you.
-                            </p>
-                            <Link
-                                href="/signup"
-                                className="flex items-center gap-2.5 px-7 py-3.5 bg-[#FF6200] hover:bg-[#FF7A29] text-white font-semibold text-sm rounded-xl transition-all hover:shadow-lg hover:shadow-[#FF6200]/20 group"
-                            >
-                                Sign Up Free <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
-                            </Link>
-                        </div>
-
-                        {/* QR Code / App promo */}
-                        <div className="relative z-10 hidden md:flex flex-col items-center bg-white/5 border border-white/10 p-6 rounded-2xl backdrop-blur-sm">
-                            <div className="bg-white p-3 rounded-xl mb-3 shadow-lg">
-                                <QRCode value="https://marketbridge.com.ng/app/download" size={88} />
-                            </div>
-                            <p className="text-white font-semibold text-xs">Download the App</p>
-                            <p className="text-[#FF6200] text-[10px] font-medium mt-0.5">Coming Soon</p>
-                        </div>
-                    </div>
-                </section>
-
-                {/* ─── In Your Pocket ─── */}
-                <section className="w-full bg-card border-y border-border py-20 md:py-24">
-                    <div className="max-w-6xl mx-auto px-6 md:px-10 flex flex-col md:flex-row items-center gap-12">
-                        <div className="flex-1">
-                            <h2 className="text-2xl md:text-4xl font-bold text-foreground mb-4">
-                                MarketBridge, <span className="text-[#FF6200]">in your pocket.</span>
-                            </h2>
-                            <p className="text-muted-foreground text-base max-w-md leading-relaxed mb-6">
-                                The marketplace works great right in your browser — no install needed. A native app is coming soon.
-                            </p>
-                            <div className="flex items-center gap-4">
-                                <div className="flex items-center gap-2 px-4 py-2.5 bg-zinc-100 dark:bg-white/5 rounded-xl border border-zinc-200 dark:border-white/10">
-                                    <Smartphone className="h-5 w-5 text-[#FF6200]" />
-                                    <span className="text-sm font-medium text-foreground">PWA Ready</span>
-                                </div>
-                                <span className="text-xs text-muted-foreground">Add to home screen for app-like experience</span>
-                            </div>
-                        </div>
-                        <div className="flex-1 flex justify-center">
-                            <div className="w-[220px] h-[440px] bg-zinc-50 dark:bg-[#0B1120] border-[5px] border-zinc-200 dark:border-white/10 rounded-[2.5rem] shadow-xl overflow-hidden flex items-center justify-center">
-                                <div className="text-center p-6">
-                                    <ShoppingBag className="h-12 w-12 text-[#FF6200] mx-auto mb-4" />
-                                    <p className="font-bold text-foreground text-sm">MarketBridge</p>
-                                    <p className="text-xs text-muted-foreground mt-1">Your marketplace</p>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </section>
 
             </main>
+
             <Footer />
         </div>
     );

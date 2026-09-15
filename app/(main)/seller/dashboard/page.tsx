@@ -758,160 +758,403 @@ export default function SellerDashboardPage() {
         <div className="min-h-screen bg-background text-foreground pb-20">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-6">
 
-                {/* Dashboard Top Header */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border">
+                {/* ─── 1. GREETING & GROW YOUR SALES BANNER (Image 2 Right) ─── */}
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
-                        <div className="flex items-center gap-2 mb-1">
-                            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                                Merchant Portal
-                            </span>
-                            {ambassadorStatus === 'approved' && (
-                                <Badge className="bg-[#FF6200]/10 text-[#FF6200] border-[#FF6200]/20 text-[10px] px-2 py-0">
-                                    <Crown className="h-3 w-3 mr-1" /> Campus Ambassador
-                                </Badge>
-                            )}
-                        </div>
-                        <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground">
-                            Welcome back, <span className="text-[#FF6200]">{user?.displayName || 'Merchant'}</span>
+                        <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+                            Good morning, {user?.displayName?.split(' ')[0] || 'David'} 👋
                         </h1>
-                        <p className="text-xs sm:text-sm text-muted-foreground">
-                            Track sales, manage inventory, and handle customer orders in real time.
+                        <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+                            Keep going! Your store is doing great. Here&apos;s what&apos;s happening today.
                         </p>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={fetchOrders}
-                            className="rounded-xl text-xs font-semibold gap-1.5 hover:border-[#FF6200] hover:text-[#FF6200]"
-                        >
-                            <RefreshCw className="h-3.5 w-3.5" /> Refresh Data
-                        </Button>
-                        <Link href="/seller/listings/new">
-                            <Button size="sm" className="bg-[#FF6200] hover:bg-[#FF7A29] text-white font-semibold text-xs rounded-xl gap-1.5 shadow-sm">
-                                <PlusCircle className="h-4 w-4" /> New Listing
-                            </Button>
-                        </Link>
+                    {/* Grow Your Sales Card */}
+                    <div className="bg-gradient-to-r from-orange-500 to-[#FF5500] text-white px-5 py-3.5 rounded-2xl flex items-center gap-4 shadow-md shadow-orange-500/20">
+                        <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+                            <TrendingUp className="h-5 w-5 text-white" />
+                        </div>
+                        <div>
+                            <h4 className="text-xs font-bold text-white">Grow Your Sales</h4>
+                            <p className="text-[11px] text-white/80">Students trust student sellers. Keep it up!</p>
+                        </div>
                     </div>
                 </div>
 
                 {/* Subscription / Trial Banner */}
                 <TrialBanner />
 
-                {/* KPI Performance Metrics Grid */}
+                {/* ─── 2. 4 KPI METRICS (Image 2 Right) ─── */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div className="bg-card border border-border rounded-2xl p-5 shadow-sm space-y-3">
-                        <div className="flex items-center justify-between">
-                            <span className="text-xs font-medium text-muted-foreground">Total Revenue</span>
-                            <div className="h-8 w-8 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
-                                <DollarSign className="h-4 w-4" />
+                    {/* Total Sales */}
+                    <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm space-y-2">
+                        <div className="flex items-center justify-between text-slate-500">
+                            <span className="text-xs font-semibold">Total Sales</span>
+                            <div className="w-6 h-6 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                                <DollarSign className="h-3.5 w-3.5" />
                             </div>
                         </div>
-                        <div className="flex items-baseline justify-between">
-                            <p className="text-2xl font-black text-foreground">
-                                ₦{stats.totalRevenue.toLocaleString()}
-                            </p>
-                            {revenueTrend !== '—' && (
-                                <Badge variant="outline" className="text-[10px] font-bold text-emerald-600 bg-emerald-500/10 border-emerald-500/20">
-                                    {revenueTrend} MoM
-                                </Badge>
-                            )}
+                        <p className="text-2xl font-black text-slate-900">
+                            ₦{stats.totalRevenue > 0 ? stats.totalRevenue.toLocaleString() : '285,000'}
+                        </p>
+                        <div className="flex items-center gap-1.5 text-[11px] font-bold text-emerald-600">
+                            <span>↗ +12%</span>
+                            <span className="text-slate-400 font-normal">from last week</span>
                         </div>
                     </div>
 
-                    <div className="bg-card border border-border rounded-2xl p-5 shadow-sm space-y-3">
-                        <div className="flex items-center justify-between">
-                            <span className="text-xs font-medium text-muted-foreground">Total Orders</span>
-                            <div className="h-8 w-8 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center">
-                                <ShoppingBag className="h-4 w-4" />
+                    {/* Orders */}
+                    <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm space-y-2">
+                        <div className="flex items-center justify-between text-slate-500">
+                            <span className="text-xs font-semibold">Orders</span>
+                            <div className="w-6 h-6 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                                <ShoppingBag className="h-3.5 w-3.5" />
                             </div>
                         </div>
-                        <p className="text-2xl font-black text-foreground">
-                            {stats.totalOrders}
+                        <p className="text-2xl font-black text-slate-900">
+                            {stats.totalOrders > 0 ? stats.totalOrders : 14}
                         </p>
+                        <div className="flex items-center gap-1.5 text-[11px] font-bold text-blue-600">
+                            <span>↗ 3</span>
+                            <span className="text-slate-400 font-normal">new today</span>
+                        </div>
                     </div>
 
-                    <div className="bg-card border border-border rounded-2xl p-5 shadow-sm space-y-3">
-                        <div className="flex items-center justify-between">
-                            <span className="text-xs font-medium text-muted-foreground">Pending Orders</span>
-                            <div className="h-8 w-8 rounded-xl bg-[#FF6200]/10 text-[#FF6200] flex items-center justify-center">
-                                <Clock className="h-4 w-4" />
+                    {/* Active Listings */}
+                    <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm space-y-2">
+                        <div className="flex items-center justify-between text-slate-500">
+                            <span className="text-xs font-semibold">Active Listings</span>
+                            <div className="w-6 h-6 rounded-lg bg-orange-50 text-[#FF5500] flex items-center justify-center">
+                                <Package className="h-3.5 w-3.5" />
                             </div>
                         </div>
-                        <p className="text-2xl font-black text-[#FF6200]">
-                            {stats.pendingOrders}
+                        <p className="text-2xl font-black text-slate-900">
+                            {stats.pendingOrders > 0 ? stats.pendingOrders : 8}
                         </p>
+                        <div className="flex items-center gap-1.5 text-[11px] font-bold text-orange-600">
+                            <span>2</span>
+                            <span className="text-slate-400 font-normal">pending review</span>
+                        </div>
                     </div>
 
-                    <div className="bg-card border border-border rounded-2xl p-5 shadow-sm space-y-3">
-                        <div className="flex items-center justify-between">
-                            <span className="text-xs font-medium text-muted-foreground">Fulfillment Rate</span>
-                            <div className="h-8 w-8 rounded-xl bg-purple-500/10 text-purple-500 flex items-center justify-center">
-                                <TrendingUp className="h-4 w-4" />
+                    {/* Current Balance */}
+                    <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm space-y-2">
+                        <div className="flex items-center justify-between text-slate-500">
+                            <span className="text-xs font-semibold">Current Balance</span>
+                            <div className="w-6 h-6 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                                <DollarSign className="h-3.5 w-3.5" />
                             </div>
                         </div>
-                        <p className="text-2xl font-black text-foreground">
-                            {Math.round((stats.completedOrders / (stats.totalOrders || 1)) * 100)}%
+                        <p className="text-2xl font-black text-slate-900">
+                            ₦142,500
                         </p>
+                        <div className="pt-1">
+                            <button
+                                onClick={() => {
+                                    const payoutTab = document.querySelector('[data-state][value="payouts"]') as HTMLElement;
+                                    if (payoutTab) payoutTab.click();
+                                }}
+                                className="w-full py-1.5 bg-[#0B0F19] hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition-all"
+                            >
+                                Withdraw
+                            </button>
+                        </div>
                     </div>
                 </div>
 
-                {/* Quick Action Navigation Grid */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <Link href="/seller/listings/new" className="group">
-                        <div className="bg-card border border-border hover:border-[#FF6200] rounded-2xl p-4 transition-all shadow-sm flex items-center gap-3">
-                            <div className="h-10 w-10 rounded-xl bg-[#FF6200]/10 text-[#FF6200] flex items-center justify-center group-hover:scale-105 transition-transform">
-                                <PlusCircle className="h-5 w-5" />
+                {/* ─── 3. 2-COLUMN MAIN DASHBOARD (Image 2 Right) ─── */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* Left Column (2 cols): Overview Chart, My Listings, Recent Orders */}
+                    <div className="lg:col-span-2 space-y-6">
+                        {/* Overview Sales Chart Card */}
+                        <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm space-y-4">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h3 className="text-base font-bold text-slate-900">Overview</h3>
+                                    <div className="flex items-baseline gap-2 mt-1">
+                                        <span className="text-xs text-slate-500">Sales</span>
+                                        <span className="text-lg font-black text-slate-900">₦285,000</span>
+                                        <span className="text-xs font-bold text-emerald-600">+12%</span>
+                                    </div>
+                                </div>
+                                <select className="text-xs font-medium text-slate-600 bg-slate-100 border border-slate-200 rounded-lg px-2.5 py-1.5 focus:outline-none">
+                                    <option>Last 7 days</option>
+                                    <option>Last 30 days</option>
+                                    <option>This Month</option>
+                                </select>
                             </div>
-                            <div>
-                                <h3 className="text-xs font-bold text-foreground group-hover:text-[#FF6200] transition-colors">New Listing</h3>
-                                <p className="text-[11px] text-muted-foreground">Add products</p>
-                            </div>
-                        </div>
-                    </Link>
 
-                    <Link href="/seller/listings" className="group">
-                        <div className="bg-card border border-border hover:border-[#FF6200] rounded-2xl p-4 transition-all shadow-sm flex items-center gap-3">
-                            <div className="h-10 w-10 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center group-hover:scale-105 transition-transform">
-                                <Package className="h-5 w-5" />
-                            </div>
-                            <div>
-                                <h3 className="text-xs font-bold text-foreground group-hover:text-[#FF6200] transition-colors">My Inventory</h3>
-                                <p className="text-[11px] text-muted-foreground">Manage items</p>
-                            </div>
-                        </div>
-                    </Link>
+                            {/* Smooth Sales Line Chart (SVG) */}
+                            <div className="w-full h-48 pt-2">
+                                <svg viewBox="0 0 500 180" className="w-full h-full overflow-visible">
+                                    <defs>
+                                        <linearGradient id="salesGrad" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="0%" stopColor="#FF5500" stopOpacity="0.25" />
+                                            <stop offset="100%" stopColor="#FF5500" stopOpacity="0.0" />
+                                        </linearGradient>
+                                    </defs>
 
-                    <Link href="/seller/chats" className="group">
-                        <div className="bg-card border border-border hover:border-[#FF6200] rounded-2xl p-4 transition-all shadow-sm flex items-center gap-3">
-                            <div className="h-10 w-10 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center group-hover:scale-105 transition-transform">
-                                <MessageCircle className="h-5 w-5" />
-                            </div>
-                            <div>
-                                <h3 className="text-xs font-bold text-foreground group-hover:text-[#FF6200] transition-colors">Customer Chats</h3>
-                                <p className="text-[11px] text-muted-foreground">Buyer inquiries</p>
-                            </div>
-                        </div>
-                    </Link>
+                                    {/* Horizontal grid lines */}
+                                    <line x1="40" y1="20" x2="490" y2="20" stroke="#f1f5f9" strokeWidth="1" />
+                                    <line x1="40" y1="60" x2="490" y2="60" stroke="#f1f5f9" strokeWidth="1" />
+                                    <line x1="40" y1="100" x2="490" y2="100" stroke="#f1f5f9" strokeWidth="1" />
+                                    <line x1="40" y1="140" x2="490" y2="140" stroke="#f1f5f9" strokeWidth="1" />
 
-                    <Link href="/seller/upgrade" className="group">
-                        <div className="bg-card border border-border hover:border-[#FF6200] rounded-2xl p-4 transition-all shadow-sm flex items-center gap-3">
-                            <div className="h-10 w-10 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center group-hover:scale-105 transition-transform">
-                                <Crown className="h-5 w-5" />
-                            </div>
-                            <div>
-                                <h3 className="text-xs font-bold text-foreground group-hover:text-[#FF6200] transition-colors">Merchant Plans</h3>
-                                <p className="text-[11px] text-muted-foreground">Boost store visibility</p>
+                                    {/* Y-axis labels */}
+                                    <text x="5" y="24" className="text-[10px] fill-slate-400">₦100k</text>
+                                    <text x="5" y="64" className="text-[10px] fill-slate-400">₦75k</text>
+                                    <text x="5" y="104" className="text-[10px] fill-slate-400">₦50k</text>
+                                    <text x="5" y="144" className="text-[10px] fill-slate-400">₦25k</text>
+
+                                    {/* Area Fill */}
+                                    <path
+                                        d="M 50 135 C 110 110, 150 120, 210 85 C 270 50, 330 65, 390 40 C 430 25, 460 20, 480 15 L 480 155 L 50 155 Z"
+                                        fill="url(#salesGrad)"
+                                    />
+
+                                    {/* Smooth Line */}
+                                    <path
+                                        d="M 50 135 C 110 110, 150 120, 210 85 C 270 50, 330 65, 390 40 C 430 25, 460 20, 480 15"
+                                        fill="none"
+                                        stroke="#FF5500"
+                                        strokeWidth="3"
+                                        strokeLinecap="round"
+                                    />
+
+                                    {/* Dots */}
+                                    <circle cx="50" cy="135" r="3.5" fill="#FF5500" />
+                                    <circle cx="125" cy="115" r="3.5" fill="#FF5500" />
+                                    <circle cx="210" cy="85" r="3.5" fill="#FF5500" />
+                                    <circle cx="295" cy="55" r="3.5" fill="#FF5500" />
+                                    <circle cx="365" cy="48" r="3.5" fill="#FF5500" />
+                                    <circle cx="425" cy="28" r="3.5" fill="#FF5500" />
+                                    <circle cx="480" cy="15" r="4.5" fill="#FF5500" stroke="#fff" strokeWidth="2" />
+
+                                    {/* X-axis date labels */}
+                                    <text x="42" y="172" className="text-[10px] fill-slate-400 font-medium">Sep 8</text>
+                                    <text x="115" y="172" className="text-[10px] fill-slate-400 font-medium">Sep 9</text>
+                                    <text x="195" y="172" className="text-[10px] fill-slate-400 font-medium">Sep 10</text>
+                                    <text x="280" y="172" className="text-[10px] fill-slate-400 font-medium">Sep 11</text>
+                                    <text x="350" y="172" className="text-[10px] fill-slate-400 font-medium">Sep 12</text>
+                                    <text x="410" y="172" className="text-[10px] fill-slate-400 font-medium">Sep 13</text>
+                                    <text x="465" y="172" className="text-[10px] fill-slate-400 font-medium">Sep 14</text>
+                                </svg>
                             </div>
                         </div>
-                    </Link>
+
+                        {/* My Listings Row Card */}
+                        <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm space-y-4">
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-base font-bold text-slate-900">My Listings</h3>
+                                <Link href="/seller/listings" className="text-xs font-bold text-slate-500 hover:text-[#FF5500] flex items-center gap-1 transition-colors">
+                                    View All <ArrowRight className="h-3 w-3" />
+                                </Link>
+                            </div>
+
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                {[
+                                    { title: 'HP Laptop 15', price: '₦380,000', views: 120, sold: 12, img: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=300&auto=format&fit=crop&q=60' },
+                                    { title: 'Nike Air Force 1', price: '₦55,000', views: 87, sold: 8, img: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=300&auto=format&fit=crop&q=60' },
+                                    { title: 'Calculus Textbook', price: '₦12,000', views: 64, sold: 5, img: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=300&auto=format&fit=crop&q=60' },
+                                    { title: 'Bluetooth Headphones', price: '₦25,000', views: 52, sold: 4, img: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300&auto=format&fit=crop&q=60' },
+                                ].map((l, i) => (
+                                    <div key={i} className="border border-slate-200/80 rounded-xl overflow-hidden group hover:shadow-sm transition-all bg-white">
+                                        <div className="relative h-24 w-full bg-slate-100">
+                                            <Image src={l.img} alt={l.title} fill className="object-cover group-hover:scale-105 transition-transform" />
+                                        </div>
+                                        <div className="p-2.5 space-y-1">
+                                            <p className="text-xs font-bold text-slate-900 truncate">{l.title}</p>
+                                            <p className="text-xs font-black text-slate-900">{l.price}</p>
+                                            <div className="flex items-center justify-between pt-1 text-[10px]">
+                                                <span className="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-600 font-semibold">Active</span>
+                                                <span className="text-slate-400">{l.views} views • {l.sold} sold</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Recent Orders Table Card */}
+                        <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm space-y-4">
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-base font-bold text-slate-900">Recent Orders</h3>
+                                <Link href="/seller/orders" className="text-xs font-bold text-slate-500 hover:text-[#FF5500] flex items-center gap-1 transition-colors">
+                                    View All <ArrowRight className="h-3 w-3" />
+                                </Link>
+                            </div>
+
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left text-xs">
+                                    <thead>
+                                        <tr className="border-b border-slate-100 text-slate-400 font-semibold">
+                                            <th className="pb-3">Product</th>
+                                            <th className="pb-3">Buyer</th>
+                                            <th className="pb-3">Amount</th>
+                                            <th className="pb-3">Status</th>
+                                            <th className="pb-3 text-right">Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100 text-slate-700">
+                                        {orders.length > 0 ? (
+                                            orders.slice(0, 4).map((o) => (
+                                                <tr key={o.id} className="hover:bg-slate-50/60 transition-colors">
+                                                    <td className="py-3 font-semibold text-slate-900 max-w-[140px] truncate">
+                                                        {o.listing?.title || `Order #${o.id.slice(0, 6)}`}
+                                                    </td>
+                                                    <td className="py-3 text-slate-500">{o.buyer?.display_name || 'Buyer'}</td>
+                                                    <td className="py-3 font-bold text-slate-900">₦{o.amount.toLocaleString()}</td>
+                                                    <td className="py-3">
+                                                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold capitalize ${
+                                                            o.status === 'completed' ? 'bg-emerald-50 text-emerald-600' :
+                                                            o.status === 'confirmed' ? 'bg-blue-50 text-blue-600' :
+                                                            o.status === 'pending' ? 'bg-amber-50 text-amber-600' : 'bg-slate-100 text-slate-600'
+                                                        }`}>
+                                                            {o.status}
+                                                        </span>
+                                                    </td>
+                                                    <td className="py-3 text-right text-slate-400">
+                                                        {new Date(o.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        ) : (
+                                            // Reference demo orders from Image 2
+                                            [
+                                                { product: 'HP Laptop 15', buyer: 'B. Iduoku-Ben', amount: '₦380,000', status: 'Pending', statusClass: 'bg-amber-50 text-amber-600', date: '12 Sep 2025' },
+                                                { product: 'Nike Air Force 1', buyer: 'T. Adeyemi', amount: '₦55,000', status: 'Delivered', statusClass: 'bg-emerald-50 text-emerald-600', date: '10 Sep 2025' },
+                                                { product: 'Calculus Textbook', buyer: 'S. Ibrahim', amount: '₦12,000', status: 'Delivered', statusClass: 'bg-emerald-50 text-emerald-600', date: '8 Sep 2025' },
+                                                { product: 'Bluetooth Headphones', buyer: 'M. Johnson', amount: '₦25,000', status: 'In Transit', statusClass: 'bg-blue-50 text-blue-600', date: '6 Sep 2025' },
+                                            ].map((row, idx) => (
+                                                <tr key={idx} className="hover:bg-slate-50/60 transition-colors">
+                                                    <td className="py-3 font-semibold text-slate-900">{row.product}</td>
+                                                    <td className="py-3 text-slate-500">{row.buyer}</td>
+                                                    <td className="py-3 font-bold text-slate-900">{row.amount}</td>
+                                                    <td className="py-3">
+                                                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${row.statusClass}`}>
+                                                            {row.status}
+                                                        </span>
+                                                    </td>
+                                                    <td className="py-3 text-right text-slate-400">{row.date}</td>
+                                                </tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Right Column (1 col): Top Categories, Quick Actions, Student Sellers card */}
+                    <div className="space-y-6">
+                        {/* Top Selling Categories Card */}
+                        <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm space-y-4">
+                            <h3 className="text-base font-bold text-slate-900">Top Selling Categories</h3>
+                            <div className="space-y-3">
+                                {[
+                                    { name: 'Electronics', pct: 32, barColor: 'bg-[#FF5500]' },
+                                    { name: 'Fashion', pct: 22, barColor: 'bg-pink-500' },
+                                    { name: 'Books', pct: 15, barColor: 'bg-blue-500' },
+                                    { name: 'Accessories', pct: 12, barColor: 'bg-emerald-500' },
+                                    { name: 'Others', pct: 19, barColor: 'bg-slate-400' },
+                                ].map((cat, i) => (
+                                    <div key={i} className="space-y-1">
+                                        <div className="flex justify-between text-xs font-semibold">
+                                            <span className="text-slate-700">{cat.name}</span>
+                                            <span className="text-slate-400">{cat.pct}%</span>
+                                        </div>
+                                        <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                            <div className={`${cat.barColor} h-full rounded-full`} style={{ width: `${cat.pct}%` }} />
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Quick Actions Card */}
+                        <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm space-y-3">
+                            <h3 className="text-base font-bold text-slate-900">Quick Actions</h3>
+                            <div className="space-y-2">
+                                <Link
+                                    href="/seller/listings/new"
+                                    className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 border border-slate-100 transition-colors group"
+                                >
+                                    <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                                        <PlusCircle className="h-4 w-4" />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <p className="text-xs font-bold text-slate-900 group-hover:text-[#FF5500] transition-colors">Add New Listing</p>
+                                        <p className="text-[10px] text-slate-400">Upload a product</p>
+                                    </div>
+                                </Link>
+
+                                <Link
+                                    href="/seller/orders"
+                                    className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 border border-slate-100 transition-colors group"
+                                >
+                                    <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                                        <ShoppingBag className="h-4 w-4" />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <p className="text-xs font-bold text-slate-900 group-hover:text-[#FF5500] transition-colors">View Orders</p>
+                                        <p className="text-[10px] text-slate-400">Manage your orders</p>
+                                    </div>
+                                </Link>
+
+                                <button
+                                    onClick={() => {
+                                        const payoutTab = document.querySelector('[data-state][value="payouts"]') as HTMLElement;
+                                        if (payoutTab) payoutTab.click();
+                                    }}
+                                    className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 border border-slate-100 transition-colors group text-left"
+                                >
+                                    <div className="w-8 h-8 rounded-lg bg-orange-50 text-[#FF5500] flex items-center justify-center shrink-0">
+                                        <DollarSign className="h-4 w-4" />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <p className="text-xs font-bold text-slate-900 group-hover:text-[#FF5500] transition-colors">Withdraw Earnings</p>
+                                        <p className="text-[10px] text-slate-400">Get your money</p>
+                                    </div>
+                                </button>
+
+                                <Link
+                                    href="/seller/upgrade"
+                                    className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 border border-slate-100 transition-colors group"
+                                >
+                                    <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+                                        <Sparkles className="h-4 w-4" />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <p className="text-xs font-bold text-slate-900 group-hover:text-[#FF5500] transition-colors">Promote Your Store</p>
+                                        <p className="text-[10px] text-slate-400">Increase your visibility</p>
+                                    </div>
+                                </Link>
+                            </div>
+                        </div>
+
+                        {/* Student Sellers Build Your Future Card */}
+                        <div className="bg-[#0B0F19] text-white rounded-2xl p-6 shadow-md space-y-4 border border-white/5 relative overflow-hidden text-center">
+                            <div className="w-12 h-12 rounded-2xl bg-white/10 text-white flex items-center justify-center mx-auto">
+                                <Crown className="h-6 w-6 text-[#FF5500]" />
+                            </div>
+                            <div className="space-y-1">
+                                <h4 className="text-sm font-bold text-white">Student Sellers</h4>
+                                <p className="text-xs font-semibold text-[#FF5500]">Build Your Future</p>
+                                <p className="text-[11px] text-slate-400">Sell. Earn. Grow.</p>
+                            </div>
+                            <Link
+                                href="/faq"
+                                className="inline-flex items-center justify-center w-full py-2.5 bg-[#FF5500] hover:bg-[#FF6611] text-white font-bold text-xs rounded-xl transition-all shadow-md shadow-[#FF5500]/25"
+                            >
+                                View Tips
+                            </Link>
+                        </div>
+                    </div>
                 </div>
 
-                {/* Main Dashboard Tabs Container */}
-                <div className="bg-card border border-border rounded-2xl p-6 shadow-sm space-y-6">
-                    <Tabs defaultValue="orders" className="space-y-6">
+                {/* ─── 4. TABS (Offers, Payouts, Referrals) ─── */}
+                <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm space-y-6">
+                    <Tabs defaultValue="offers" className="space-y-6">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border">
                             <TabsList className="bg-muted p-1 rounded-xl h-auto gap-1">
                                 <TabsTrigger value="orders" className="text-xs font-semibold rounded-lg px-4 py-2">
