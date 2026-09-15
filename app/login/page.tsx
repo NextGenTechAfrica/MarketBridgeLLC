@@ -2,13 +2,14 @@
 
 import React, { useState, useEffect, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
-import { Eye, EyeOff, Loader2, Lock, User as UserIcon, Globe, AlertTriangle, ArrowRight, ArrowLeft, BookOpen, ShieldAlert } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Lock, User as UserIcon, Globe, AlertTriangle, ArrowRight, ArrowLeft, Store, ShieldAlert } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { normalizeIdentifier } from '@/lib/auth/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
+import { Logo } from '@/components/logo';
 
 type Step = 'role' | 'buyer-credentials' | 'seller-google';
 type Role = 'buyer' | 'seller';
@@ -124,228 +125,344 @@ function LoginContent() {
     };
 
     if (loading) {
-        return <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center"><Loader2 className="h-10 w-10 animate-spin text-orange-500" /></div>;
+        return <div className="min-h-screen bg-[#0A1628] flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-[#FF6200]" /></div>;
     }
+
+    // ─── Shared layout wrapper ────────────────────────────────────────────────
+    const AuthShell = ({ children }: { children: React.ReactNode }) => (
+        <div className="min-h-screen flex bg-[#F7F7F7] dark:bg-[#0B1120]">
+            {/* Left panel — branding */}
+            <div className="hidden lg:flex flex-col justify-between w-[420px] shrink-0 bg-[#0A1628] p-10 relative overflow-hidden">
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_hsla(23,100%,50%,0.12)_0%,_transparent_60%)] pointer-events-none" />
+                <div className="relative z-10">
+                    <Logo variant="sidebar" size="md" />
+                </div>
+                <div className="relative z-10 space-y-6">
+                    <div className="space-y-2">
+                        <h2 className="text-2xl font-bold text-white leading-tight">
+                            Nigeria's trusted<br />
+                            <span className="text-[#FF6200]">marketplace.</span>
+                        </h2>
+                        <p className="text-white/50 text-sm leading-relaxed">
+                            Buy and sell securely with verified sellers across campuses and communities.
+                        </p>
+                    </div>
+                    <div className="flex flex-col gap-3">
+                        {[
+                            { label: 'Escrow-protected payments' },
+                            { label: 'Verified sellers' },
+                            { label: 'Trusted campus community' },
+                        ].map((item) => (
+                            <div key={item.label} className="flex items-center gap-2.5 text-sm text-white/60">
+                                <span className="h-1.5 w-1.5 rounded-full bg-[#FF6200] shrink-0" />
+                                {item.label}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+                <p className="relative z-10 text-white/20 text-xs">A platform operated by NextGen Tech</p>
+            </div>
+
+            {/* Right panel — form */}
+            <div className="flex-1 flex flex-col items-center justify-center p-6 md:p-10 overflow-y-auto">
+                <div className="w-full max-w-[420px]">
+                    {/* Mobile logo */}
+                    <div className="lg:hidden mb-8 flex justify-center">
+                        <Logo size="lg" />
+                    </div>
+                    {children}
+                </div>
+            </div>
+        </div>
+    );
 
     // ─── STEP 1: Role Selector ────────────────────────────────────────────────
     if (currentStep === 'role') {
         return (
-            <div className="min-h-screen flex flex-col justify-center items-center p-4 py-12 bg-[#0a0a0a] text-white relative overflow-hidden">
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-orange-500/10 rounded-full blur-[150px] pointer-events-none z-0" />
-                <div className="w-full max-w-xl relative z-10 bg-[#111] border border-zinc-800 rounded-3xl p-6 md:p-10 shadow-2xl">
-                    <div className="text-center mb-8 space-y-3">
-                        <Link href="/" className="inline-flex items-center text-gray-400 hover:text-white uppercase text-[10px] font-black tracking-widest transition-colors mb-2">
-                            <ArrowLeft className="mr-2 h-4 w-4" /> Back to Home
-                        </Link>
-                        <h1 className="text-3xl sm:text-4xl font-black uppercase tracking-tighter italic leading-none">
-                            Log <span className="text-orange-500">In</span>
-                        </h1>
-                        <p className="text-gray-400 font-bold uppercase tracking-[0.2em] text-[10px] italic">Access your account</p>
+            <AuthShell>
+                <div className="space-y-6">
+                    <div className="space-y-1">
+                        <h1 className="text-2xl font-bold text-foreground">Welcome back</h1>
+                        <p className="text-sm text-muted-foreground">Sign in to your MarketBridge account</p>
                     </div>
 
-                    {/* Symmetrical Dual Selector Tabs */}
-                    <div className="flex bg-[#1a1a1a] p-1.5 rounded-2xl border border-zinc-800 mb-8">
-                        <button 
+                    {/* Buyer / Seller tab */}
+                    <div className="flex bg-zinc-100 dark:bg-white/5 p-1 rounded-xl border border-zinc-200 dark:border-white/10">
+                        <button
                             type="button"
                             onClick={() => { setActiveTab('buyer'); setRole('buyer'); }}
                             className={cn(
-                                "flex-1 py-3 text-xs font-black uppercase tracking-widest rounded-xl transition-all flex items-center justify-center gap-2",
-                                activeTab === 'buyer' ? "bg-orange-500 text-black shadow-lg" : "text-gray-400 hover:text-white"
+                                "flex-1 py-2.5 text-sm font-semibold rounded-lg transition-all flex items-center justify-center gap-2",
+                                activeTab === 'buyer'
+                                    ? "bg-white dark:bg-[#0F1A2E] text-foreground shadow-sm border border-zinc-200 dark:border-white/10"
+                                    : "text-muted-foreground hover:text-foreground"
                             )}
                         >
-                            <UserIcon className="h-3.5 w-3.5" />
+                            <UserIcon className="h-4 w-4" />
                             Buyer
                         </button>
-                        <button 
+                        <button
                             type="button"
                             onClick={() => { setActiveTab('seller'); setRole('seller'); }}
                             className={cn(
-                                "flex-1 py-3 text-xs font-black uppercase tracking-widest rounded-xl transition-all flex items-center justify-center gap-2",
-                                activeTab === 'seller' ? "bg-orange-500 text-black shadow-lg" : "text-gray-400 hover:text-white"
+                                "flex-1 py-2.5 text-sm font-semibold rounded-lg transition-all flex items-center justify-center gap-2",
+                                activeTab === 'seller'
+                                    ? "bg-white dark:bg-[#0F1A2E] text-foreground shadow-sm border border-zinc-200 dark:border-white/10"
+                                    : "text-muted-foreground hover:text-foreground"
                             )}
                         >
-                            <BookOpen className="h-3.5 w-3.5" />
+                            <Store className="h-4 w-4" />
                             Seller
                         </button>
                     </div>
 
                     {activeTab === 'buyer' ? (
-                        <div className="space-y-4">
-                            <Button 
-                                type="button" 
-                                onClick={() => handleGoogleLogin('buyer')} 
+                        <div className="space-y-3">
+                            {/* Google */}
+                            <Button
+                                type="button"
+                                onClick={() => handleGoogleLogin('buyer')}
                                 disabled={googleLoadingRole === 'buyer'}
-                                className="w-full py-6 bg-white text-black hover:bg-gray-200 font-black uppercase tracking-wider text-[11px] rounded-xl flex items-center justify-center gap-2"
+                                className="w-full h-11 bg-white hover:bg-zinc-50 text-zinc-800 border border-zinc-200 shadow-sm font-semibold text-sm rounded-xl flex items-center justify-center gap-2.5 transition-all"
                             >
-                                {googleLoadingRole === 'buyer' ? <Loader2 className="animate-spin h-5 w-5" /> : <><Globe className="h-4.5 w-4.5" /> Google Sign-In</>}
+                                {googleLoadingRole === 'buyer' ? <Loader2 className="animate-spin h-4 w-4" /> : (
+                                    <>
+                                        <svg className="h-4 w-4" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" /><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" /><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" /><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" /></svg>
+                                        Continue with Google
+                                    </>
+                                )}
                             </Button>
 
-                            <div className="relative py-4 flex items-center justify-center">
-                                <div className="absolute inset-x-0 h-px bg-zinc-800" />
-                                <span className="relative bg-[#111] px-4 text-[9px] font-black uppercase tracking-[0.3em] text-gray-500">Or</span>
+                            <div className="relative flex items-center justify-center py-1">
+                                <div className="absolute inset-x-0 h-px bg-zinc-200 dark:bg-white/10" />
+                                <span className="relative bg-[#F7F7F7] dark:bg-[#0B1120] px-3 text-xs text-muted-foreground">or</span>
                             </div>
 
-                            <Button 
+                            <Button
                                 type="button"
                                 onClick={() => { setRole('buyer'); setCurrentStep('buyer-credentials'); }}
-                                className="w-full py-6 border border-[#2a2a2a] bg-[#1a1a1a] text-white hover:bg-[#2a2a2a] font-black uppercase tracking-widest text-[11px] rounded-xl"
+                                variant="outline"
+                                className="w-full h-11 font-semibold text-sm rounded-xl border-zinc-200 dark:border-white/10 hover:bg-zinc-50 dark:hover:bg-white/5"
                             >
-                                Log In with Email
+                                Sign in with Email
                             </Button>
                         </div>
                     ) : (
-                        <div className="space-y-6">
-                            <div className="text-center mb-4">
-                                <p className="text-gray-400 text-xs leading-relaxed">
-                                    To access your merchant store, sign in with your verified university Google account (.edu.ng).
+                        <div className="space-y-4">
+                            <div className="p-4 bg-[#FF6200]/5 border border-[#FF6200]/20 rounded-xl">
+                                <p className="text-sm text-foreground/70 leading-relaxed">
+                                    Sellers sign in with their verified university Google account to access their store.
                                 </p>
                             </div>
-
-                            <Button 
-                                type="button" 
-                                onClick={() => handleGoogleLogin('seller')} 
+                            <Button
+                                type="button"
+                                onClick={() => handleGoogleLogin('seller')}
                                 disabled={googleLoadingRole === 'seller'}
-                                className="w-full py-6 bg-orange-500 text-black hover:bg-orange-600 font-black uppercase tracking-wider text-[11px] rounded-xl shadow-[0_10px_30px_rgba(255,98,0,0.2)] flex items-center justify-center gap-2"
+                                className="w-full h-11 bg-[#FF6200] hover:bg-[#FF7A29] text-white font-semibold text-sm rounded-xl flex items-center justify-center gap-2.5 shadow-[0_4px_20px_rgba(255,98,0,0.25)] transition-all"
                             >
-                                {googleLoadingRole === 'seller' ? <Loader2 className="animate-spin h-5 w-5" /> : <><Globe className="h-4.5 w-4.5" /> Google Sign-In</>}
+                                {googleLoadingRole === 'seller' ? <Loader2 className="animate-spin h-4 w-4" /> : (
+                                    <>
+                                        <svg className="h-4 w-4 fill-white" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" /><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" /><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" /><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" /></svg>
+                                        Sign in with Google
+                                    </>
+                                )}
                             </Button>
                         </div>
                     )}
 
-                    <div className="text-center pt-6 mt-6 border-t border-zinc-800">
-                        <p className="text-gray-450 font-bold text-xs uppercase tracking-widest">
-                            No account?{' '}
-                            <Link href="/signup" className="text-orange-500 font-black ml-2 hover:opacity-80">Sign Up</Link>
-                        </p>
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
-    // ─── STEP 2b: Seller Google-Only ──────────────────────────────────────────
-    if (currentStep === 'seller-google') {
-        return (
-            <div className="min-h-screen flex flex-col justify-center items-center p-4 py-12 bg-[#0a0a0a] text-white relative overflow-hidden">
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-orange-500/10 rounded-full blur-[150px] pointer-events-none z-0" />
-                <div className="w-full max-w-lg relative z-10 bg-[#1a1a1a] border border-[#2a2a2a] rounded-3xl p-6 md:p-10 lg:p-14 shadow-2xl">
-                    <div className="text-center mb-10 space-y-4">
-                        <Button variant="ghost" onClick={() => setCurrentStep('role')} className="text-gray-400 hover:text-white uppercase text-[10px] font-black tracking-widest px-0 mb-4">
-                            <ArrowLeft className="mr-2 h-4 w-4" /> Go Back
-                        </Button>
-                        <h1 className="text-3xl sm:text-4xl font-black uppercase tracking-tighter italic leading-none">
-                            Seller <span className="text-orange-500">Sign In</span>
-                        </h1>
-                        <p className="text-gray-400 font-bold text-[10px] leading-relaxed max-w-sm mx-auto">
-                            Sellers sign in securely with their verified university Google account.
-                        </p>
-                    </div>
-
                     {error && (
-                        <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-4 flex items-center gap-4 mb-8">
-                            <AlertTriangle className="h-5 w-5 text-red-500 shrink-0" />
-                            <p className="text-red-400 text-[10px] font-bold uppercase tracking-widest">{error}</p>
+                        <div className="p-3.5 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl flex items-center gap-3">
+                            <AlertTriangle className="h-4 w-4 text-red-500 shrink-0" />
+                            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
                         </div>
                     )}
 
-                    <Button type="button" onClick={() => handleGoogleLogin('seller')} disabled={googleLoadingRole !== null}
-                        className="w-full h-16 bg-orange-500 text-black hover:bg-orange-600 font-black uppercase tracking-[0.2em] text-sm rounded-xl shadow-[0_10px_30px_rgba(255,98,0,0.3)] flex items-center justify-center gap-3 mb-6">
-                        {googleLoadingRole ? <Loader2 className="animate-spin h-5 w-5" /> : <><Globe className="h-5 w-5" /> Sign In with Google</>}
-                    </Button>
-
-                    <div className="text-center">
-                        <p className="text-gray-500 text-[9px] font-bold">
-                            No account? <Link href="/signup" className="text-orange-500 hover:underline">Sign Up as Seller</Link>
-                        </p>
-                    </div>
+                    <p className="text-center text-sm text-muted-foreground">
+                        No account?{' '}
+                        <Link href="/signup" className="text-[#FF6200] font-semibold hover:underline">Create one free</Link>
+                    </p>
                 </div>
-            </div>
+            </AuthShell>
         );
     }
 
-    // ─── STEP 2a: Buyer Credentials Form ──────────────────────────────────────
-    return (
-        <div className="min-h-screen flex flex-col justify-center items-center p-4 py-12 bg-[#0a0a0a] text-white relative overflow-hidden">
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-orange-500/10 rounded-full blur-[150px] pointer-events-none z-0" />
-            <div className="w-full max-w-lg relative z-10 bg-[#1a1a1a] border border-[#2a2a2a] rounded-3xl p-6 md:p-10 lg:p-14 shadow-2xl">
-                <div className="text-center mb-12 space-y-4">
-                    <div className="flex justify-between items-center mb-6">
-                        <Button variant="ghost" onClick={() => setCurrentStep('role')} className="text-gray-400 hover:text-white uppercase text-[10px] font-black tracking-widest px-0">
-                            <ArrowLeft className="mr-2 h-4 w-4" /> Go Back
-                        </Button>
+    // ─── STEP 2b: Seller Google-Only (direct deep-link) ───────────────────────
+    if (currentStep === 'seller-google') {
+        return (
+            <AuthShell>
+                <div className="space-y-6">
+                    <button
+                        type="button"
+                        onClick={() => setCurrentStep('role')}
+                        className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                        <ArrowLeft className="h-4 w-4" /> Back
+                    </button>
+                    <div className="space-y-1">
+                        <h1 className="text-2xl font-bold text-foreground">Seller Sign In</h1>
+                        <p className="text-sm text-muted-foreground">Sign in with your verified university Google account</p>
                     </div>
-                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-black uppercase tracking-tighter italic leading-none">
-                        Log <span className="text-orange-500">In</span>
-                    </h1>
-                    <p className="text-gray-400 font-bold uppercase tracking-[0.2em] text-[10px] italic">Enter your credentials</p>
+
+                    {error && (
+                        <div className="p-3.5 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl flex items-center gap-3">
+                            <AlertTriangle className="h-4 w-4 text-red-500 shrink-0" />
+                            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+                        </div>
+                    )}
+
+                    <Button
+                        type="button"
+                        onClick={() => handleGoogleLogin('seller')}
+                        disabled={googleLoadingRole !== null}
+                        className="w-full h-11 bg-[#FF6200] hover:bg-[#FF7A29] text-white font-semibold text-sm rounded-xl flex items-center justify-center gap-2.5 shadow-[0_4px_20px_rgba(255,98,0,0.25)] transition-all"
+                    >
+                        {googleLoadingRole ? <Loader2 className="animate-spin h-4 w-4" /> : (
+                            <>
+                                <Globe className="h-4 w-4" /> Sign In with Google
+                            </>
+                        )}
+                    </Button>
+
+                    <p className="text-center text-sm text-muted-foreground">
+                        No seller account?{' '}
+                        <Link href="/signup?role=seller" className="text-[#FF6200] font-semibold hover:underline">Sign Up as Seller</Link>
+                    </p>
+                </div>
+            </AuthShell>
+        );
+    }
+
+    // ─── STEP 2a: Buyer Email/Password Form ───────────────────────────────────
+    return (
+        <AuthShell>
+            <div className="space-y-6">
+                <button
+                    type="button"
+                    onClick={() => setCurrentStep('role')}
+                    className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                    <ArrowLeft className="h-4 w-4" /> Back
+                </button>
+
+                <div className="space-y-1">
+                    <h1 className="text-2xl font-bold text-foreground">Sign in</h1>
+                    <p className="text-sm text-muted-foreground">Enter your email and password</p>
                 </div>
 
-                <div className="mb-8 p-4 bg-orange-500/10 border border-orange-500/30 rounded-2xl flex items-start gap-3">
-                    <ShieldAlert className="h-5 w-5 text-orange-500 shrink-0 mt-0.5" />
+                {/* Beta notice — preserved from original */}
+                <div className="p-3.5 bg-[#FF6200]/5 border border-[#FF6200]/20 rounded-xl flex items-start gap-3">
+                    <ShieldAlert className="h-4 w-4 text-[#FF6200] shrink-0 mt-0.5" />
                     <div>
-                        <h4 className="text-orange-500 font-black uppercase text-[10px] tracking-widest mb-1 italic">🚀 Private Beta Mode Active</h4>
-                        <p className="text-orange-500/80 text-[10px] font-bold leading-relaxed">No real transactions or money will be processed during this beta phase.</p>
+                        <p className="text-xs font-semibold text-[#FF6200] mb-0.5">Private Beta Active</p>
+                        <p className="text-xs text-foreground/60 leading-relaxed">No real transactions will be processed during beta.</p>
                     </div>
                 </div>
 
                 {error && (
-                    <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-4 flex items-center gap-4 mb-8">
-                        <AlertTriangle className="h-5 w-5 text-red-500 shrink-0" />
-                        <p className="text-red-400 text-[10px] font-bold uppercase tracking-widest">{error}</p>
+                    <div className="p-3.5 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl flex items-center gap-3">
+                        <AlertTriangle className="h-4 w-4 text-red-500 shrink-0" />
+                        <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
                     </div>
                 )}
 
-                <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="space-y-2">
-                        <label className="text-[10px] uppercase font-black tracking-[0.2em] text-gray-400 ml-2">Email Address</label>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    {/* Email */}
+                    <div className="space-y-1.5">
+                        <label className="text-xs font-semibold text-foreground/70 uppercase tracking-wide">Email Address</label>
                         <div className="relative">
-                            <div className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-500"><UserIcon className="h-4 w-4" /></div>
-                            <input name="email" type="email" value={formData.email} onChange={handleChange} required autoFocus placeholder="you@address.com"
-                                className="w-full h-16 pl-14 pr-6 bg-[#2a2a2a] border-0 rounded-xl text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500 font-bold tracking-wider text-sm" />
+                            <UserIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <input
+                                name="email"
+                                type="email"
+                                value={formData.email}
+                                onChange={handleChange}
+                                required
+                                autoFocus
+                                placeholder="you@example.com"
+                                className="w-full h-11 pl-10 pr-4 bg-white dark:bg-white/5 border border-zinc-200 dark:border-white/10 rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#FF6200]/30 focus:border-[#FF6200]/50 transition-all"
+                            />
                         </div>
                     </div>
-                    <div className="space-y-2">
-                        <div className="flex justify-between items-center px-1">
-                            <label className="text-[10px] uppercase font-black tracking-[0.2em] text-gray-400 ml-1">Password</label>
-                            <Link href="/forgot-password" className="text-[9px] font-black uppercase tracking-widest text-orange-500 hover:opacity-80 pr-1">Forgot Password?</Link>
+
+                    {/* Password */}
+                    <div className="space-y-1.5">
+                        <div className="flex justify-between items-center">
+                            <label className="text-xs font-semibold text-foreground/70 uppercase tracking-wide">Password</label>
+                            <Link href="/forgot-password" className="text-xs text-[#FF6200] hover:underline font-medium">Forgot password?</Link>
                         </div>
                         <div className="relative">
-                            <div className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-500"><Lock className="h-4 w-4" /></div>
-                            <input name="password" type={showPassword ? 'text' : 'password'} value={formData.password} onChange={handleChange} required placeholder="••••••••"
-                                className="w-full h-16 pl-14 pr-16 bg-[#2a2a2a] border-0 rounded-xl text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500 font-bold tracking-wider text-sm" />
-                            <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors">
-                                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                            <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <input
+                                name="password"
+                                type={showPassword ? 'text' : 'password'}
+                                value={formData.password}
+                                onChange={handleChange}
+                                required
+                                placeholder="••••••••"
+                                className="w-full h-11 pl-10 pr-11 bg-white dark:bg-white/5 border border-zinc-200 dark:border-white/10 rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#FF6200]/30 focus:border-[#FF6200]/50 transition-all"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                            >
+                                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                             </button>
                         </div>
                     </div>
-                    <div className="flex items-center space-x-2 pt-2">
-                        <input type="checkbox" id="remember" className="rounded bg-[#2a2a2a] text-orange-500 cursor-pointer w-4 h-4 border-0" checked={rememberMe} onChange={e => setRememberMe(e.target.checked)} />
-                        <label htmlFor="remember" className="text-xs font-black uppercase tracking-widest text-gray-400 cursor-pointer">Remember Me</label>
+
+                    {/* Remember me */}
+                    <div className="flex items-center gap-2">
+                        <input
+                            type="checkbox"
+                            id="remember"
+                            className="h-4 w-4 rounded border-zinc-300 dark:border-white/20 text-[#FF6200] cursor-pointer accent-[#FF6200]"
+                            checked={rememberMe}
+                            onChange={e => setRememberMe(e.target.checked)}
+                        />
+                        <label htmlFor="remember" className="text-sm text-muted-foreground cursor-pointer select-none">Remember me</label>
                     </div>
-                    <div className="pt-4">
-                        <Button type="submit" className="w-full h-16 bg-orange-500 text-black hover:bg-orange-600 font-black uppercase tracking-[0.2em] text-sm rounded-xl shadow-[0_10px_30px_rgba(255,98,0,0.3)] flex items-center justify-center" disabled={isLoading}>
-                            {isLoading ? <Loader2 className="animate-spin h-6 w-6" /> : <>Log In <ArrowRight className="ml-4 h-5 w-5" /></>}
-                        </Button>
-                    </div>
+
+                    <Button
+                        type="submit"
+                        disabled={isLoading}
+                        className="w-full h-11 bg-[#FF6200] hover:bg-[#FF7A29] text-white font-semibold text-sm rounded-xl shadow-[0_4px_20px_rgba(255,98,0,0.25)] flex items-center justify-center gap-2 transition-all"
+                    >
+                        {isLoading ? <Loader2 className="animate-spin h-4 w-4" /> : <>Sign In <ArrowRight className="h-4 w-4" /></>}
+                    </Button>
                 </form>
 
-                <div className="relative py-8 flex items-center justify-center">
-                    <div className="absolute inset-x-0 h-px bg-[#2a2a2a]" />
-                    <span className="relative bg-[#1a1a1a] px-4 text-[9px] font-black uppercase tracking-[0.3em] text-gray-500">Or</span>
+                <div className="relative flex items-center justify-center py-1">
+                    <div className="absolute inset-x-0 h-px bg-zinc-200 dark:bg-white/10" />
+                    <span className="relative bg-[#F7F7F7] dark:bg-[#0B1120] px-3 text-xs text-muted-foreground">or</span>
                 </div>
 
-                <Button type="button" onClick={() => handleGoogleLogin(role)} disabled={googleLoadingRole !== null}
-                    className="w-full h-16 bg-white text-black hover:bg-gray-200 font-black uppercase tracking-widest rounded-xl flex items-center justify-center gap-3">
-                    {googleLoadingRole ? <Loader2 className="animate-spin h-5 w-5" /> : <><Globe className="h-5 w-5" /> Google Sign-In</>}
+                <Button
+                    type="button"
+                    onClick={() => handleGoogleLogin(role)}
+                    disabled={googleLoadingRole !== null}
+                    className="w-full h-11 bg-white hover:bg-zinc-50 text-zinc-800 border border-zinc-200 shadow-sm font-semibold text-sm rounded-xl flex items-center justify-center gap-2.5 transition-all"
+                >
+                    {googleLoadingRole ? <Loader2 className="animate-spin h-4 w-4" /> : (
+                        <>
+                            <svg className="h-4 w-4" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" /><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" /><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" /><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" /></svg>
+                            Continue with Google
+                        </>
+                    )}
                 </Button>
+
+                <p className="text-center text-sm text-muted-foreground">
+                    No account?{' '}
+                    <Link href="/signup" className="text-[#FF6200] font-semibold hover:underline">Create one free</Link>
+                </p>
             </div>
-        </div>
+        </AuthShell>
     );
 }
 
 export default function LoginPage() {
     return (
-        <Suspense fallback={<div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center"><Loader2 className="animate-spin h-10 w-10 text-orange-500" /></div>}>
+        <Suspense fallback={<div className="min-h-screen bg-[#0A1628] flex items-center justify-center"><Loader2 className="animate-spin h-8 w-8 text-[#FF6200]" /></div>}>
             <LoginContent />
         </Suspense>
     );
