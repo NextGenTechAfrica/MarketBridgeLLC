@@ -58,8 +58,8 @@ function VerifyContent() {
                             <p className="text-zinc-600 text-sm font-medium italic">{message}</p>
                         </div>
                         <div className="pt-4 flex flex-col gap-3">
-                            <Button asChild className="h-14 bg-[#FF6200] text-black hover:bg-[#FF7A29] rounded-2xl font-black uppercase tracking-widest text-xs font-heading italic shadow-xl shadow-[#FF6200]/10 border-none">
-                                <Link href="/purchases">View My Purchases <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                            <Button asChild className="h-14 bg-[#FF6200] text-white hover:bg-[#FF7A29] rounded-2xl font-bold tracking-wide text-sm shadow-xl shadow-[#FF6200]/20 border-none">
+                                <Link href="/orders">View My Orders <ArrowRight className="ml-2 h-4 w-4" /></Link>
                             </Button>
                             <Button variant="ghost" asChild className="text-zinc-500 hover:text-zinc-900 text-[10px] uppercase font-black tracking-widest">
                                 <Link href="/marketplace">Continue Shopping</Link>
