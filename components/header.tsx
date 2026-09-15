@@ -76,28 +76,29 @@ export const Header = () => {
 
                     {/* Center Navigation: Screen 1 Navigation Links on Homepage, Search bar on other pages */}
                     {pathname === '/' ? (
-                        <nav className="hidden md:flex items-center gap-8 ml-8">
-                            <Link href="/marketplace" className="text-sm font-medium text-slate-600 hover:text-[#FF5500] transition-colors">
+                        <nav className="hidden md:flex items-center gap-8 ml-8" aria-label="Main Navigation">
+                            <Link href="/marketplace" className="text-sm font-semibold text-slate-800 dark:text-slate-100 hover:text-[#FF6200] dark:hover:text-[#FF6200] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF6200] rounded-md px-1 py-0.5">
                                 Browse
                             </Link>
-                            <Link href="/#how-it-works" className="text-sm font-medium text-slate-600 hover:text-[#FF5500] transition-colors">
+                            <Link href="/#how-it-works" className="text-sm font-semibold text-slate-800 dark:text-slate-100 hover:text-[#FF6200] dark:hover:text-[#FF6200] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF6200] rounded-md px-1 py-0.5">
                                 How It Works
                             </Link>
-                            <Link href="/seller-onboarding" className="text-sm font-medium text-slate-600 hover:text-[#FF5500] transition-colors">
+                            <Link href="/seller-onboarding" className="text-sm font-semibold text-slate-800 dark:text-slate-100 hover:text-[#FF6200] dark:hover:text-[#FF6200] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF6200] rounded-md px-1 py-0.5">
                                 Sell on MarketBridge
                             </Link>
                         </nav>
                     ) : (
                         /* Search Bar for Marketplace / Inner Pages */
-                        <form onSubmit={handleSearch} className="flex-1 max-w-xl hidden sm:block">
+                        <form onSubmit={handleSearch} className="flex-1 max-w-xl hidden sm:block" role="search">
                             <div className="relative">
-                                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+                                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" aria-hidden="true" />
                                 <input
                                     type="text"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     placeholder="Search products, sellers, or categories..."
-                                    className="w-full pl-10 pr-4 py-2.5 bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 rounded-xl text-sm text-foreground placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#FF5500]/30 focus:border-[#FF5500]/50 transition-all"
+                                    aria-label="Search products, sellers, or categories"
+                                    className="w-full pl-10 pr-4 py-2.5 bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 rounded-xl text-sm text-foreground placeholder:text-zinc-500 dark:placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#FF6200]/40 focus:border-[#FF6200] transition-all"
                                 />
                             </div>
                         </form>
@@ -109,18 +110,20 @@ export const Header = () => {
                         {/* Location Selector (Shown on inner pages) */}
                         {pathname !== '/' && (
                             <button
-                                className="hidden lg:flex items-center gap-1.5 px-3 py-2 bg-zinc-100 dark:bg-white/5 hover:bg-zinc-200 dark:hover:bg-white/10 border border-zinc-200 dark:border-white/10 rounded-xl transition-all group"
+                                className="hidden lg:flex items-center gap-1.5 px-3 py-2 bg-zinc-100 dark:bg-white/5 hover:bg-zinc-200 dark:hover:bg-white/10 border border-zinc-200 dark:border-white/10 rounded-xl transition-all group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF6200]"
                                 onClick={() => setShowDialog(true)}
+                                aria-label={`Current location: ${currentNode}. Click to change.`}
                             >
-                                <MapPin className="h-3.5 w-3.5 text-[#FF5500]" />
-                                <span className="text-xs font-medium text-zinc-600 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors">
+                                <MapPin className="h-3.5 w-3.5 text-[#FF6200]" />
+                                <span className="text-xs font-semibold text-zinc-700 dark:text-zinc-200 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors">
                                     {currentNode}
                                 </span>
                                 <ChevronDown className="h-3 w-3 text-zinc-400" />
                             </button>
                         )}
 
-                        {pathname !== '/' && <ThemeToggle />}
+                        {/* ThemeToggle available across all pages for full light/dark accessibility */}
+                        <ThemeToggle />
 
                         {user && <NotificationBell />}
 
@@ -128,20 +131,24 @@ export const Header = () => {
                         {pathname !== '/' && (!user || user.role === 'student_buyer' || user.role === 'buyer') && (
                             <Link
                                 href="/cart"
-                                className="relative p-2.5 rounded-xl bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 hover:bg-zinc-200 dark:hover:bg-white/10 transition-all hidden sm:flex"
+                                aria-label="Shopping Cart"
+                                className="relative p-2.5 rounded-xl bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 hover:bg-zinc-200 dark:hover:bg-white/10 transition-all hidden sm:flex focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF6200]"
                             >
-                                <ShoppingCart className="h-4 w-4 text-zinc-600 dark:text-zinc-400" />
+                                <ShoppingCart className="h-4 w-4 text-zinc-700 dark:text-zinc-200" />
                             </Link>
                         )}
 
                         {/* Unauthenticated Actions */}
                         {!user && !loading && (
                             <div className="flex items-center gap-3">
-                                <Link href="/login" className="text-sm font-semibold text-slate-700 hover:text-[#FF5500] transition-colors px-2 py-1">
+                                <Link
+                                    href="/login"
+                                    className="text-sm font-bold text-slate-800 dark:text-white hover:text-[#FF6200] dark:hover:text-[#FF6200] transition-colors px-2 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF6200] rounded-lg"
+                                >
                                     Login
                                 </Link>
                                 <Link href="/signup">
-                                    <Button size="sm" className="bg-[#FF5500] hover:bg-[#FF6611] text-white font-bold text-sm rounded-xl px-5 h-10 transition-all shadow-md shadow-[#FF5500]/25 active:scale-95">
+                                    <Button size="sm" className="bg-[#FF6200] hover:bg-[#E55800] text-white font-bold text-sm rounded-xl px-5 h-10 transition-all shadow-md shadow-[#FF6200]/25 active:scale-95 focus-visible:ring-2 focus-visible:ring-[#FF6200] focus-visible:outline-none">
                                         Get Started
                                     </Button>
                                 </Link>
@@ -270,43 +277,91 @@ export const Header = () => {
                         </div>
                     </form>
 
-                    {/* Location on mobile */}
-                    <button
-                        className="flex items-center gap-2 px-4 py-3 bg-zinc-100 dark:bg-white/5 rounded-xl text-left"
-                        onClick={() => { setShowDialog(true); setMobileMenuOpen(false); }}
-                    >
-                        <MapPin className="h-4 w-4 text-[#FF6200]" />
-                        <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">{currentNode}</span>
-                        <ChevronDown className="h-3 w-3 text-zinc-400 ml-auto" />
-                    </button>
+                    {/* Mobile Navigation Links */}
+                    {pathname === '/' ? (
+                        <div className="flex flex-col gap-1 border-b border-zinc-100 dark:border-white/10 pb-3">
+                            <Link
+                                href="/marketplace"
+                                onClick={() => setMobileMenuOpen(false)}
+                                className="px-4 py-3 text-slate-800 dark:text-slate-100 hover:text-[#FF6200] font-bold text-base transition-colors rounded-xl hover:bg-zinc-50 dark:hover:bg-white/5"
+                            >
+                                Browse
+                            </Link>
+                            <Link
+                                href="/#how-it-works"
+                                onClick={() => setMobileMenuOpen(false)}
+                                className="px-4 py-3 text-slate-800 dark:text-slate-100 hover:text-[#FF6200] font-bold text-base transition-colors rounded-xl hover:bg-zinc-50 dark:hover:bg-white/5"
+                            >
+                                How It Works
+                            </Link>
+                            <Link
+                                href="/seller-onboarding"
+                                onClick={() => setMobileMenuOpen(false)}
+                                className="px-4 py-3 text-slate-800 dark:text-slate-100 hover:text-[#FF6200] font-bold text-base transition-colors rounded-xl hover:bg-zinc-50 dark:hover:bg-white/5"
+                            >
+                                Sell on MarketBridge
+                            </Link>
+                        </div>
+                    ) : (
+                        <>
+                            {/* Location on mobile */}
+                            <button
+                                className="flex items-center gap-2 px-4 py-3 bg-zinc-100 dark:bg-white/5 rounded-xl text-left"
+                                onClick={() => { setShowDialog(true); setMobileMenuOpen(false); }}
+                                aria-label={`Select location, current: ${currentNode}`}
+                            >
+                                <MapPin className="h-4 w-4 text-[#FF6200]" />
+                                <span className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">{currentNode}</span>
+                                <ChevronDown className="h-3 w-3 text-zinc-400 ml-auto" />
+                            </button>
 
-                    <Link
-                        href="/marketplace"
-                        onClick={() => setMobileMenuOpen(false)}
-                        className="flex items-center gap-3 px-4 py-3 text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white font-medium text-sm transition-colors rounded-xl hover:bg-zinc-50 dark:hover:bg-white/5"
-                    >
-                        <ShoppingBag className="h-4 w-4" />
-                        Browse Market
-                    </Link>
+                            <Link
+                                href="/marketplace"
+                                onClick={() => setMobileMenuOpen(false)}
+                                className="flex items-center gap-3 px-4 py-3 text-zinc-800 dark:text-zinc-200 hover:text-zinc-900 dark:hover:text-white font-semibold text-sm transition-colors rounded-xl hover:bg-zinc-50 dark:hover:bg-white/5"
+                            >
+                                <ShoppingBag className="h-4 w-4 text-[#FF6200]" />
+                                Browse Market
+                            </Link>
+                        </>
+                    )}
 
-                    <div className="border-t border-zinc-100 dark:border-white/5 pt-3 flex flex-col gap-2">
+                    {/* Theme Toggle row in Mobile Drawer */}
+                    <div className="flex items-center justify-between px-4 py-2 bg-zinc-50 dark:bg-white/5 rounded-xl border border-zinc-200 dark:border-white/10">
+                        <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">Appearance</span>
+                        <ThemeToggle />
+                    </div>
+
+                    <div className="border-t border-zinc-100 dark:border-white/10 pt-3 flex flex-col gap-2">
                         {user ? (
                             <>
-                                <Link href="/settings" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 text-zinc-700 dark:text-zinc-300 font-medium text-sm rounded-xl hover:bg-zinc-50 dark:hover:bg-white/5">
+                                <Link href="/settings" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 text-zinc-800 dark:text-zinc-200 font-semibold text-sm rounded-xl hover:bg-zinc-50 dark:hover:bg-white/5">
                                     <User className="h-4 w-4" />
                                     My Account
                                 </Link>
-                                <button onClick={() => { setMobileMenuOpen(false); handleSignOut(); }} className="flex items-center gap-3 px-4 py-3 text-red-500 font-medium text-sm text-left rounded-xl hover:bg-red-50 dark:hover:bg-red-500/10">
+                                <button onClick={() => { setMobileMenuOpen(false); handleSignOut(); }} className="flex items-center gap-3 px-4 py-3 text-red-500 font-bold text-sm text-left rounded-xl hover:bg-red-50 dark:hover:bg-red-500/10">
                                     <LogOut className="h-4 w-4" />
                                     Log out
                                 </button>
                             </>
                         ) : (
                             !loading && (
-                                <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 text-zinc-700 dark:text-zinc-300 font-medium text-sm rounded-xl hover:bg-zinc-50 dark:hover:bg-white/5">
-                                    <User className="h-4 w-4" />
-                                    Sign In
-                                </Link>
+                                <div className="flex flex-col gap-2">
+                                    <Link
+                                        href="/login"
+                                        onClick={() => setMobileMenuOpen(false)}
+                                        className="flex items-center justify-center py-3 text-slate-800 dark:text-white font-bold text-sm rounded-xl border border-zinc-200 dark:border-white/10 hover:bg-zinc-50 dark:hover:bg-white/5 transition-colors"
+                                    >
+                                        Sign In
+                                    </Link>
+                                    <Link
+                                        href="/signup"
+                                        onClick={() => setMobileMenuOpen(false)}
+                                        className="flex items-center justify-center py-3 bg-[#FF6200] hover:bg-[#E55800] text-white font-bold text-sm rounded-xl shadow-md shadow-[#FF6200]/25 transition-all"
+                                    >
+                                        Get Started
+                                    </Link>
+                                </div>
                             )
                         )}
                     </div>
