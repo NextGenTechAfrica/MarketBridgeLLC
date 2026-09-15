@@ -70,7 +70,7 @@ export default function OrderDetailPage() {
     const params = useParams();
     const { user, loading: authLoading } = useAuth();
     const { toast } = useToast();
-    
+
     const [order, setOrder] = useState<Order | null>(null);
     const [loading, setLoading] = useState(true);
     const [confirmingOrder, setConfirmingOrder] = useState(false);
@@ -104,7 +104,7 @@ export default function OrderDetailPage() {
                 .single();
 
             if (error) throw error;
-            
+
             // Transform listing if returned as array
             const transformedOrder = {
                 ...data,
@@ -194,20 +194,22 @@ export default function OrderDetailPage() {
 
     if (authLoading || loading) {
         return (
-            <div className="min-h-screen flex flex-col items-center justify-center bg-[#FAFAFA]">
+            <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950">
                 <Loader2 className="h-8 w-8 animate-spin text-[#FF6200]" />
-                <span className="mt-4 text-xs font-black uppercase tracking-widest text-zinc-400">Loading Cycle Logs...</span>
+                <span className="mt-4 text-xs font-black uppercase tracking-widest text-slate-400">Loading Order Details...</span>
             </div>
         );
     }
 
     if (!order) {
         return (
-            <div className="min-h-screen bg-[#FAFAFA] flex flex-col items-center justify-center p-6 text-center">
-                <AlertCircle className="h-16 w-16 text-[#FF6200] mb-6" />
-                <h1 className="text-3xl font-black text-zinc-900 uppercase tracking-tighter mb-2">Order Not Found</h1>
-                <p className="text-zinc-500 mb-8 max-w-sm">This order does not exist or you do not have permission to view it.</p>
-                <Button asChild className="bg-[#FF6200] text-black hover:bg-[#FF7A29] font-black uppercase tracking-widest text-xs rounded-2xl h-14 px-8 border-none">
+            <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-6 text-center">
+                <div className="h-16 w-16 rounded-2xl bg-amber-500/10 text-[#FF6200] flex items-center justify-center mb-6">
+                    <AlertCircle className="h-8 w-8" />
+                </div>
+                <h1 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight mb-2">Order Not Found</h1>
+                <p className="text-slate-500 dark:text-slate-400 mb-8 max-w-sm text-sm font-medium">This order does not exist or you do not have permission to view it.</p>
+                <Button asChild className="bg-[#FF6200] text-white hover:bg-[#FF7A29] font-black uppercase tracking-widest text-xs rounded-xl h-12 px-6 border-none">
                     <Link href="/seller/orders">Back to Orders</Link>
                 </Button>
             </div>
@@ -215,51 +217,46 @@ export default function OrderDetailPage() {
     }
 
     // Determine Timeline Steps status
-    // Step statuses can be: 'completed', 'active', 'pending'
     const getStepStatus = (step: 'paid' | 'preparing' | 'shipped' | 'delivered') => {
         const { status } = order;
-        
+
         if (status === 'cancelled') return 'pending';
-        if (status === 'disputed') {
-            // Keep status visually frozen but alert active dispute
-        }
 
         switch (step) {
             case 'paid':
                 if (status === 'pending_verification' || status === 'pending') return 'active';
-                return 'completed'; // paid, confirmed, completed, disputed
+                return 'completed';
             case 'preparing':
                 if (status === 'pending_verification' || status === 'pending') return 'pending';
                 if (status === 'paid') return 'active';
-                return 'completed'; // confirmed, completed
+                return 'completed';
             case 'shipped':
                 if (status === 'pending_verification' || status === 'pending' || status === 'paid') return 'pending';
                 if (status === 'confirmed') return 'active';
-                return 'completed'; // completed
+                return 'completed';
             case 'delivered':
                 if (status === 'completed') return 'completed';
                 return 'pending';
         }
     };
 
-    const getStatusText = (status: string) => {
+    const getStatusBadge = (status: string) => {
         switch (status) {
-            case 'pending_verification':
-                return 'Awaiting Verification';
-            case 'pending':
-                return 'Awaiting Payment';
             case 'paid':
-                return 'Funds in Escrow';
+                return <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-black text-[10px] uppercase tracking-wider px-3 py-1 rounded-full">Funds in Escrow</Badge>;
             case 'confirmed':
-                return 'Shipped / In Transit';
+                return <Badge className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 font-black text-[10px] uppercase tracking-wider px-3 py-1 rounded-full">Shipped / In Transit</Badge>;
             case 'completed':
-                return 'Delivered / Completed';
-            case 'cancelled':
-                return 'Cancelled / Refunded';
+                return <Badge className="bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20 font-black text-[10px] uppercase tracking-wider px-3 py-1 rounded-full">Completed</Badge>;
+            case 'pending_verification':
+            case 'pending':
+                return <Badge className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 font-black text-[10px] uppercase tracking-wider px-3 py-1 rounded-full">Awaiting Confirmation</Badge>;
             case 'disputed':
-                return 'Disputed / Held';
+                return <Badge className="bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 font-black text-[10px] uppercase tracking-wider px-3 py-1 rounded-full">Disputed / Held</Badge>;
+            case 'cancelled':
+                return <Badge className="bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/20 font-black text-[10px] uppercase tracking-wider px-3 py-1 rounded-full">Cancelled</Badge>;
             default:
-                return status.toUpperCase();
+                return <Badge variant="outline" className="font-black text-[10px] uppercase tracking-wider px-3 py-1">{status}</Badge>;
         }
     };
 
@@ -276,73 +273,69 @@ export default function OrderDetailPage() {
         {
             key: 'paid' as const,
             title: 'Payment Secured',
-            description: 'Funds successfully processed and held in escrow.',
+            description: 'Funds safely processed and held in escrow protection.',
             icon: CreditCard,
         },
         {
             key: 'preparing' as const,
             title: 'Preparing Order',
-            description: 'Seller is packaging and preparing your item.',
+            description: 'Item is being inspected, packaged, and readied.',
             icon: Package,
         },
         {
             key: 'shipped' as const,
             title: 'Shipped / In Transit',
-            description: 'Order dispatched by seller and is on the way.',
+            description: 'Order dispatched and en route to the destination.',
             icon: Truck,
         },
         {
             key: 'delivered' as const,
             title: 'Delivered & Released',
-            description: 'Item received and funds released to the seller.',
+            description: 'Receipt confirmed and payment released from escrow.',
             icon: CheckCircle2,
         },
     ];
 
     return (
-        <div className="min-h-screen bg-[#FAFAFA] text-zinc-900 relative selection:bg-[#FF6200] selection:text-black pt-28 pb-32">
-            <div className="fixed inset-0 bg-[url('/grid-pattern.svg')] opacity-10 pointer-events-none z-0" />
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 pt-24 pb-28">
+            <div className="container mx-auto px-4 sm:px-6 max-w-5xl">
 
-            <div className="container mx-auto px-6 max-w-4xl relative z-10">
-                
                 {/* Header Navigation */}
-                <div className="mb-10 flex items-center justify-between">
+                <div className="mb-8 flex items-center justify-between">
                     <Button variant="ghost" asChild className="pl-0 hover:bg-transparent hover:text-[#FF6200] transition-colors group">
-                        <Link href="/seller/orders" className="flex items-center gap-2 font-heading font-black text-[10px] uppercase tracking-widest text-zinc-500">
+                        <Link href="/seller/orders" className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                             <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
                             Back to Orders
                         </Link>
                     </Button>
-                    <Badge className="bg-[#FF6200]/10 border border-[#FF6200]/25 text-[#FF6200] text-[10px] px-4 py-1.5 rounded-full font-black uppercase tracking-wider">
-                        {getStatusText(order.status)}
-                    </Badge>
+                    {getStatusBadge(order.status)}
                 </div>
 
                 {/* Main Grid: Info Cards & Vertical Timeline */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-                    
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
                     {/* Left Column: Order Details & Escrow Box */}
-                    <div className="md:col-span-2 space-y-8">
-                        
+                    <div className="lg:col-span-2 space-y-6">
+
                         {/* Title & Metadata */}
-                        <div className="space-y-2">
-                            <p className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400">Order ID: #{order.id.slice(-12).toUpperCase()}</p>
-                            <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tighter italic font-heading">
-                                Order <span className="text-[#FF6200]">Details</span>
+                        <div className="space-y-1">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-[#FF6200]">
+                                Order #{order.id.slice(-10).toUpperCase()}
+                            </p>
+                            <h1 className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-slate-900 dark:text-white">
+                                Order Details
                             </h1>
-                            <div className="flex items-center gap-4 text-zinc-500 text-xs font-medium italic mt-2">
-                                <span className="flex items-center gap-1.5">
-                                    <Calendar className="h-3.5 w-3.5" />
-                                    {new Date(order.created_at).toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' })}
-                                </span>
+                            <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-xs font-medium">
+                                <Calendar className="h-3.5 w-3.5" />
+                                <span>Placed on {new Date(order.created_at).toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                             </div>
                         </div>
 
                         {/* Product Card */}
-                        <Card className="bg-white border border-zinc-200/80 shadow-sm rounded-[2.5rem] overflow-hidden hover:shadow-md transition-all duration-300">
-                            <CardContent className="p-8">
-                                <div className="flex flex-col sm:flex-row gap-6">
-                                    <div className="h-28 w-28 shrink-0 rounded-2xl overflow-hidden border border-zinc-100 relative bg-zinc-50">
+                        <Card className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-2xl overflow-hidden">
+                            <CardContent className="p-6">
+                                <div className="flex flex-col sm:flex-row gap-5">
+                                    <div className="h-24 w-24 shrink-0 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 relative bg-slate-100 dark:bg-slate-800">
                                         {order.listing?.images?.[0] ? (
                                             <Image
                                                 src={order.listing.images[0]}
@@ -352,34 +345,34 @@ export default function OrderDetailPage() {
                                             />
                                         ) : (
                                             <div className="h-full w-full flex items-center justify-center">
-                                                <Package className="h-8 w-8 text-zinc-200" />
+                                                <Package className="h-8 w-8 text-slate-300 dark:text-slate-600" />
                                             </div>
                                         )}
                                     </div>
-                                    <div className="flex-1 flex flex-col justify-between space-y-4">
+                                    <div className="flex-1 flex flex-col justify-between space-y-3">
                                         <div>
-                                            <h3 className="text-xl font-black uppercase tracking-tight italic font-heading line-clamp-1">
-                                                {order.listing?.title || 'Unknown Listing'}
+                                            <h3 className="text-lg font-bold text-slate-900 dark:text-white line-clamp-1">
+                                                {order.listing?.title || 'Listing Item'}
                                             </h3>
-                                            <p className="text-xs text-zinc-400 font-medium line-clamp-2 mt-1 italic">
+                                            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium line-clamp-2 mt-0.5">
                                                 {order.listing?.description || 'No description provided.'}
                                             </p>
                                         </div>
                                         <div className="flex items-end justify-between">
                                             <div>
-                                                <p className="text-[9px] font-black uppercase tracking-widest text-zinc-400">Total Price</p>
-                                                <p className="text-2xl font-black text-[#FF6200] font-heading tracking-tighter">₦{order.amount.toLocaleString()}</p>
+                                                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Total Price</p>
+                                                <p className="text-2xl font-black text-[#FF6200] tracking-tight">₦{order.amount.toLocaleString()}</p>
                                             </div>
                                             {order.seller && (
-                                                <div className="flex items-center gap-2 px-3 py-1.5 bg-zinc-50 rounded-xl border border-zinc-100">
-                                                    <div className="h-5 w-5 rounded-full overflow-hidden bg-[#FF6200]/10 flex items-center justify-center text-[10px] font-bold">
+                                                <div className="flex items-center gap-2 px-3 py-1 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
+                                                    <div className="h-5 w-5 rounded-full overflow-hidden bg-[#FF6200]/10 flex items-center justify-center text-[10px] font-bold text-[#FF6200]">
                                                         {order.seller.photo_url ? (
-                                                            <img src={order.seller.photo_url} className="h-full w-full object-cover" />
+                                                            <img src={order.seller.photo_url} alt="" className="h-full w-full object-cover" />
                                                         ) : (
                                                             order.seller.display_name.charAt(0)
                                                         )}
                                                     </div>
-                                                    <span className="text-[9px] font-black uppercase tracking-widest text-zinc-600">{order.seller.display_name}</span>
+                                                    <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">{order.seller.display_name}</span>
                                                 </div>
                                             )}
                                         </div>
@@ -389,33 +382,33 @@ export default function OrderDetailPage() {
                         </Card>
 
                         {/* Escrow Status Alert Box */}
-                        <div className="bg-[#FF6200]/5 border border-[#FF6200]/15 rounded-[2.5rem] p-8 space-y-4">
-                            <div className="flex items-center gap-3 text-[#FF6200]">
-                                <ShieldCheck className="h-6 w-6" />
-                                <span className="text-xs font-black uppercase tracking-widest font-heading">Secure Escrow Protocol</span>
+                        <div className="bg-[#FF6200]/5 dark:bg-[#FF6200]/10 border border-[#FF6200]/20 rounded-2xl p-6 space-y-3">
+                            <div className="flex items-center gap-2.5 text-[#FF6200]">
+                                <ShieldCheck className="h-5 w-5 shrink-0" />
+                                <span className="text-xs font-black uppercase tracking-wider">Escrow Protection Active</span>
                             </div>
-                            
+
                             {order.status === 'pending_verification' && (
-                                <p className="text-xs text-zinc-600 leading-relaxed font-medium italic">
-                                    Your manual payment proof is currently under review by our operations team. Once verified, funds will be locked in escrow and the seller will dispatch your item.
+                                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
+                                    Manual payment confirmation is currently in review. Once verified, funds will be secured in escrow and the seller will dispatch your item.
                                 </p>
                             )}
 
-                            {(order.status === 'paid') && (
-                                <p className="text-xs text-zinc-600 leading-relaxed font-medium italic">
-                                    Payment of <span className="font-bold text-zinc-900">₦{order.amount.toLocaleString()}</span> has been safely secured in escrow. The seller has been notified to dispatch the item. Funds will only be released when you confirm receipt.
+                            {order.status === 'paid' && (
+                                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
+                                    Payment of <span className="font-bold text-slate-900 dark:text-white">₦{order.amount.toLocaleString()}</span> is secured in MarketBridge Escrow. The seller has been notified to dispatch the order.
                                 </p>
                             )}
 
                             {order.status === 'confirmed' && (
-                                <div className="space-y-4">
-                                    <p className="text-xs text-zinc-900 font-bold italic leading-relaxed">
-                                        The seller has shipped the item! Please verify the contents before releasing the funds from escrow.
+                                <div className="space-y-3">
+                                    <p className="text-xs text-slate-700 dark:text-slate-200 font-medium leading-relaxed">
+                                        The item is in transit. Please verify the parcel upon arrival before confirming delivery to release funds from escrow.
                                     </p>
-                                    <div className="pt-2">
+                                    <div>
                                         <Button
                                             onClick={() => setShowConfirmDialog(true)}
-                                            className="w-full h-14 bg-[#FF6200] text-black hover:bg-[#FF7A29] rounded-2xl font-black uppercase tracking-widest text-[10px] font-heading border-none shadow-md"
+                                            className="w-full h-12 bg-[#FF6200] text-white hover:bg-[#FF7A29] rounded-xl font-bold uppercase tracking-wider text-xs border-none shadow-sm"
                                         >
                                             <CheckCircle2 className="mr-2 h-4 w-4" /> Confirm Receipt & Release Funds
                                         </Button>
@@ -424,47 +417,47 @@ export default function OrderDetailPage() {
                             )}
 
                             {order.status === 'completed' && (
-                                <p className="text-xs text-zinc-500 leading-relaxed font-medium italic">
-                                    This transaction cycle has completed. The locked funds have been successfully released to the seller's wallet.
+                                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed font-medium">
+                                    This order has successfully completed. Payment was released to the seller's wallet.
                                 </p>
                             )}
 
                             {order.status === 'disputed' && (
-                                <p className="text-xs text-[#FF6200] leading-relaxed font-medium italic">
-                                    This transaction is currently under review by our trust & safety department. Funds will remain locked in escrow until the dispute is resolved.
+                                <p className="text-xs text-red-600 dark:text-red-400 leading-relaxed font-medium">
+                                    This transaction is currently under dispute review. Funds will remain secured in escrow until resolved.
                                 </p>
                             )}
 
                             {order.status === 'cancelled' && (
-                                <p className="text-xs text-zinc-500 leading-relaxed font-medium italic">
-                                    This transaction was cancelled. The funds have been returned to the buyer.
+                                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
+                                    This order was cancelled and any associated payment has been refunded.
                                 </p>
                             )}
                         </div>
 
                         {/* Shipping & Delivery Info */}
                         {order.shipping_address && (
-                            <Card className="bg-white border border-zinc-200/80 shadow-sm rounded-[2.5rem] overflow-hidden">
-                                <CardContent className="p-8 space-y-6">
-                                    <h3 className="text-sm font-black uppercase tracking-widest text-zinc-400">Delivery Endpoint</h3>
-                                    <div className="space-y-4">
-                                        <div className="flex gap-4">
-                                            <div className="h-10 w-10 rounded-2xl bg-zinc-50 border border-zinc-100 flex items-center justify-center text-zinc-400 shrink-0">
-                                                <MapPin className="h-5 w-5" />
+                            <Card className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-2xl overflow-hidden">
+                                <CardContent className="p-6 space-y-4">
+                                    <h3 className="text-xs font-black uppercase tracking-wider text-slate-400">Delivery Information</h3>
+                                    <div className="space-y-3">
+                                        <div className="flex items-start gap-3">
+                                            <div className="h-9 w-9 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 shrink-0">
+                                                <MapPin className="h-4 w-4" />
                                             </div>
                                             <div>
-                                                <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Destination Address</p>
-                                                <p className="text-sm text-zinc-700 font-medium mt-1">{order.shipping_address}</p>
+                                                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Destination Address</p>
+                                                <p className="text-sm text-slate-800 dark:text-slate-200 font-medium mt-0.5">{order.shipping_address}</p>
                                             </div>
                                         </div>
                                         {order.phone_number && (
-                                            <div className="flex gap-4">
-                                                <div className="h-10 w-10 rounded-2xl bg-zinc-50 border border-zinc-100 flex items-center justify-center text-zinc-400 shrink-0">
-                                                    <Phone className="h-5 w-5" />
+                                            <div className="flex items-start gap-3">
+                                                <div className="h-9 w-9 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 shrink-0">
+                                                    <Phone className="h-4 w-4" />
                                                 </div>
                                                 <div>
-                                                    <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Contact Number</p>
-                                                    <p className="text-sm text-zinc-700 font-medium mt-1">{order.phone_number}</p>
+                                                    <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Contact Phone</p>
+                                                    <p className="text-sm text-slate-800 dark:text-slate-200 font-medium mt-0.5">{order.phone_number}</p>
                                                 </div>
                                             </div>
                                         )}
@@ -475,19 +468,19 @@ export default function OrderDetailPage() {
 
                         {/* Note */}
                         {order.notes && (
-                            <div className="p-6 bg-zinc-50 border border-zinc-100 rounded-3xl">
-                                <p className="text-[9px] font-black uppercase tracking-widest text-zinc-400 mb-1">Additional Notes</p>
-                                <p className="text-xs text-zinc-500 italic font-medium">{order.notes}</p>
+                            <div className="p-5 bg-slate-100 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-2xl">
+                                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1">Buyer Notes</p>
+                                <p className="text-xs text-slate-600 dark:text-slate-300 font-medium">{order.notes}</p>
                             </div>
                         )}
 
                         {/* Action buttons */}
-                        <div className="flex flex-col sm:flex-row gap-4 pt-4">
+                        <div className="flex flex-col sm:flex-row gap-3 pt-2">
                             <Button
                                 variant="outline"
                                 onClick={openChat}
                                 disabled={chatLoading}
-                                className="flex-1 h-14 border-zinc-200 hover:border-[#FF6200]/40 rounded-2xl font-black uppercase tracking-widest text-[10px] font-heading"
+                                className="flex-1 h-12 border-slate-200 dark:border-slate-700 hover:border-[#FF6200] rounded-xl font-bold uppercase tracking-wider text-xs"
                             >
                                 {chatLoading ? (
                                     <Loader2 className="mr-2 h-4 w-4 animate-spin text-[#FF6200]" />
@@ -497,12 +490,12 @@ export default function OrderDetailPage() {
                                 Message Seller
                             </Button>
 
-                            {/* Open Dispute Button (available when status is 'paid', 'confirmed' or 'completed' within 48h) */}
+                            {/* Open Dispute Button */}
                             {((['paid', 'confirmed'].includes(order.status)) || (order.status === 'completed' && isWithin48HoursOfDelivery())) && (
                                 <Button
                                     asChild
                                     variant="ghost"
-                                    className="flex-1 h-14 text-zinc-500 hover:text-red-600 hover:bg-red-50 rounded-2xl font-black uppercase tracking-widest text-[10px] font-heading transition-colors"
+                                    className="flex-1 h-12 text-slate-500 dark:text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-xl font-bold uppercase tracking-wider text-xs transition-colors"
                                 >
                                     <Link href={`/seller/orders/${order.id}/dispute`}>
                                         <AlertCircle className="mr-2 h-4 w-4" /> Open Dispute
@@ -514,49 +507,49 @@ export default function OrderDetailPage() {
                     </div>
 
                     {/* Right Column: Vertical Timeline */}
-                    <div className="space-y-8">
-                        <Card className="bg-white border border-zinc-200/80 shadow-sm rounded-[2.5rem] overflow-hidden">
-                            <CardContent className="p-8 md:p-10 space-y-8">
-                                <h3 className="text-xs font-black uppercase tracking-widest text-zinc-400">Order Progress</h3>
-                                
-                                <div className="relative pl-6 space-y-12">
-                                    {/* Vertical connecting line */}
-                                    <div className="absolute left-[17px] top-4 bottom-4 w-[2px] bg-zinc-100" />
+                    <div className="space-y-6">
+                        <Card className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-2xl overflow-hidden">
+                            <CardContent className="p-6 space-y-6">
+                                <h3 className="text-xs font-black uppercase tracking-wider text-slate-400">Fulfillment Timeline</h3>
 
-                                    {timelineSteps.map((step, idx) => {
+                                <div className="relative pl-6 space-y-8">
+                                    {/* Vertical connecting line */}
+                                    <div className="absolute left-[17px] top-3 bottom-3 w-[2px] bg-slate-100 dark:bg-slate-800" />
+
+                                    {timelineSteps.map((step) => {
                                         const stepStatus = getStepStatus(step.key);
                                         const StepIcon = step.icon;
 
                                         return (
-                                            <div key={step.key} className="relative flex gap-6 items-start group">
+                                            <div key={step.key} className="relative flex gap-4 items-start group">
                                                 {/* Step indicator circle */}
-                                                <div className="absolute -left-[27px] top-1 z-10 flex items-center justify-center">
+                                                <div className="absolute -left-[27px] top-0.5 z-10 flex items-center justify-center">
                                                     {stepStatus === 'completed' ? (
-                                                        <div className="h-6 w-6 rounded-full bg-[#FF6200] text-black border-2 border-white flex items-center justify-center shadow-sm">
-                                                            <Check className="h-3 w-3 stroke-[3]" />
+                                                        <div className="h-6 w-6 rounded-full bg-emerald-500 text-white border-2 border-white dark:border-slate-900 flex items-center justify-center shadow-sm">
+                                                            <Check className="h-3.5 w-3.5 stroke-[3]" />
                                                         </div>
                                                     ) : stepStatus === 'active' ? (
-                                                        <div className="h-6 w-6 rounded-full bg-white border-2 border-[#FF6200] flex items-center justify-center shadow-md animate-pulse">
+                                                        <div className="h-6 w-6 rounded-full bg-white dark:bg-slate-900 border-2 border-[#FF6200] flex items-center justify-center shadow-md animate-pulse">
                                                             <div className="h-2 w-2 rounded-full bg-[#FF6200]" />
                                                         </div>
                                                     ) : (
-                                                        <div className="h-6 w-6 rounded-full bg-white border-2 border-zinc-200 flex items-center justify-center shadow-sm">
-                                                            <div className="h-2 w-2 rounded-full bg-zinc-200" />
+                                                        <div className="h-6 w-6 rounded-full bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 flex items-center justify-center shadow-sm">
+                                                            <div className="h-2 w-2 rounded-full bg-slate-300 dark:bg-slate-700" />
                                                         </div>
                                                     )}
                                                 </div>
 
-                                                <div className="space-y-1.5">
+                                                <div className="space-y-1">
                                                     <div className="flex items-center gap-2">
-                                                        <StepIcon className={`h-4 w-4 ${stepStatus === 'completed' || stepStatus === 'active' ? 'text-[#FF6200]' : 'text-zinc-300'}`} />
-                                                        <h4 className={`text-xs font-black uppercase tracking-wider ${
-                                                            stepStatus === 'completed' ? 'text-zinc-900 line-through decoration-zinc-300' :
-                                                            stepStatus === 'active' ? 'text-[#FF6200]' : 'text-zinc-400'
+                                                        <StepIcon className={`h-4 w-4 ${stepStatus === 'completed' ? 'text-emerald-500' : stepStatus === 'active' ? 'text-[#FF6200]' : 'text-slate-300 dark:text-slate-600'}`} />
+                                                        <h4 className={`text-xs font-bold uppercase tracking-wider ${
+                                                            stepStatus === 'completed' ? 'text-slate-900 dark:text-slate-100' :
+                                                            stepStatus === 'active' ? 'text-[#FF6200]' : 'text-slate-400'
                                                         }`}>
                                                             {step.title}
                                                         </h4>
                                                     </div>
-                                                    <p className={`text-[11px] leading-relaxed italic ${stepStatus === 'completed' || stepStatus === 'active' ? 'text-zinc-500 font-medium' : 'text-zinc-400'}`}>
+                                                    <p className={`text-[11px] leading-relaxed ${stepStatus === 'completed' || stepStatus === 'active' ? 'text-slate-500 dark:text-slate-400 font-medium' : 'text-slate-400/80 dark:text-slate-600'}`}>
                                                         {step.description}
                                                     </p>
                                                 </div>
@@ -574,19 +567,19 @@ export default function OrderDetailPage() {
 
             {/* Confirm Receipt Modal */}
             <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-                <AlertDialogContent className="bg-white border border-zinc-200 rounded-[2.5rem] p-10 max-w-lg">
+                <AlertDialogContent className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 sm:p-8 max-w-lg">
                     <AlertDialogHeader>
-                        <AlertDialogTitle className="text-2xl font-black uppercase italic tracking-tighter">Authorize Escrow Release?</AlertDialogTitle>
-                        <AlertDialogDescription className="text-zinc-500 font-medium italic py-4">
-                            You are about to authorize the permanent release of <span className="text-zinc-900 font-bold">₦{order.amount.toLocaleString()}</span> to the seller. 
-                            Confirm only if the asset has been received in the expected condition.
+                        <AlertDialogTitle className="text-xl font-black uppercase tracking-tight text-slate-900 dark:text-white">Authorize Escrow Release?</AlertDialogTitle>
+                        <AlertDialogDescription className="text-slate-500 dark:text-slate-400 font-medium py-3 text-sm">
+                            You are about to authorize the permanent release of <span className="text-slate-900 dark:text-white font-bold">₦{order.amount.toLocaleString()}</span> to the seller.
+                            Confirm only if the item has arrived and meets your expectation.
                             <br /><br />
-                            <span className="text-[#FF6200] uppercase text-[10px] font-black tracking-widest font-heading">System Warning: This action is non-reversible.</span>
+                            <span className="text-[#FF6200] font-bold text-xs">Note: Once released, this transaction cannot be reversed.</span>
                         </AlertDialogDescription>
                     </AlertDialogHeader>
-                    <AlertDialogFooter className="gap-4">
-                        <AlertDialogCancel className="h-14 px-8 border-zinc-200 text-zinc-500 hover:text-zinc-900 rounded-2xl font-black uppercase tracking-widest text-[10px] font-heading">Abort</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleConfirmDelivery} disabled={confirmingOrder} className="h-14 px-10 bg-[#FF6200] text-black hover:bg-[#FF7A29] rounded-2xl font-black uppercase tracking-widest text-[10px] font-heading border-none">
+                    <AlertDialogFooter className="gap-2 sm:gap-3">
+                        <AlertDialogCancel className="h-11 px-5 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 rounded-xl font-bold uppercase tracking-wider text-xs">Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleConfirmDelivery} disabled={confirmingOrder} className="h-11 px-6 bg-[#FF6200] text-white hover:bg-[#FF7A29] rounded-xl font-bold uppercase tracking-wider text-xs border-none">
                             {confirmingOrder ? 'Releasing...' : 'Release Funds'}
                         </AlertDialogAction>
                     </AlertDialogFooter>

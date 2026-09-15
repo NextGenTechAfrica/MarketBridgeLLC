@@ -1,18 +1,42 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
-const supabase = createClient();
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, CheckCircle, User, Building, Shield, Bell, MapPin, Phone, MessageCircle, Tag, Banknote, Landmark, ArrowLeft, AlertTriangle, Gift, Copy, Share2, Users, Clock, CheckCircle2, ExternalLink } from 'lucide-react';
+import {
+    Loader2,
+    CheckCircle,
+    User,
+    Building,
+    Shield,
+    Bell,
+    MapPin,
+    Phone,
+    MessageCircle,
+    Tag,
+    Banknote,
+    Landmark,
+    ArrowLeft,
+    AlertTriangle,
+    Gift,
+    Copy,
+    Share2,
+    Users,
+    Clock,
+    CheckCircle2,
+    ExternalLink,
+    ShieldCheck
+} from 'lucide-react';
 import { ImageUpload } from '@/components/ImageUpload';
 import { NIGERIAN_STATES } from '@/lib/constants';
+
+const supabase = createClient();
 
 export default function SettingsPage() {
     const { user, loading: authLoading, refreshUser } = useAuth();
@@ -246,7 +270,7 @@ export default function SettingsPage() {
 
     if (authLoading) {
         return (
-            <div className="flex items-center justify-center min-h-[60vh]">
+            <div className="flex items-center justify-center min-h-[60vh] bg-slate-50 dark:bg-slate-950">
                 <Loader2 className="h-8 w-8 animate-spin text-[#FF6200]" />
             </div>
         );
@@ -254,34 +278,25 @@ export default function SettingsPage() {
 
     if (!user) {
         return (
-            <div className="container mx-auto px-4 py-12 text-center">
-                <h1 className="text-2xl font-bold">Please login to access settings</h1>
+            <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-6 text-center">
+                <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Please log in to access settings</h1>
+                <Button asChild className="mt-4 bg-[#FF6200] hover:bg-[#FF7A29] text-white font-bold rounded-xl">
+                    <a href="/login">Log In</a>
+                </Button>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-black text-white pb-20">
-            {/* Background Grid Accent */}
-            <div className="fixed inset-0 bg-[url('/grid-pattern.svg')] opacity-10 pointer-events-none" />
-            <div className="fixed top-0 right-0 w-[500px] h-[500px] bg-[#FF6200]/5 blur-[120px] rounded-full pointer-events-none" />
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 pt-24 pb-28">
+            <div className="container mx-auto px-4 sm:px-6 max-w-5xl">
 
-            <div className="container mx-auto px-4 py-12 max-w-5xl relative z-10">
-                <div className="mb-12 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+                {/* Header Navigation & Title */}
+                <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
                     <div>
-                        <div className="flex items-center gap-2 text-[#FF6200] mb-2">
-                            <Shield className="h-4 w-4" />
-                            <span className="text-[10px] font-black uppercase tracking-[0.2em]">Secure Area</span>
-                        </div>
-                        <h1 className="text-4xl font-black uppercase tracking-tighter italic">
-                            Profile <span className="text-[#FF6200]">Settings</span>
-                        </h1>
-                        <p className="text-white/40 mt-2 font-medium">
-                            Account status: {user.isVerified ? 'Verified' : 'Pending Verification'}
-                        </p>
                         <Button
                             variant="ghost"
-                            className="text-white/40 hover:text-white mt-4 p-0 h-auto font-mono text-xs uppercase tracking-widest flex items-center gap-2"
+                            className="text-slate-500 hover:text-slate-900 dark:hover:text-white p-0 h-auto text-xs font-bold uppercase tracking-wider flex items-center gap-2 mb-3"
                             onClick={() => {
                                 if (user.role === 'ceo') window.location.href = '/ceo';
                                 else if (user.role === 'admin' || user.role.includes('_admin')) window.location.href = '/admin';
@@ -289,116 +304,120 @@ export default function SettingsPage() {
                                 else window.location.href = '/';
                             }}
                         >
-                            <ArrowLeft className="h-3 w-3" />
-                            Return to Interface
+                            <ArrowLeft className="h-3.5 w-3.5" />
+                            Back to Dashboard
                         </Button>
+                        <h1 className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-slate-900 dark:text-white">
+                            Account <span className="text-[#FF6200]">Settings</span>
+                        </h1>
+                        <p className="text-slate-500 dark:text-slate-400 text-sm font-medium mt-1">
+                            Status: <span className="font-semibold text-slate-700 dark:text-slate-300">{user.isVerified ? 'Verified Merchant' : 'Verification Pending'}</span>
+                        </p>
                     </div>
+
                     {successMessage && (
-                        <div className="bg-[#FF6200]/10 border border-[#FF6200]/20 text-[#FF6200] px-6 py-3 rounded-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-4 backdrop-blur-md">
-                            <CheckCircle className="h-4 w-4" />
-                            <span className="text-xs font-black uppercase tracking-widest">{successMessage}</span>
+                        <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-5 py-2.5 rounded-xl flex items-center gap-2.5 animate-in fade-in slide-in-from-top-2">
+                            <CheckCircle className="h-4 w-4 shrink-0" />
+                            <span className="text-xs font-bold uppercase tracking-wider">{successMessage}</span>
                         </div>
                     )}
                 </div>
 
-                <Tabs defaultValue="profile" className="space-y-8">
-                    <TabsList className="bg-white/5 border border-white/10 p-1 lg:w-auto w-full flex overflow-x-auto no-scrollbar rounded-2xl h-14">
-                        <TabsTrigger value="profile" className="gap-2 px-6 rounded-xl data-[state=active]:bg-[#FF6200] data-[state=active]:text-black font-bold uppercase text-[10px] tracking-widest transition-all">
+                <Tabs defaultValue="profile" className="space-y-6">
+                    <TabsList className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-1 w-full flex overflow-x-auto no-scrollbar rounded-2xl h-14 shadow-sm">
+                        <TabsTrigger value="profile" className="gap-2 px-5 rounded-xl data-[state=active]:bg-[#FF6200] data-[state=active]:text-white font-bold uppercase text-[11px] tracking-wider transition-all">
                             <User className="h-3.5 w-3.5" />
                             Profile
                         </TabsTrigger>
                         {user.role === 'student_seller' && (
                             <>
-                                <TabsTrigger value="business" className="gap-2 px-6 rounded-xl data-[state=active]:bg-[#FF6200] data-[state=active]:text-black font-bold uppercase text-[10px] tracking-widest transition-all">
+                                <TabsTrigger value="business" className="gap-2 px-5 rounded-xl data-[state=active]:bg-[#FF6200] data-[state=active]:text-white font-bold uppercase text-[11px] tracking-wider transition-all">
                                     <Building className="h-3.5 w-3.5" />
                                     Business
                                 </TabsTrigger>
-                                <TabsTrigger value="financials" className="gap-2 px-6 rounded-xl data-[state=active]:bg-[#FF6200] data-[state=active]:text-black font-bold uppercase text-[10px] tracking-widest transition-all">
+                                <TabsTrigger value="financials" className="gap-2 px-5 rounded-xl data-[state=active]:bg-[#FF6200] data-[state=active]:text-white font-bold uppercase text-[11px] tracking-wider transition-all">
                                     <Banknote className="h-3.5 w-3.5" />
-                                    Payments
+                                    Payouts
                                 </TabsTrigger>
                             </>
                         )}
-                        <TabsTrigger value="security" className="gap-2 px-6 rounded-xl data-[state=active]:bg-[#FF6200] data-[state=active]:text-black font-bold uppercase text-[10px] tracking-widest transition-all">
+                        <TabsTrigger value="security" className="gap-2 px-5 rounded-xl data-[state=active]:bg-[#FF6200] data-[state=active]:text-white font-bold uppercase text-[11px] tracking-wider transition-all">
                             <Shield className="h-3.5 w-3.5" />
                             Security
                         </TabsTrigger>
-                        <TabsTrigger value="notifications" className="gap-2 px-6 rounded-xl data-[state=active]:bg-[#FF6200] data-[state=active]:text-black font-bold uppercase text-[10px] tracking-widest transition-all">
+                        <TabsTrigger value="notifications" className="gap-2 px-5 rounded-xl data-[state=active]:bg-[#FF6200] data-[state=active]:text-white font-bold uppercase text-[11px] tracking-wider transition-all">
                             <Bell className="h-3.5 w-3.5" />
                             Notifications
                         </TabsTrigger>
-                        <TabsTrigger value="referrals" className="gap-2 px-6 rounded-xl data-[state=active]:bg-[#FF6200] data-[state=active]:text-black font-bold uppercase text-[10px] tracking-widest transition-all">
+                        <TabsTrigger value="referrals" className="gap-2 px-5 rounded-xl data-[state=active]:bg-[#FF6200] data-[state=active]:text-white font-bold uppercase text-[11px] tracking-wider transition-all">
                             <Gift className="h-3.5 w-3.5" />
                             Referrals
                         </TabsTrigger>
                     </TabsList>
 
                     {/* Identity Tab (Standard) */}
-                    <TabsContent value="profile" className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                        <Card className="glass-card border-white/10 rounded-[2rem] overflow-hidden bg-white/5">
-                            <CardHeader className="p-8 pb-4">
-                                <CardTitle className="text-xl font-black uppercase tracking-tight">Personal Information</CardTitle>
-                                <CardDescription className="text-white/20 uppercase text-[9px] font-bold tracking-widest">Update your public profile details</CardDescription>
+                    <TabsContent value="profile" className="animate-in fade-in duration-300">
+                        <Card className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
+                            <CardHeader className="p-6 sm:p-8 pb-4">
+                                <CardTitle className="text-lg font-black uppercase tracking-tight text-slate-900 dark:text-white">Personal Information</CardTitle>
+                                <CardDescription className="text-slate-500 dark:text-slate-400 text-xs">Update your public profile details and contact information</CardDescription>
                             </CardHeader>
-                            <CardContent className="p-8 space-y-8">
-                                <div className="flex flex-col md:flex-row gap-12 items-start">
-                                    <div className="space-y-4">
-                                        <Label className="text-[10px] uppercase font-black tracking-widest text-white/40">Profile Picture</Label>
-                                        <div className="w-40 h-40 relative group">
-                                            <div className="absolute inset-0 bg-gradient-to-br from-[#FF6200] to-orange-400 rounded-3xl blur opacity-20 group-hover:opacity-40 transition-opacity" />
-                                            <div className="relative h-full w-full rounded-3xl overflow-hidden border border-white/10 bg-black">
-                                                <ImageUpload
-                                                    onImagesSelected={(urls) => setFormData({ ...formData, photoURL: urls[0] || '' })}
-                                                    defaultImages={formData.photoURL ? [formData.photoURL] : []}
-                                                    maxImages={1}
-                                                    bucketName="avatars"
-                                                />
-                                            </div>
+                            <CardContent className="p-6 sm:p-8 space-y-6">
+                                <div className="flex flex-col md:flex-row gap-8 items-start">
+                                    <div className="space-y-3">
+                                        <Label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Profile Photo</Label>
+                                        <div className="w-36 h-36 relative rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800">
+                                            <ImageUpload
+                                                onImagesSelected={(urls) => setFormData({ ...formData, photoURL: urls[0] || '' })}
+                                                defaultImages={formData.photoURL ? [formData.photoURL] : []}
+                                                maxImages={1}
+                                                bucketName="avatars"
+                                            />
                                         </div>
                                     </div>
 
-                                    <div className="flex-1 grid gap-8 w-full">
-                                        <div className="grid gap-3">
-                                            <Label htmlFor="displayName" className="text-[10px] uppercase font-black tracking-widest text-white/40 ml-1">Full Name</Label>
-                                            <div className="relative group">
-                                                <User className="absolute left-5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/10 group-focus-within:text-[#FF6200] transition-colors" />
+                                    <div className="flex-1 grid gap-5 w-full">
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="displayName" className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Full Name</Label>
+                                            <div className="relative">
+                                                <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                                                 <Input
                                                     id="displayName"
-                                                    className="h-14 pl-14 bg-black border-white/10 rounded-2xl focus-visible:ring-[#FF6200] focus-visible:border-[#FF6200] focus-visible:ring-1 font-bold text-white uppercase placeholder:text-white/10"
+                                                    className="h-12 pl-11 bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 rounded-xl focus-visible:ring-[#FF6200] font-medium"
                                                     value={formData.displayName}
                                                     onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
                                                 />
                                             </div>
                                         </div>
 
-                                        <div className="grid md:grid-cols-2 gap-8">
-                                            <div className="grid gap-3">
-                                                <Label htmlFor="phone" className="text-[10px] uppercase font-black tracking-widest text-white/30 ml-1">Phone Number</Label>
-                                                <div className="relative group">
-                                                    <Phone className="absolute left-5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/10 group-focus-within:text-[#FF6200] transition-colors" />
+                                        <div className="grid md:grid-cols-2 gap-5">
+                                            <div className="grid gap-2">
+                                                <Label htmlFor="phone" className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Phone Number</Label>
+                                                <div className="relative">
+                                                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                                                     <Input
                                                         id="phone"
-                                                        className="h-14 pl-14 bg-black border-white/10 rounded-2xl focus-visible:ring-[#FF6200] focus-visible:border-[#FF6200] focus-visible:ring-1 font-bold text-white"
+                                                        className="h-12 pl-11 bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 rounded-xl focus-visible:ring-[#FF6200] font-medium"
                                                         value={formData.phone_number}
                                                         onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
                                                     />
                                                 </div>
                                             </div>
-                                            <div className="grid gap-3">
-                                                <Label htmlFor="location" className="text-[10px] uppercase font-black tracking-widest text-white/40 ml-1">Location / State</Label>
-                                                <div className="relative group">
-                                                    <MapPin className="absolute left-5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/10 group-focus-within:text-[#FF6200] transition-colors z-10" />
+                                            <div className="grid gap-2">
+                                                <Label htmlFor="location" className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Location / State</Label>
+                                                <div className="relative">
+                                                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 z-10" />
                                                     <select
                                                         id="location"
                                                         title="Select your state or location"
                                                         aria-label="Location / State"
-                                                        className="w-full h-14 pl-14 pr-6 bg-black border border-white/10 rounded-2xl text-white focus:ring-1 focus:ring-[#FF6200] focus:border-[#FF6200] outline-none font-bold uppercase appearance-none"
+                                                        className="w-full h-12 pl-11 pr-4 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 focus:ring-1 focus:ring-[#FF6200] focus:border-[#FF6200] outline-none font-medium appearance-none"
                                                         value={formData.location}
                                                         onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                                                     >
-                                                        <option value="" className="bg-black">Select Location</option>
+                                                        <option value="">Select Location</option>
                                                         {NIGERIAN_STATES.map((state: string) => (
-                                                            <option key={state} value={state} className="bg-black">{state === 'FCT - Abuja' ? 'FCT (Abuja)' : state}</option>
+                                                            <option key={state} value={state}>{state === 'FCT - Abuja' ? 'FCT (Abuja)' : state}</option>
                                                         ))}
                                                     </select>
                                                 </div>
@@ -407,10 +426,10 @@ export default function SettingsPage() {
                                     </div>
                                 </div>
                             </CardContent>
-                            <CardFooter className="bg-white/5 border-t border-white/10 p-8 flex justify-end">
-                                <Button onClick={handleUpdateProfile} disabled={updating} className="h-14 px-10 bg-[#FF6200] hover:bg-[#FF7A29] text-black font-black uppercase tracking-widest rounded-2xl border-none">
-                                    {updating ? <Loader2 className="mr-3 h-5 w-5 animate-spin" /> : <CheckCircle className="mr-3 h-5 w-5" />}
-                                    Save Changes
+                            <CardFooter className="bg-slate-50/50 dark:bg-slate-800/30 border-t border-slate-200 dark:border-slate-800 p-6 flex justify-end">
+                                <Button onClick={handleUpdateProfile} disabled={updating} className="h-12 px-8 bg-[#FF6200] hover:bg-[#FF7A29] text-white font-bold uppercase tracking-wider text-xs rounded-xl border-none shadow-sm">
+                                    {updating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle className="mr-2 h-4 w-4" />}
+                                    Save Profile
                                 </Button>
                             </CardFooter>
                         </Card>
@@ -418,46 +437,46 @@ export default function SettingsPage() {
 
                     {/* Business Tab (Sellers Only) */}
                     {user.role === 'student_seller' && (
-                        <TabsContent value="business" className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                            <Card className="glass-card border-white/10 rounded-[2rem] overflow-hidden bg-white/5">
-                                <CardHeader className="p-8 pb-4">
-                                    <CardTitle className="text-xl font-black uppercase tracking-tight">Business Details</CardTitle>
-                                    <CardDescription className="text-white/40 uppercase text-[9px] font-bold tracking-widest">Update your business information</CardDescription>
+                        <TabsContent value="business" className="animate-in fade-in duration-300">
+                            <Card className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
+                                <CardHeader className="p-6 sm:p-8 pb-4">
+                                    <CardTitle className="text-lg font-black uppercase tracking-tight text-slate-900 dark:text-white">Business Details</CardTitle>
+                                    <CardDescription className="text-slate-500 dark:text-slate-400 text-xs">Configure your storefront appearance and business setup</CardDescription>
                                 </CardHeader>
-                                <CardContent className="p-8 space-y-8">
-                                    <div className="grid md:grid-cols-2 gap-8">
-                                        <div className="grid gap-3">
-                                            <Label htmlFor="businessName" className="text-[10px] uppercase font-black tracking-widest text-white/30 ml-1">Business Name</Label>
-                                            <div className="relative group">
-                                                <Building className="absolute left-5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20 group-focus-within:text-[#FF6200] transition-colors" />
+                                <CardContent className="p-6 sm:p-8 space-y-6">
+                                    <div className="grid md:grid-cols-2 gap-5">
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="businessName" className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Store / Business Name</Label>
+                                            <div className="relative">
+                                                <Building className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                                                 <Input
                                                     id="businessName"
-                                                    className="h-14 pl-14 bg-black border-white/10 rounded-2xl focus-visible:ring-[#FF6200] focus-visible:border-[#FF6200] focus-visible:ring-1 font-bold text-white"
+                                                    className="h-12 pl-11 bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 rounded-xl focus-visible:ring-[#FF6200] font-medium"
                                                     value={formData.businessName}
                                                     onChange={(e) => setFormData({ ...formData, businessName: e.target.value })}
                                                 />
                                             </div>
                                         </div>
-                                        <div className="grid gap-3">
-                                            <Label htmlFor="storeType" className="text-[10px] uppercase font-black tracking-widest text-white/30 ml-1">Store Type</Label>
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="storeType" className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Store Type</Label>
                                             <select
                                                 id="storeType"
                                                 title="Select your store type"
                                                 aria-label="Store Type"
-                                                className="w-full h-14 px-6 bg-black border border-white/10 rounded-2xl text-white focus:ring-1 focus:ring-[#FF6200] focus:border-[#FF6200] outline-none font-bold uppercase appearance-none"
+                                                className="w-full h-12 px-4 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 focus:ring-1 focus:ring-[#FF6200] focus:border-[#FF6200] outline-none font-medium appearance-none"
                                                 value={formData.storeType}
                                                 onChange={(e) => setFormData({ ...formData, storeType: e.target.value })}
                                             >
-                                                <option value="online" className="bg-zinc-900">Online Store</option>
-                                                <option value="physical" className="bg-zinc-900">Physical Store</option>
-                                                <option value="both" className="bg-zinc-900">Both</option>
+                                                <option value="online">Online Marketplace Store</option>
+                                                <option value="physical">Physical Campus Store</option>
+                                                <option value="both">Both (Online + Physical)</option>
                                             </select>
                                         </div>
                                     </div>
                                 </CardContent>
-                                <CardFooter className="bg-white/5 border-t border-white/10 p-8 flex justify-end">
-                                    <Button onClick={handleUpdateProfile} disabled={updating} className="h-14 px-10 bg-[#FF6200] hover:bg-[#FF7A29] text-black font-black uppercase tracking-widest rounded-2xl border-none">
-                                        {updating ? <Loader2 className="mr-3 h-5 w-5 animate-spin" /> : <CheckCircle className="mr-3 h-5 w-5" />}
+                                <CardFooter className="bg-slate-50/50 dark:bg-slate-800/30 border-t border-slate-200 dark:border-slate-800 p-6 flex justify-end">
+                                    <Button onClick={handleUpdateProfile} disabled={updating} className="h-12 px-8 bg-[#FF6200] hover:bg-[#FF7A29] text-white font-bold uppercase tracking-wider text-xs rounded-xl border-none shadow-sm">
+                                        {updating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle className="mr-2 h-4 w-4" />}
                                         Update Business
                                     </Button>
                                 </CardFooter>
@@ -467,59 +486,59 @@ export default function SettingsPage() {
 
                     {/* Financials / Payouts Tab (Sellers Only) */}
                     {user.role === 'student_seller' && (
-                        <TabsContent value="financials" className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                            <Card className="glass-card border-white/10 rounded-[2rem] overflow-hidden bg-white/5">
-                                <CardHeader className="p-8 pb-4">
-                                    <CardTitle className="text-xl font-black uppercase tracking-tight">Bank Details</CardTitle>
-                                    <CardDescription className="text-white/40 uppercase text-[9px] font-bold tracking-widest">Where you want to receive payments</CardDescription>
+                        <TabsContent value="financials" className="animate-in fade-in duration-300">
+                            <Card className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
+                                <CardHeader className="p-6 sm:p-8 pb-4">
+                                    <CardTitle className="text-lg font-black uppercase tracking-tight text-slate-900 dark:text-white">Bank Account & Payouts</CardTitle>
+                                    <CardDescription className="text-slate-500 dark:text-slate-400 text-xs">Direct deposit account for sales revenue settlement</CardDescription>
                                 </CardHeader>
-                                <CardContent className="p-8 space-y-8">
-                                    <div className="grid md:grid-cols-2 gap-8">
-                                        <div className="grid gap-3">
-                                            <Label htmlFor="bankName" className="text-[10px] uppercase font-black tracking-widest text-white/30 ml-1">Bank Name</Label>
-                                            <div className="relative group">
-                                                <Landmark className="absolute left-5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20 group-focus-within:text-[#FF6200] transition-colors" />
+                                <CardContent className="p-6 sm:p-8 space-y-6">
+                                    <div className="grid md:grid-cols-2 gap-5">
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="bankName" className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Bank Name</Label>
+                                            <div className="relative">
+                                                <Landmark className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                                                 <Input
                                                     id="bankName"
                                                     placeholder="e.g. GTBank, Kuda, Moniepoint"
-                                                    className="h-14 pl-14 bg-black border-white/10 rounded-2xl focus-visible:ring-[#FF6200] focus-visible:border-[#FF6200] focus-visible:ring-1 font-bold text-white"
+                                                    className="h-12 pl-11 bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 rounded-xl focus-visible:ring-[#FF6200] font-medium"
                                                     value={bankData.bankName}
                                                     onChange={(e) => setBankData({ ...bankData, bankName: e.target.value })}
                                                 />
                                             </div>
                                         </div>
-                                        <div className="grid gap-3">
-                                            <Label htmlFor="accountNumber" className="text-[10px] uppercase font-black tracking-widest text-white/30 ml-1">Account Number</Label>
-                                            <div className="relative group">
-                                                <Banknote className="absolute left-5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20 group-focus-within:text-[#FF6200] transition-colors" />
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="accountNumber" className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Account Number</Label>
+                                            <div className="relative">
+                                                <Banknote className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                                                 <Input
                                                     id="accountNumber"
                                                     placeholder="10-digit NUBAN"
-                                                    className="h-14 pl-14 bg-black border-white/10 rounded-2xl focus-visible:ring-[#FF6200] focus-visible:border-[#FF6200] focus-visible:ring-1 font-bold text-white font-mono"
+                                                    className="h-12 pl-11 bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 rounded-xl focus-visible:ring-[#FF6200] font-medium font-mono"
                                                     value={bankData.accountNumber}
                                                     onChange={(e) => setBankData({ ...bankData, accountNumber: e.target.value })}
                                                 />
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="grid gap-3">
-                                        <Label htmlFor="accountName" className="text-[10px] uppercase font-black tracking-widest text-white/30 ml-1">Account Name</Label>
-                                        <div className="relative group">
-                                            <User className="absolute left-5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20 group-focus-within:text-[#FF6200] transition-colors" />
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="accountName" className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Account Name</Label>
+                                        <div className="relative">
+                                            <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                                             <Input
                                                 id="accountName"
                                                 placeholder="Matching Bank Account Name"
-                                                className="h-14 pl-14 bg-black border-white/10 rounded-2xl focus-visible:ring-[#FF6200] focus-visible:border-[#FF6200] focus-visible:ring-1 font-bold text-white"
+                                                className="h-12 pl-11 bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 rounded-xl focus-visible:ring-[#FF6200] font-medium"
                                                 value={bankData.accountName}
                                                 onChange={(e) => setBankData({ ...bankData, accountName: e.target.value })}
                                             />
                                         </div>
                                     </div>
                                 </CardContent>
-                                <CardFooter className="bg-white/5 border-t border-white/10 p-8 flex justify-end">
-                                    <Button onClick={handleUpdateBank} disabled={updating} className="h-14 px-10 bg-[#FF6200] hover:bg-[#FF7A29] text-black font-black uppercase tracking-widest rounded-2xl border-none">
-                                        {updating ? <Loader2 className="mr-3 h-5 w-5 animate-spin" /> : <CheckCircle className="mr-3 h-5 w-5" />}
-                                        Save Details
+                                <CardFooter className="bg-slate-50/50 dark:bg-slate-800/30 border-t border-slate-200 dark:border-slate-800 p-6 flex justify-end">
+                                    <Button onClick={handleUpdateBank} disabled={updating} className="h-12 px-8 bg-[#FF6200] hover:bg-[#FF7A29] text-white font-bold uppercase tracking-wider text-xs rounded-xl border-none shadow-sm">
+                                        {updating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle className="mr-2 h-4 w-4" />}
+                                        Save Payout Details
                                     </Button>
                                 </CardFooter>
                             </Card>
@@ -527,129 +546,128 @@ export default function SettingsPage() {
                     )}
 
                     {/* Security Tab */}
-                    <TabsContent value="security" className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                        <div className="grid gap-8">
-                            <Card className="glass-card border-white/10 rounded-[2rem] overflow-hidden bg-white/5">
-                                <CardHeader className="p-8">
-                                    <CardTitle className="text-xl font-black uppercase tracking-tight">Account Security</CardTitle>
-                                    <CardDescription className="text-white/40 uppercase text-[9px] font-bold tracking-widest">Status and access control</CardDescription>
-                                </CardHeader>
-                                <CardContent className="px-8 pb-8 space-y-6">
-                                    <div className="flex items-center justify-between p-6 bg-black border border-white/5 rounded-2xl">
-                                        <div className="space-y-1">
-                                            <p className="text-[10px] uppercase font-black text-white/30 tracking-[0.2em]">Current Role</p>
-                                            <p className="font-bold text-white uppercase tracking-wider">{user.role}</p>
-                                        </div>
-                                        <Shield className="h-6 w-6 text-[#FF6200] opacity-50" />
+                    <TabsContent value="security" className="animate-in fade-in duration-300 space-y-6">
+                        <Card className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
+                            <CardHeader className="p-6 sm:p-8 pb-4">
+                                <CardTitle className="text-lg font-black uppercase tracking-tight text-slate-900 dark:text-white">Account Security & Status</CardTitle>
+                                <CardDescription className="text-slate-500 dark:text-slate-400 text-xs">Verified credentials and access control tier</CardDescription>
+                            </CardHeader>
+                            <CardContent className="p-6 sm:p-8 space-y-4">
+                                <div className="flex items-center justify-between p-5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/60 rounded-xl">
+                                    <div className="space-y-0.5">
+                                        <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Account Role</p>
+                                        <p className="font-bold text-slate-800 dark:text-slate-200 uppercase text-sm">{user.role}</p>
                                     </div>
-                                    <div className="flex items-center justify-between p-6 bg-black border border-white/5 rounded-2xl">
-                                        <div className="space-y-1">
-                                            <p className="text-[10px] uppercase font-black text-white/30 tracking-[0.2em]">Verification Status</p>
-                                            <p className={`font-black uppercase tracking-wider ${user.isVerified ? 'text-[#FF6200]' : 'text-white/40'}`}>
-                                                {user.isVerified ? 'Verified' : 'Pending'}
-                                            </p>
-                                        </div>
-                                        <CheckCircle className={`h-6 w-6 ${user.isVerified ? 'text-[#FF6200]' : 'text-white/20'}`} />
+                                    <Shield className="h-5 w-5 text-[#FF6200]" />
+                                </div>
+                                <div className="flex items-center justify-between p-5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/60 rounded-xl">
+                                    <div className="space-y-0.5">
+                                        <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Verification Status</p>
+                                        <p className={`font-bold uppercase text-sm ${user.isVerified ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-500'}`}>
+                                            {user.isVerified ? 'Verified Merchant' : 'Verification In Progress'}
+                                        </p>
                                     </div>
-                                </CardContent>
-                            </Card>
+                                    <ShieldCheck className={`h-5 w-5 ${user.isVerified ? 'text-emerald-500' : 'text-amber-500'}`} />
+                                </div>
+                            </CardContent>
+                        </Card>
 
-                            <Card className="border-[#FF6200]/20 rounded-[2rem] overflow-hidden bg-[#FF6200]/5">
-                                <CardHeader className="p-8 pb-4">
-                                    <CardTitle className="text-xl font-black uppercase tracking-tight text-white">Danger Zone</CardTitle>
-                                    <CardDescription className="text-white/20 uppercase text-[9px] font-bold tracking-widest">Permanent actions</CardDescription>
-                                </CardHeader>
-                                <CardContent className="p-8 space-y-4">
-                                    {!showDeleteConfirm ? (
-                                        <Button
-                                            variant="outline"
-                                            onClick={() => setShowDeleteConfirm(true)}
-                                            className="border-white/20 text-white/40 hover:bg-red-600 hover:text-white hover:border-red-600 font-bold uppercase tracking-widest rounded-xl transition-all h-12"
-                                        >
-                                            <AlertTriangle className="mr-2 h-4 w-4" />
-                                            Delete Account
-                                        </Button>
-                                    ) : (
-                                        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
-                                            <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-5 space-y-2">
-                                                <p className="text-red-400 text-sm font-bold">This action is permanent and cannot be undone.</p>
-                                                <p className="text-white/40 text-xs">All your listings, orders, chats, and profile data will be permanently erased.</p>
-                                            </div>
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] uppercase font-black text-white/30 tracking-widest ml-1">Type DELETE to confirm</label>
-                                                <input
-                                                    type="text"
-                                                    value={deleteConfirmText}
-                                                    onChange={(e) => setDeleteConfirmText(e.target.value)}
-                                                    placeholder="DELETE"
-                                                    className="w-full h-14 px-6 bg-black border border-red-500/30 rounded-2xl text-white font-bold uppercase tracking-widest placeholder:text-white/10 focus:outline-none focus:ring-1 focus:ring-red-500/50"
-                                                />
-                                            </div>
-                                            <div className="flex gap-3">
-                                                <Button
-                                                    variant="ghost"
-                                                    onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmText(''); }}
-                                                    className="flex-1 h-12 border border-white/10 text-white/40 hover:text-white font-bold uppercase tracking-widest rounded-xl"
-                                                >
-                                                    Cancel
-                                                </Button>
-                                                <Button
-                                                    disabled={deleteConfirmText !== 'DELETE' || isDeleting}
-                                                    onClick={async () => {
-                                                        setIsDeleting(true);
-                                                        try {
-                                                            const res = await fetch('/api/account/delete', { method: 'DELETE' });
-                                                            const data = await res.json();
-                                                            if (!res.ok) throw new Error(data.error);
-                                                            router.push('/?deleted=true');
-                                                        } catch (err: any) {
-                                                            setSuccessMessage(`Error: ${err.message || 'Deletion failed'}`);
-                                                            setIsDeleting(false);
-                                                        }
-                                                    }}
-                                                    className="flex-1 h-12 bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-widest rounded-xl border-none disabled:opacity-30"
-                                                >
-                                                    {isDeleting ? <Loader2 className="animate-spin h-5 w-5" /> : 'Permanently Delete'}
-                                                </Button>
-                                            </div>
+                        {/* Danger Zone */}
+                        <Card className="border-red-500/20 bg-red-500/5 rounded-2xl overflow-hidden">
+                            <CardHeader className="p-6 sm:p-8 pb-4">
+                                <CardTitle className="text-lg font-black uppercase tracking-tight text-red-600 dark:text-red-400">Danger Zone</CardTitle>
+                                <CardDescription className="text-slate-500 dark:text-slate-400 text-xs">Irreversible account actions</CardDescription>
+                            </CardHeader>
+                            <CardContent className="p-6 sm:p-8 space-y-4">
+                                {!showDeleteConfirm ? (
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => setShowDeleteConfirm(true)}
+                                        className="border-red-200 dark:border-red-900/40 text-red-600 hover:bg-red-600 hover:text-white font-bold uppercase tracking-wider text-xs rounded-xl transition-all h-11"
+                                    >
+                                        <AlertTriangle className="mr-2 h-4 w-4" />
+                                        Delete Account
+                                    </Button>
+                                ) : (
+                                    <div className="space-y-4">
+                                        <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 space-y-1">
+                                            <p className="text-red-600 dark:text-red-400 text-xs font-bold">This action is permanent and cannot be reversed.</p>
+                                            <p className="text-slate-600 dark:text-slate-400 text-xs">All active listings, order history, chats, and balance records will be permanently removed.</p>
                                         </div>
-                                    )}
-                                </CardContent>
-                            </Card>
-                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Type DELETE to confirm</label>
+                                            <Input
+                                                type="text"
+                                                value={deleteConfirmText}
+                                                onChange={(e) => setDeleteConfirmText(e.target.value)}
+                                                placeholder="DELETE"
+                                                className="h-12 bg-white dark:bg-slate-900 border-red-500/30 rounded-xl font-bold uppercase tracking-wider focus:outline-none focus:ring-1 focus:ring-red-500"
+                                            />
+                                        </div>
+                                        <div className="flex gap-3">
+                                            <Button
+                                                variant="ghost"
+                                                onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmText(''); }}
+                                                className="flex-1 h-11 border border-slate-200 dark:border-slate-700 font-bold uppercase tracking-wider text-xs rounded-xl"
+                                            >
+                                                Cancel
+                                            </Button>
+                                            <Button
+                                                disabled={deleteConfirmText !== 'DELETE' || isDeleting}
+                                                onClick={async () => {
+                                                    setIsDeleting(true);
+                                                    try {
+                                                        const res = await fetch('/api/account/delete', { method: 'DELETE' });
+                                                        const data = await res.json();
+                                                        if (!res.ok) throw new Error(data.error);
+                                                        router.push('/?deleted=true');
+                                                    } catch (err: any) {
+                                                        setSuccessMessage(`Error: ${err.message || 'Deletion failed'}`);
+                                                        setIsDeleting(false);
+                                                    }
+                                                }}
+                                                className="flex-1 h-11 bg-red-600 hover:bg-red-700 text-white font-bold uppercase tracking-wider text-xs rounded-xl border-none disabled:opacity-40"
+                                            >
+                                                {isDeleting ? <Loader2 className="animate-spin h-4 w-4" /> : 'Permanently Delete'}
+                                            </Button>
+                                        </div>
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
                     </TabsContent>
 
                     {/* Notifications Tab */}
-                    <TabsContent value="notifications" className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                        <Card className="glass-card border-white/10 rounded-[2rem] overflow-hidden bg-white/5">
-                            <CardHeader className="p-8">
-                                <CardTitle className="text-xl font-black uppercase tracking-tight">Notifications</CardTitle>
-                                <CardDescription className="text-white/40 uppercase text-[9px] font-bold tracking-widest">Control how and when we contact you</CardDescription>
+                    <TabsContent value="notifications" className="animate-in fade-in duration-300">
+                        <Card className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
+                            <CardHeader className="p-6 sm:p-8 pb-4">
+                                <CardTitle className="text-lg font-black uppercase tracking-tight text-slate-900 dark:text-white">Notification Preferences</CardTitle>
+                                <CardDescription className="text-slate-500 dark:text-slate-400 text-xs">Choose which notifications you wish to receive</CardDescription>
                             </CardHeader>
-                            <CardContent className="px-8 pb-8 space-y-3">
+                            <CardContent className="p-6 sm:p-8 space-y-3">
                                 {([
                                     {
                                         key: 'notif_order_updates' as const,
-                                        label: 'Order Updates',
-                                        description: 'Get notified when your order status changes (shipped, delivered, etc.)',
+                                        label: 'Order Status Updates',
+                                        description: 'Alerts when order states change (shipped, delivered, completed)',
                                         icon: Tag,
                                     },
                                     {
                                         key: 'notif_new_messages' as const,
-                                        label: 'New Messages',
-                                        description: 'Get notified when someone sends you a chat message',
+                                        label: 'Direct Chat Messages',
+                                        description: 'Alerts when buyers or sellers send you messages',
                                         icon: MessageCircle,
                                     },
                                     {
                                         key: 'notif_offer_updates' as const,
-                                        label: 'Offer Updates',
-                                        description: 'Get notified when a seller accepts or rejects your price offer',
+                                        label: 'Offer & Price Negotiations',
+                                        description: 'Notifications when buyers submit, counter, or accept price offers',
                                         icon: Bell,
                                     },
                                     {
                                         key: 'notif_marketing_emails' as const,
-                                        label: 'Marketing Emails',
-                                        description: 'Receive promotional emails, campus deals, and platform news',
+                                        label: 'Marketing & Campus Digest',
+                                        description: 'Promotional deals, seller growth tips, and platform updates',
                                         icon: MapPin,
                                     },
                                 ] as const).map(({ key, label, description, icon: Icon }) => {
@@ -661,33 +679,37 @@ export default function SettingsPage() {
                                             key={key}
                                             onClick={() => toggleNotif(key)}
                                             disabled={!!savingNotif}
-                                            className={`w-full flex items-center justify-between p-6 rounded-2xl border transition-all duration-300 text-left group ${isOn
-                                                ? 'bg-[#FF6200]/5 border-[#FF6200]/20 hover:border-[#FF6200]/40'
-                                                : 'bg-black border-white/5 hover:border-white/15'
-                                                } disabled:opacity-60 disabled:cursor-wait`}
+                                            className={`w-full flex items-center justify-between p-5 rounded-xl border transition-all text-left group ${
+                                                isOn
+                                                    ? 'bg-[#FF6200]/5 dark:bg-[#FF6200]/10 border-[#FF6200]/30 hover:border-[#FF6200]/50'
+                                                    : 'bg-slate-50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-700/60 hover:border-slate-300 dark:hover:border-slate-600'
+                                            } disabled:opacity-60 disabled:cursor-wait`}
                                         >
-                                            <div className="flex items-center gap-5">
-                                                <div className={`h-10 w-10 rounded-xl flex items-center justify-center shrink-0 transition-colors ${isOn ? 'bg-[#FF6200]/10' : 'bg-white/5'
-                                                    }`}>
-                                                    <Icon className={`h-4 w-4 transition-colors ${isOn ? 'text-[#FF6200]' : 'text-white/30'}`} />
+                                            <div className="flex items-center gap-4">
+                                                <div className={`h-10 w-10 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
+                                                    isOn ? 'bg-[#FF6200]/10 text-[#FF6200]' : 'bg-slate-200 dark:bg-slate-700 text-slate-400'
+                                                }`}>
+                                                    <Icon className="h-4 w-4" />
                                                 </div>
                                                 <div className="space-y-0.5">
-                                                    <p className={`font-black uppercase tracking-wider text-sm transition-colors ${isOn ? 'text-white' : 'text-white/40'}`}>
+                                                    <p className={`font-bold uppercase text-xs tracking-wider ${isOn ? 'text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-400'}`}>
                                                         {label}
                                                     </p>
-                                                    <p className="text-[11px] text-white/30 font-medium">{description}</p>
+                                                    <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">{description}</p>
                                                 </div>
                                             </div>
                                             <div className="shrink-0 ml-4">
                                                 {isSaving ? (
                                                     <Loader2 className="h-5 w-5 animate-spin text-[#FF6200]" />
                                                 ) : isSuccess ? (
-                                                    <CheckCircle className="h-5 w-5 text-[#FF6200]" />
+                                                    <CheckCircle className="h-5 w-5 text-emerald-500" />
                                                 ) : (
-                                                    <div className={`relative w-12 h-6 rounded-full transition-all duration-300 ${isOn ? 'bg-[#FF6200]' : 'bg-white/10'
-                                                        }`}>
-                                                        <div className={`absolute top-1 h-4 w-4 rounded-full bg-white shadow-md transition-all duration-300 ${isOn ? 'left-7' : 'left-1'
-                                                            }`} />
+                                                    <div className={`relative w-11 h-6 rounded-full transition-all duration-200 ${
+                                                        isOn ? 'bg-[#FF6200]' : 'bg-slate-300 dark:bg-slate-700'
+                                                    }`}>
+                                                        <div className={`absolute top-1 h-4 w-4 rounded-full bg-white shadow-sm transition-all duration-200 ${
+                                                            isOn ? 'left-6' : 'left-1'
+                                                        }`} />
                                                     </div>
                                                 )}
                                             </div>
@@ -695,9 +717,9 @@ export default function SettingsPage() {
                                     );
                                 })}
 
-                                <div className="pt-4 border-t border-white/5">
-                                    <p className="text-[10px] text-white/20 font-medium leading-relaxed">
-                                        Note: Critical security emails (password resets, login alerts) are always sent regardless of your preferences.
+                                <div className="pt-4 border-t border-slate-200 dark:border-slate-800">
+                                    <p className="text-[11px] text-slate-400 font-medium">
+                                        Security and critical transaction notices will always be delivered to ensure account integrity.
                                     </p>
                                 </div>
                             </CardContent>
@@ -705,29 +727,27 @@ export default function SettingsPage() {
                     </TabsContent>
 
                     {/* Referrals Tab */}
-                    <TabsContent value="referrals" className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8">
+                    <TabsContent value="referrals" className="animate-in fade-in duration-300 space-y-6">
                         {/* Referral Code Card */}
-                        <Card className="glass-card border-white/10 rounded-[2rem] overflow-hidden bg-white/5 relative">
-                            <div className="absolute top-0 right-0 w-48 h-48 bg-[#FF6200]/5 blur-[80px] rounded-full pointer-events-none" />
-                            <CardHeader className="p-8 pb-4">
-                                <CardTitle className="text-xl font-black uppercase tracking-tight flex items-center gap-3">
+                        <Card className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
+                            <CardHeader className="p-6 sm:p-8 pb-4">
+                                <CardTitle className="text-lg font-black uppercase tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
                                     <Gift className="h-5 w-5 text-[#FF6200]" />
                                     Your Referral Code
                                 </CardTitle>
-                                <CardDescription className="text-white/40 uppercase text-[9px] font-bold tracking-widest">Share your code and earn 50 MC for each successful referral</CardDescription>
+                                <CardDescription className="text-slate-500 dark:text-slate-400 text-xs">Share your code and earn 50 MarketCoins for every invited merchant</CardDescription>
                             </CardHeader>
-                            <CardContent className="p-8 pt-4 space-y-6">
+                            <CardContent className="p-6 sm:p-8 pt-2 space-y-4">
                                 {referralLoading ? (
                                     <div className="flex items-center justify-center py-8">
                                         <Loader2 className="h-6 w-6 animate-spin text-[#FF6200]" />
                                     </div>
                                 ) : (
                                     <>
-                                        {/* Code Display */}
-                                        <div className="flex flex-col sm:flex-row gap-4 items-stretch">
-                                            <div className="flex-1 relative">
-                                                <div className="h-16 bg-black border-2 border-dashed border-[#FF6200]/30 rounded-2xl flex items-center justify-center">
-                                                    <span className="text-2xl font-black tracking-[0.3em] text-[#FF6200] font-mono">
+                                        <div className="flex flex-col sm:flex-row gap-3 items-stretch">
+                                            <div className="flex-1">
+                                                <div className="h-14 bg-slate-50 dark:bg-slate-800/60 border-2 border-dashed border-[#FF6200]/40 rounded-xl flex items-center justify-center px-4">
+                                                    <span className="text-xl font-black tracking-[0.25em] text-[#FF6200] font-mono">
                                                         {referralCode || 'NO CODE'}
                                                     </span>
                                                 </div>
@@ -739,10 +759,10 @@ export default function SettingsPage() {
                                                         setCodeCopied(true);
                                                         setTimeout(() => setCodeCopied(false), 2000);
                                                     }}
-                                                    className={`h-16 px-6 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all ${
+                                                    className={`h-14 px-5 rounded-xl font-bold uppercase tracking-wider text-xs transition-all ${
                                                         codeCopied
-                                                            ? 'bg-green-500/20 border border-green-500/30 text-green-400'
-                                                            : 'bg-white/5 border border-white/10 text-white hover:bg-white/10'
+                                                            ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400'
+                                                            : 'bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
                                                     }`}
                                                 >
                                                     {codeCopied ? <CheckCircle2 className="h-4 w-4 mr-2" /> : <Copy className="h-4 w-4 mr-2" />}
@@ -754,7 +774,7 @@ export default function SettingsPage() {
                                                         if (navigator.share) {
                                                             navigator.share({
                                                                 title: 'Join MarketBridge',
-                                                                text: `Use my referral code ${referralCode} to sign up on MarketBridge and we both earn MC!`,
+                                                                text: `Use my referral code ${referralCode} to sign up on MarketBridge and we both earn MarketCoins!`,
                                                                 url: shareUrl,
                                                             });
                                                         } else {
@@ -763,18 +783,17 @@ export default function SettingsPage() {
                                                             setTimeout(() => setLinkCopied(false), 2000);
                                                         }
                                                     }}
-                                                    className="h-16 px-6 bg-[#FF6200] hover:bg-[#FF7A29] text-black rounded-2xl font-black uppercase tracking-widest text-[10px] border-none"
+                                                    className="h-14 px-5 bg-[#FF6200] hover:bg-[#FF7A29] text-white rounded-xl font-bold uppercase tracking-wider text-xs border-none"
                                                 >
                                                     <Share2 className="h-4 w-4 mr-2" />
-                                                    {linkCopied ? 'Link Copied!' : 'Share'}
+                                                    {linkCopied ? 'Link Copied!' : 'Share Link'}
                                                 </Button>
                                             </div>
                                         </div>
 
-                                        {/* Share Link Preview */}
-                                        <div className="flex items-center gap-3 bg-black/50 border border-white/5 rounded-xl px-5 py-3">
-                                            <ExternalLink className="h-3.5 w-3.5 text-white/20 shrink-0" />
-                                            <span className="text-xs font-mono text-white/30 truncate">
+                                        <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/60 rounded-xl px-4 py-2.5">
+                                            <ExternalLink className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                                            <span className="text-xs font-mono text-slate-500 dark:text-slate-400 truncate">
                                                 marketbridge.com.ng/ref/{referralCode}
                                             </span>
                                         </div>
@@ -786,16 +805,16 @@ export default function SettingsPage() {
                         {/* Stats Grid */}
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             {[
-                                { label: 'Total Referrals', value: referralStats.total, icon: Users, color: 'text-white' },
-                                { label: 'Completed', value: referralStats.completed, icon: CheckCircle2, color: 'text-green-400' },
-                                { label: 'Pending', value: referralStats.pending, icon: Clock, color: 'text-yellow-400' },
-                                { label: 'MC Earned', value: `${referralStats.mcEarned} MC`, icon: Gift, color: 'text-[#FF6200]' },
+                                { label: 'Total Invites', value: referralStats.total, icon: Users, color: 'text-slate-900 dark:text-white' },
+                                { label: 'Completed', value: referralStats.completed, icon: CheckCircle2, color: 'text-emerald-500' },
+                                { label: 'Pending', value: referralStats.pending, icon: Clock, color: 'text-amber-500' },
+                                { label: 'MarketCoins', value: `${referralStats.mcEarned} MC`, icon: Gift, color: 'text-[#FF6200]' },
                             ].map((stat) => (
-                                <Card key={stat.label} className="bg-white/5 border-white/10 rounded-2xl overflow-hidden">
+                                <Card key={stat.label} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
                                     <CardContent className="p-5">
-                                        <div className="flex items-center gap-2 mb-3">
-                                            <stat.icon className={`h-4 w-4 ${stat.color} opacity-60`} />
-                                            <span className="text-[9px] uppercase font-black tracking-widest text-white/30">{stat.label}</span>
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <stat.icon className={`h-4 w-4 ${stat.color}`} />
+                                            <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400">{stat.label}</span>
                                         </div>
                                         <p className={`text-2xl font-black tracking-tight ${stat.color}`}>{stat.value}</p>
                                     </CardContent>
@@ -804,69 +823,69 @@ export default function SettingsPage() {
                         </div>
 
                         {/* Referral History */}
-                        <Card className="glass-card border-white/10 rounded-[2rem] overflow-hidden bg-white/5">
-                            <CardHeader className="p-8 pb-4">
-                                <CardTitle className="text-xl font-black uppercase tracking-tight">Referral History</CardTitle>
-                                <CardDescription className="text-white/40 uppercase text-[9px] font-bold tracking-widest">People who signed up with your code</CardDescription>
+                        <Card className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
+                            <CardHeader className="p-6 sm:p-8 pb-4">
+                                <CardTitle className="text-lg font-black uppercase tracking-tight text-slate-900 dark:text-white">Referral History</CardTitle>
+                                <CardDescription className="text-slate-500 dark:text-slate-400 text-xs">Members who joined using your referral code</CardDescription>
                             </CardHeader>
-                            <CardContent className="p-8 pt-0">
+                            <CardContent className="p-6 sm:p-8 pt-0">
                                 {referralLoading ? (
-                                    <div className="flex items-center justify-center py-12">
+                                    <div className="flex items-center justify-center py-10">
                                         <Loader2 className="h-6 w-6 animate-spin text-[#FF6200]" />
                                     </div>
                                 ) : referralHistory.length === 0 ? (
-                                    <div className="text-center py-16 space-y-4">
-                                        <div className="h-16 w-16 mx-auto rounded-2xl bg-white/5 flex items-center justify-center">
-                                            <Users className="h-7 w-7 text-white/20" />
+                                    <div className="text-center py-12 space-y-3">
+                                        <div className="h-12 w-12 mx-auto rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                                            <Users className="h-6 w-6 text-slate-400" />
                                         </div>
                                         <div>
-                                            <p className="text-white/40 font-bold uppercase tracking-wider text-sm">No referrals yet</p>
-                                            <p className="text-white/20 text-xs mt-1">Share your code to start earning MC!</p>
+                                            <p className="text-slate-700 dark:text-slate-300 font-bold uppercase text-xs tracking-wider">No referrals yet</p>
+                                            <p className="text-slate-400 text-xs mt-0.5">Share your code to earn MarketCoins rewards.</p>
                                         </div>
                                     </div>
                                 ) : (
                                     <div className="overflow-x-auto">
                                         <table className="w-full">
                                             <thead>
-                                                <tr className="border-b border-white/5">
-                                                    <th className="text-left text-[9px] uppercase font-black tracking-widest text-white/30 pb-4 pl-4">Name</th>
-                                                    <th className="text-left text-[9px] uppercase font-black tracking-widest text-white/30 pb-4">Status</th>
-                                                    <th className="text-left text-[9px] uppercase font-black tracking-widest text-white/30 pb-4">Date</th>
-                                                    <th className="text-right text-[9px] uppercase font-black tracking-widest text-white/30 pb-4 pr-4">Reward</th>
+                                                <tr className="border-b border-slate-200 dark:border-slate-800">
+                                                    <th className="text-left text-[10px] uppercase font-bold tracking-wider text-slate-400 pb-3 pl-3">Member</th>
+                                                    <th className="text-left text-[10px] uppercase font-bold tracking-wider text-slate-400 pb-3">Status</th>
+                                                    <th className="text-left text-[10px] uppercase font-bold tracking-wider text-slate-400 pb-3">Date</th>
+                                                    <th className="text-right text-[10px] uppercase font-bold tracking-wider text-slate-400 pb-3 pr-3">Reward</th>
                                                 </tr>
                                             </thead>
-                                            <tbody className="divide-y divide-white/5">
+                                            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
                                                 {referralHistory.map((ref) => (
-                                                    <tr key={ref.id} className="hover:bg-white/[0.02] transition-colors">
-                                                        <td className="py-4 pl-4">
-                                                            <div className="flex items-center gap-3">
-                                                                <div className="h-8 w-8 rounded-lg bg-white/5 flex items-center justify-center">
-                                                                    <User className="h-3.5 w-3.5 text-white/30" />
+                                                    <tr key={ref.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+                                                        <td className="py-3.5 pl-3">
+                                                            <div className="flex items-center gap-2.5">
+                                                                <div className="h-7 w-7 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
+                                                                    <User className="h-3.5 w-3.5" />
                                                                 </div>
-                                                                <span className="font-bold text-sm text-white">{ref.referee_name}</span>
+                                                                <span className="font-semibold text-xs text-slate-900 dark:text-white">{ref.referee_name}</span>
                                                             </div>
                                                         </td>
-                                                        <td className="py-4">
-                                                            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${
+                                                        <td className="py-3.5">
+                                                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
                                                                 ref.status === 'completed'
-                                                                    ? 'bg-green-500/10 text-green-400 border border-green-500/20'
+                                                                    ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
                                                                     : ref.status === 'pending'
-                                                                    ? 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'
-                                                                    : 'bg-white/5 text-white/30 border border-white/10'
+                                                                    ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
+                                                                    : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
                                                             }`}>
                                                                 {ref.status === 'completed' && <CheckCircle2 className="h-3 w-3" />}
                                                                 {ref.status === 'pending' && <Clock className="h-3 w-3" />}
                                                                 {ref.status}
                                                             </span>
                                                         </td>
-                                                        <td className="py-4">
-                                                            <span className="text-xs font-mono text-white/30">
+                                                        <td className="py-3.5">
+                                                            <span className="text-xs font-mono text-slate-400">
                                                                 {new Date(ref.created_at).toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' })}
                                                             </span>
                                                         </td>
-                                                        <td className="py-4 pr-4 text-right">
-                                                            <span className={`font-black text-sm ${
-                                                                ref.mc_rewarded ? 'text-[#FF6200]' : 'text-white/20'
+                                                        <td className="py-3.5 pr-3 text-right">
+                                                            <span className={`font-bold text-xs ${
+                                                                ref.mc_rewarded ? 'text-[#FF6200]' : 'text-slate-400'
                                                             }`}>
                                                                 {ref.mc_rewarded ? '+50 MC' : '—'}
                                                             </span>

@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Package, Plus, Edit, Trash2, Eye, Loader2, Zap, X, Clock, TrendingUp, Flame, Crown } from 'lucide-react';
+import { Package, Plus, Edit, Trash2, Eye, Loader2, Zap, X, Clock, TrendingUp, Flame, Crown, EyeOff } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -50,8 +50,6 @@ export default function SellerListingsPage() {
     const [deletingId, setDeletingId] = useState<string | null>(null);
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
     const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
-    const [promotingId, setPromotingId] = useState<string | null>(null);
-    // Boost modal state
     const [boostListing, setBoostListing] = useState<Listing | null>(null);
     const [boostLoading, setBoostLoading] = useState(false);
     const [boostError, setBoostError] = useState('');
@@ -66,7 +64,6 @@ export default function SellerListingsPage() {
 
         if (!user) return;
 
-        // MANDATORY EMAIL VERIFICATION CHECK
         if (!user.email_verified) {
             router.push('/verify-email');
             return;
@@ -150,6 +147,7 @@ export default function SellerListingsPage() {
             setShowDeleteDialog(false);
             setSelectedListing(null);
             fetchListings();
+            toast('Listing removed successfully', 'success');
         } catch (err) {
             console.error('Failed to delete listing:', err);
             toast('Failed to delete listing. Please check your network.', 'error');
@@ -169,19 +167,18 @@ export default function SellerListingsPage() {
             if (error) throw error;
 
             fetchListings();
+            toast(newStatus === 'active' ? 'Listing is now visible' : 'Listing hidden from marketplace', 'info');
         } catch (err) {
             console.error('Failed to update status:', err);
             toast('Failed to update listing status.', 'error');
         }
     };
 
-    // Open the boost tier modal
     const handleBoostClick = (listing: Listing) => {
         setBoostListing(listing);
         setBoostError('');
     };
 
-    // Handle tier selection → Paystack checkout
     const handleBoostTier = async (tier: 'basic' | 'featured' | 'premium') => {
         if (!boostListing) return;
         setBoostLoading(true);
@@ -194,7 +191,6 @@ export default function SellerListingsPage() {
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.error);
-            // Redirect to Paystack checkout
             window.location.href = data.authorization_url;
         } catch (err: any) {
             setBoostError(err.message || 'Failed to initialize boost payment');
@@ -214,7 +210,6 @@ export default function SellerListingsPage() {
                 throw new Error("Insufficient MarketCoins. You need 50 MC.");
             }
 
-            // Deduct 50 MC and grant premium
             await supabase.from('users').update({ coins_balance: currentCoins - 50 }).eq('id', user.id);
             const expires = new Date();
             expires.setDate(expires.getDate() + 14);
@@ -240,19 +235,17 @@ export default function SellerListingsPage() {
             label: 'Basic Boost',
             price: '₦500',
             duration: '3 days',
-            icon: <Zap className="h-5 w-5 text-[#FF6200]" />,
-            perks: ['Pinned to top of your category', '3-day visibility window', '+10 MarketCoins reward'],
-            color: 'border-zinc-200 dark:border-white/5 hover:border-[#FF6200]/40 dark:hover:border-[#FF6200]/60',
+            icon: <Zap className="h-4 w-4 text-[#FF6200]" />,
+            perks: ['Pinned to top of category', '3-day visibility window', '+10 MarketCoins reward'],
             badge: null,
         },
         {
             id: 'featured' as const,
-            label: 'Featured',
+            label: 'Featured Spotlight',
             price: '₦1,500',
             duration: '7 days',
-            icon: <TrendingUp className="h-5 w-5 text-amber-400" />,
+            icon: <TrendingUp className="h-4 w-4 text-amber-500" />,
             perks: ['Pinned for 7 days', 'FEATURED badge on card', '+25 MarketCoins reward'],
-            color: 'border-amber-500/30 hover:border-amber-400/60 dark:border-amber-500/20 dark:hover:border-amber-400/50',
             badge: 'POPULAR',
         },
         {
@@ -260,43 +253,28 @@ export default function SellerListingsPage() {
             label: 'Premium Spotlight',
             price: '50 MC',
             duration: '14 days',
-            icon: <Crown className="h-5 w-5 text-yellow-300" />,
-            perks: ['Pinned for 14 days', 'PREMIUM badge + homepage exposure', 'Cost: 50 MarketCoins'],
-            color: 'border-yellow-500/30 hover:border-yellow-400/60 dark:border-yellow-500/20 dark:hover:border-yellow-400/50',
+            icon: <Crown className="h-4 w-4 text-amber-500" />,
+            perks: ['Pinned for 14 days', 'Homepage priority exposure', 'Paid with 50 MarketCoins'],
             badge: 'BEST VALUE',
         },
     ];
 
-
-
     if (authLoading || loading) {
         return (
-            <div className="container mx-auto py-10 px-4 space-y-8 bg-transparent transition-colors">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-6">
+                <div className="flex items-center justify-between">
                     <div>
-                        <Skeleton className="h-12 w-64 bg-zinc-100 dark:bg-zinc-800" />
-                        <Skeleton className="h-4 w-96 mt-2 bg-zinc-100 dark:bg-zinc-800" />
+                        <Skeleton className="h-8 w-48 rounded-xl" />
+                        <Skeleton className="h-4 w-64 mt-2 rounded-lg" />
                     </div>
-                    <Skeleton className="h-12 w-48 rounded-xl bg-zinc-100 dark:bg-zinc-800" />
+                    <Skeleton className="h-10 w-36 rounded-xl" />
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                     {[1, 2, 3].map((i) => (
-                        <div key={i} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/5 shadow-sm rounded-[2rem] overflow-hidden flex flex-col h-full shadow-2xl">
-                            <Skeleton className="aspect-[4/3] w-full rounded-none bg-zinc-50 dark:bg-zinc-800/50" />
-                            <div className="p-8 space-y-6 flex-1 flex flex-col justify-between">
-                                <div className="space-y-3">
-                                    <Skeleton className="h-6 w-3/4 bg-zinc-50 dark:bg-zinc-800/50" />
-                                    <Skeleton className="h-8 w-1/3 bg-[#FF6200]/10" />
-                                </div>
-                                <div className="space-y-2">
-                                    <Skeleton className="h-4 w-full bg-zinc-50 dark:bg-zinc-800/50" />
-                                    <Skeleton className="h-4 w-2/3 bg-zinc-50 dark:bg-zinc-800/50" />
-                                </div>
-                                <div className="grid grid-cols-2 gap-3 pt-6 border-t border-zinc-100 dark:border-white/5">
-                                    <Skeleton className="h-8 w-full rounded-xl bg-zinc-50 dark:bg-zinc-800/50" />
-                                    <Skeleton className="h-8 w-full rounded-xl bg-zinc-50 dark:bg-zinc-800/50" />
-                                </div>
-                            </div>
+                        <div key={i} className="bg-card border border-border rounded-2xl p-4 space-y-4 shadow-sm">
+                            <Skeleton className="aspect-[4/3] w-full rounded-xl" />
+                            <Skeleton className="h-5 w-3/4 rounded-md" />
+                            <Skeleton className="h-6 w-1/3 rounded-md" />
                         </div>
                     ))}
                 </div>
@@ -305,249 +283,249 @@ export default function SellerListingsPage() {
     }
 
     return (
-        <div className="container mx-auto py-10 px-4 space-y-8 bg-transparent transition-colors">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-4xl font-extrabold tracking-tight lg:text-5xl">My Inventory</h1>
-                    <p className="text-muted-foreground mt-2">Manage your products and listings.</p>
-                </div>
-                <Button asChild className="bg-[#FF6200] hover:bg-[#FF7A29] text-black font-black uppercase tracking-widest italic shadow-xl shadow-[#FF6200]/20 rounded-xl">
+        <div className="min-h-screen bg-background text-foreground pb-20">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-6">
+                {/* Header */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border">
+                    <div>
+                        <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground">My Inventory</h1>
+                        <p className="text-xs sm:text-sm text-muted-foreground">
+                            Manage, edit, boost, or remove your marketplace listings.
+                        </p>
+                    </div>
                     <Link href="/seller/listings/new">
-                        <Plus className="mr-2 h-4 w-4" />
-                        Create New Listing
+                        <Button className="bg-[#FF6200] hover:bg-[#FF7A29] text-white font-semibold text-xs rounded-xl gap-1.5 shadow-sm">
+                            <Plus className="h-4 w-4" /> Create New Listing
+                        </Button>
                     </Link>
-                </Button>
-            </div>
+                </div>
 
-            {listings.length === 0 ? (
-                <EmptyState
-                    icon={<Package className="h-10 w-10 text-[#FF6200]" />}
-                    title="No Items Found"
-                    description="You haven't added any items to the marketplace yet."
-                    actionLabel="Create First Listing"
-                    actionHref="/seller/listings/new"
-                />
-            ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {listings.map((listing) => (
-                        <Card key={listing.id} className="overflow-hidden border-zinc-100 dark:border-white/5 bg-white dark:bg-zinc-950 hover:border-[#FF6200]/30 hover:shadow-2xl transition-all group rounded-[2rem]">
-                            <div className="aspect-[4/3] bg-[#FAFAFA] dark:bg-zinc-900 relative overflow-hidden">
-                                {listing.images && listing.images.length > 0 ? (
-                                    <Image
-                                        src={listing.images[0]}
-                                        alt={listing.title}
-                                        fill
-                                        className="object-cover group-hover:scale-105 transition-transform duration-500"
-                                    />
-                                ) : (
-                                    <div className="absolute inset-0 flex items-center justify-center text-muted-foreground font-mono text-xs uppercase tracking-widest">
-                                        No Image
-                                    </div>
-                                )}
-                                <div className="absolute top-3 right-3 flex flex-col gap-2">
-                                    <Badge
-                                        className={`font-black uppercase tracking-tighter shadow-lg ${listing.status === 'active' ? 'bg-[#FF6200] text-black hover:bg-[#FF7A29]' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'}`}
-                                    >
-                                        {listing.status}
-                                    </Badge>
-                                    {listing.is_sponsored && (
-                                        <Badge className="bg-[#FF6200] text-black font-black uppercase tracking-tighter shadow-lg gap-1 border-none">
-                                            <Zap className="h-3 w-3 fill-black" />
-                                            Sponsored
-                                        </Badge>
-                                    )}
-                                </div>
-                            </div>
-                            <CardHeader className="p-5">
-                                <div className="flex justify-between items-start gap-4">
-                                    <CardTitle className="text-xl font-black italic uppercase tracking-tighter line-clamp-1 group-hover:text-[#FF6200] transition-colors text-zinc-900 dark:text-white">{listing.title}</CardTitle>
-                                </div>
-                                <p className="text-2xl font-black text-[#FF6200] mt-1">
-                                    ₦{listing.price.toLocaleString()}
-                                </p>
-                            </CardHeader>
-                            <CardContent className="px-5 pb-5 pt-0">
-                                <p className="text-xs text-muted-foreground line-clamp-2 italic mb-6 min-h-[2.5rem]">
-                                    {listing.description}
-                                </p>
-                                <div className="grid grid-cols-2 gap-3">
-                                    <Button asChild variant="outline" size="sm" className="font-bold border-zinc-200 dark:border-white/10 hover:border-[#FF6200]/30 hover:bg-white dark:hover:bg-white/5 rounded-xl text-[10px] uppercase tracking-widest font-heading">
-                                        <Link href={`/listings/${listing.id}`}>
-                                            <Eye className="mr-2 h-3.5 w-3.5" />
-                                            VIEW
-                                        </Link>
-                                    </Button>
-                                    <Button asChild variant="outline" size="sm" className="font-bold border-zinc-200 dark:border-white/10 hover:border-[#FF6200]/30 hover:bg-white dark:hover:bg-white/5 rounded-xl text-[10px] uppercase tracking-widest font-heading">
-                                        <Link href={`/seller/listings/${listing.id}/edit`}>
-                                            <Edit className="mr-2 h-3.5 w-3.5" />
-                                            EDIT
-                                        </Link>
-                                    </Button>
-                                    <Button
-                                        variant="secondary"
-                                        size="sm"
-                                        className="font-bold bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-xl text-[10px] uppercase tracking-widest font-heading"
-                                        onClick={() => toggleStatus(listing)}
-                                    >
-                                        {listing.status === 'active' ? 'HIDE' : 'SHOW'}
-                                    </Button>
-                                    <Button
-                                        variant="destructive"
-                                        size="sm"
-                                        className="font-bold shadow-lg shadow-destructive/10 rounded-xl text-[10px] uppercase tracking-widest font-heading"
-                                        onClick={() => handleDeleteClick(listing)}
-                                        disabled={deletingId === listing.id}
-                                    >
-                                        {deletingId === listing.id ? (
-                                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                {/* Listings Grid */}
+                {listings.length === 0 ? (
+                    <EmptyState
+                        icon={<Package className="h-10 w-10 text-[#FF6200]" />}
+                        title="No Products Found"
+                        description="You haven't listed any items in your store yet. Start selling today!"
+                        actionLabel="Create First Listing"
+                        actionHref="/seller/listings/new"
+                    />
+                ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                        {listings.map((listing) => (
+                            <div
+                                key={listing.id}
+                                className="bg-card border border-border hover:border-[#FF6200]/40 rounded-2xl overflow-hidden transition-all shadow-sm hover:shadow-md flex flex-col justify-between"
+                            >
+                                <div>
+                                    {/* Image Container */}
+                                    <div className="relative aspect-[4/3] bg-muted overflow-hidden">
+                                        {listing.images && listing.images.length > 0 ? (
+                                            <Image
+                                                src={listing.images[0]}
+                                                alt={listing.title}
+                                                fill
+                                                className="object-cover group-hover:scale-105 transition-transform duration-500"
+                                            />
                                         ) : (
-                                            <>
-                                                <Trash2 className="mr-2 h-3.5 w-3.5" />
-                                                DELETE
-                                            </>
+                                            <div className="h-full w-full flex items-center justify-center text-muted-foreground text-xs font-semibold">
+                                                No Image
+                                            </div>
                                         )}
-                                    </Button>
 
-                                    {/* Show expiry warning if listing expires within 7 days */}
-                                    {listing.expires_at && (new Date(listing.expires_at).getTime() - Date.now()) < 7 * 24 * 60 * 60 * 1000 && listing.status === 'active' && (
-                                        <div className="col-span-2 flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20 mt-1">
-                                            <Clock className="h-3.5 w-3.5 text-amber-400 flex-shrink-0" />
-                                            <span className="text-[10px] text-amber-400 font-bold uppercase tracking-wider">
-                                                Expires {new Date(listing.expires_at).toLocaleDateString('en-NG', { day: 'numeric', month: 'short' })} — Boost to extend reach
-                                            </span>
+                                        {/* Status & Sponsored Badges */}
+                                        <div className="absolute top-3 right-3 flex flex-col gap-1.5 items-end">
+                                            <Badge
+                                                className={cn(
+                                                    "text-[10px] font-bold px-2 py-0.5 rounded-lg uppercase shadow-sm",
+                                                    listing.status === 'active'
+                                                        ? "bg-emerald-500 text-white"
+                                                        : "bg-muted text-muted-foreground border-border"
+                                                )}
+                                            >
+                                                {listing.status}
+                                            </Badge>
+                                            {listing.is_sponsored && (
+                                                <Badge className="bg-[#FF6200] text-white text-[9px] font-bold px-1.5 py-0.5 rounded-lg flex items-center gap-1 shadow-sm">
+                                                    <Zap className="h-2.5 w-2.5 fill-white" /> Sponsored
+                                                </Badge>
+                                            )}
                                         </div>
-                                    )}
+                                    </div>
 
-                                    {/* Boost button — only for active non-sponsored listings */}
+                                    {/* Content */}
+                                    <div className="p-4 space-y-2">
+                                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                                            <span className="font-semibold uppercase text-[#FF6200] text-[11px]">
+                                                {listing.category || 'General'}
+                                            </span>
+                                            {listing.view_count !== undefined && (
+                                                <span className="flex items-center gap-1 text-[11px]">
+                                                    <Eye className="h-3 w-3" /> {listing.view_count} views
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        <h3 className="font-bold text-sm text-foreground leading-snug line-clamp-2">
+                                            {listing.title}
+                                        </h3>
+
+                                        <p className="text-base font-extrabold text-[#FF6200]">
+                                            ₦{listing.price.toLocaleString()}
+                                        </p>
+
+                                        <p className="text-xs text-muted-foreground line-clamp-2 italic">
+                                            {listing.description || 'No description.'}
+                                        </p>
+
+                                        {/* Expiry Warning */}
+                                        {listing.expires_at && (new Date(listing.expires_at).getTime() - Date.now()) < 7 * 24 * 60 * 60 * 1000 && listing.status === 'active' && (
+                                            <div className="flex items-center gap-1.5 p-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 text-[11px] font-semibold">
+                                                <Clock className="h-3.5 w-3.5 shrink-0" />
+                                                <span>Expires soon. Boost to extend.</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Action Buttons */}
+                                <div className="p-4 pt-0 space-y-2 border-t border-border mt-3">
+                                    <div className="grid grid-cols-4 gap-1.5 pt-3">
+                                        <Link href={`/listings/${listing.id}`} className="block">
+                                            <Button variant="outline" size="sm" className="w-full text-xs rounded-xl p-0 h-8" title="View Listing">
+                                                <Eye className="h-3.5 w-3.5" />
+                                            </Button>
+                                        </Link>
+
+                                        <Link href={`/seller/listings/${listing.id}/edit`} className="block">
+                                            <Button variant="outline" size="sm" className="w-full text-xs rounded-xl p-0 h-8" title="Edit Listing">
+                                                <Edit className="h-3.5 w-3.5" />
+                                            </Button>
+                                        </Link>
+
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="text-xs rounded-xl p-0 h-8"
+                                            onClick={() => toggleStatus(listing)}
+                                            title={listing.status === 'active' ? 'Hide listing' : 'Make listing active'}
+                                        >
+                                            {listing.status === 'active' ? <EyeOff className="h-3.5 w-3.5 text-muted-foreground" /> : <Eye className="h-3.5 w-3.5 text-emerald-600" />}
+                                        </Button>
+
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="text-xs rounded-xl p-0 h-8 text-red-600 hover:bg-red-500/10 hover:border-red-500/30"
+                                            onClick={() => handleDeleteClick(listing)}
+                                            disabled={deletingId === listing.id}
+                                            title="Delete Listing"
+                                        >
+                                            {deletingId === listing.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                                        </Button>
+                                    </div>
+
+                                    {/* Boost Button */}
                                     {listing.status === 'active' && (
                                         <Button
                                             variant="outline"
                                             size="sm"
-                                            className={`col-span-2 font-black italic uppercase tracking-widest text-[10px] mt-2 h-10 shadow-lg rounded-xl transition-all ${listing.is_sponsored
-                                                ? 'border-[#FF6200]/40 text-[#FF6200]/60 cursor-default'
-                                                : 'border-[#FF6200]/20 text-[#FF6200] hover:bg-[#FF6200] hover:text-black shadow-[#FF6200]/5'
-                                                }`}
+                                            className="w-full rounded-xl text-xs font-semibold h-9 border-[#FF6200]/30 text-[#FF6200] hover:bg-[#FF6200] hover:text-white transition-colors"
                                             onClick={() => !listing.is_sponsored && handleBoostClick(listing)}
                                             disabled={listing.is_sponsored}
                                         >
-                                            <Zap className="mr-2 h-3 w-3 fill-current" />
-                                            {listing.is_sponsored
-                                                ? `Boosted until ${new Date(listing.sponsored_until!).toLocaleDateString('en-NG', { day: 'numeric', month: 'short' })}`
-                                                : 'Boost This Listing →'}
+                                            <Zap className="mr-1.5 h-3.5 w-3.5" />
+                                            {listing.is_sponsored ? 'Listing is Boosted' : 'Boost Listing Visibility'}
                                         </Button>
                                     )}
                                 </div>
-                            </CardContent>
-                        </Card>
-                    ))}
-                </div>
-            )}
-
-            {/* ─── Boost Modal ───────────────────────────────────────── */}
-            {boostListing && (
-                <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-zinc-950/20 dark:bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
-                    <div className="w-full max-w-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/10 rounded-[2.5rem] p-6 md:p-10 shadow-2xl relative animate-in fade-in zoom-in-95 duration-300 max-h-[90vh] overflow-y-auto">
-                        <button
-                            onClick={() => setBoostListing(null)}
-                            aria-label="Close boost modal"
-                            title="Close"
-                            className="absolute top-6 right-6 text-zinc-900/30 dark:text-white/20 hover:text-zinc-900 dark:hover:text-white transition-colors"
-                        >
-                            <X className="h-6 w-6" />
-                        </button>
-
-                        <div className="mb-8">
-                            <div className="flex items-center gap-3 mb-2">
-                                <div className="h-10 w-10 rounded-xl bg-[#FF6200]/10 flex items-center justify-center">
-                                    <Flame className="h-6 w-6 text-[#FF6200]" />
-                                </div>
-                                <h2 className="text-2xl md:text-3xl font-black uppercase tracking-tighter italic font-heading dark:text-white">Boost <span className="text-[#FF6200]">Listing</span></h2>
                             </div>
-                            <p className="text-zinc-500 dark:text-zinc-400 text-sm font-medium italic border-l-2 border-[#FF6200]/30 pl-3">
-                                &ldquo;{boostListing.title}&rdquo; — choose your boost tier
-                            </p>
-                        </div>
+                        ))}
+                    </div>
+                )}
 
-                        <div className="space-y-4 mb-8">
-                            {BOOST_TIERS.map((tier) => (
-                                <button
-                                    key={tier.id}
-                                    onClick={() => tier.id === 'premium' ? handleBoostWithCoins() : handleBoostTier(tier.id)}
-                                    disabled={boostLoading}
-                                    className={`w-full text-left p-6 rounded-2xl border transition-all hover:scale-[1.02] active:scale-[0.98] relative group ${tier.color} bg-[#FAFAFA]/50 dark:bg-white/[0.02] hover:bg-white dark:hover:bg-white/[0.05] disabled:opacity-50 disabled:cursor-not-allowed border-zinc-200 dark:border-white/5`}
-                                >
-                                    {tier.badge && (
-                                        <span className="absolute top-4 right-4 text-[8px] font-black uppercase tracking-widest px-2.5 py-1.5 rounded-full bg-[#FF6200] text-black shadow-lg shadow-[#FF6200]/20">
-                                            {tier.badge}
-                                        </span>
-                                    )}
-                                    <div className="flex items-center gap-3 mb-4">
-                                        <div className="p-2 rounded-lg bg-white dark:bg-zinc-800 shadow-sm transition-transform group-hover:scale-110">
-                                            {tier.icon}
-                                        </div>
-                                        <span className="font-black uppercase tracking-wider text-sm dark:text-white">{tier.label}</span>
-                                        <span className="ml-auto text-2xl font-black text-zinc-900 dark:text-white group-hover:text-[#FF6200] transition-colors">{tier.price}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 mb-4">
-                                        <Clock className="h-3.5 w-3.5 text-[#FF6200]" />
-                                        <span className="text-[11px] text-[#FF6200] font-black uppercase tracking-widest">{tier.duration} Visibility</span>
-                                    </div>
-                                    <ul className="space-y-2">
-                                        {tier.perks.map((perk, i) => (
-                                            <li key={i} className="text-[11px] text-zinc-500 dark:text-zinc-400 flex items-center gap-3">
-                                                <Zap className="h-3 w-3 text-[#FF6200] opacity-50" />
-                                                {perk}
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </button>
-                            ))}
-                        </div>
+                {/* Boost Modal */}
+                {boostListing && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                        <div className="w-full max-w-lg bg-card border border-border rounded-2xl p-6 shadow-xl text-foreground relative max-h-[90vh] overflow-y-auto space-y-5 animate-in fade-in zoom-in-95 duration-200">
+                            <button
+                                onClick={() => setBoostListing(null)}
+                                className="absolute top-4 right-4 h-8 w-8 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center text-muted-foreground transition-colors"
+                            >
+                                <X className="h-4 w-4" />
+                            </button>
 
-                        {boostError && (
-                            <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 mb-6">
-                                <p className="text-red-500 text-xs font-bold text-center leading-relaxed">{boostError}</p>
-                            </div>
-                        )}
-
-                        <div className="space-y-4">
-                            {boostLoading && (
-                                <div className="flex items-center justify-center gap-3 text-zinc-600 dark:text-zinc-400 text-sm font-bold bg-zinc-100 dark:bg-zinc-800/50 py-4 rounded-xl animate-pulse">
-                                    <Loader2 className="h-4 w-4 animate-spin text-[#FF6200]" />
-                                    Authenticating Transaction...
+                            <div className="space-y-1">
+                                <div className="flex items-center gap-2 text-[#FF6200]">
+                                    <Flame className="h-5 w-5" />
+                                    <h2 className="text-lg font-bold text-foreground">Boost Listing Visibility</h2>
                                 </div>
-                            )}
-
-                            <div className="flex flex-col items-center gap-2">
-                                <div className="flex items-center gap-4 py-2 px-4 bg-zinc-100 dark:bg-zinc-800/50 rounded-full">
-                                    <p className="text-[9px] text-zinc-400 dark:text-zinc-500 font-bold uppercase tracking-widest">Powered by</p>
-                                    <div className="h-4 w-20 bg-[url('/paystack-logo.png')] bg-contain bg-no-repeat bg-center opacity-40 grayscale" />
-                                </div>
-                                <p className="text-center text-[9px] text-zinc-300 dark:text-zinc-600 uppercase tracking-[0.2em] font-medium">
-                                    Secure Payment — No Recurring Charges
+                                <p className="text-xs text-muted-foreground">
+                                    "{boostListing.title}" — get higher rank in search results and category pages.
                                 </p>
                             </div>
+
+                            <div className="space-y-3">
+                                {BOOST_TIERS.map((tier) => (
+                                    <button
+                                        key={tier.id}
+                                        onClick={() => tier.id === 'premium' ? handleBoostWithCoins() : handleBoostTier(tier.id)}
+                                        disabled={boostLoading}
+                                        className="w-full text-left p-4 rounded-xl border border-border hover:border-[#FF6200] bg-background hover:bg-muted/40 transition-all space-y-2 relative group disabled:opacity-50"
+                                    >
+                                        {tier.badge && (
+                                            <span className="absolute top-3 right-3 text-[9px] font-bold px-2 py-0.5 rounded-md bg-[#FF6200] text-white">
+                                                {tier.badge}
+                                            </span>
+                                        )}
+
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                                {tier.icon}
+                                                <span className="font-bold text-xs text-foreground">{tier.label}</span>
+                                            </div>
+                                            <span className="font-extrabold text-sm text-[#FF6200]">{tier.price}</span>
+                                        </div>
+
+                                        <p className="text-[11px] text-muted-foreground">
+                                            {tier.duration} visibility • {tier.perks.join(' • ')}
+                                        </p>
+                                    </button>
+                                ))}
+                            </div>
+
+                            {boostError && (
+                                <p className="text-xs text-red-600 bg-red-500/10 p-2.5 rounded-xl text-center font-medium">
+                                    {boostError}
+                                </p>
+                            )}
+
+                            {boostLoading && (
+                                <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground py-2 font-medium">
+                                    <Loader2 className="h-4 w-4 animate-spin text-[#FF6200]" /> Processing payment...
+                                </div>
+                            )}
                         </div>
                     </div>
-                </div>
-            )}
+                )}
 
-            <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Listing</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            Are you sure you want to delete "{selectedListing?.title}"? This action cannot be undone.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground">
-                            Delete
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+                {/* Delete Dialog */}
+                <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+                    <AlertDialogContent className="rounded-2xl max-w-md bg-card border-border text-foreground">
+                        <AlertDialogHeader>
+                            <AlertDialogTitle className="text-base font-bold">Delete Listing</AlertDialogTitle>
+                            <AlertDialogDescription className="text-xs text-muted-foreground">
+                                Are you sure you want to delete "{selectedListing?.title}"? This item will be permanently removed from the marketplace.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel className="rounded-xl text-xs">Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-semibold">
+                                Delete Permanently
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+            </div>
         </div>
     );
 }

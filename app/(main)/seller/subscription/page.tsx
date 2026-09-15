@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { Check, Zap, Crown, Rocket, ArrowLeft, Sparkles, Shield, TrendingUp, Loader2, ShieldCheck } from 'lucide-react';
+import { Check, Zap, Crown, ArrowLeft, Sparkles, Shield, TrendingUp, Loader2, ShieldCheck, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
@@ -72,7 +72,7 @@ export default function PricingPage() {
 
         // MANDATORY EMAIL VERIFICATION CHECK
         if (user.role === 'student_seller' && !user.email_verified) {
-            toast('Please verify your email Dashboard before subscribing.', 'error');
+            toast('Please verify your email address before subscribing.', 'error');
             router.push('/verify-email');
             return;
         }
@@ -99,7 +99,7 @@ export default function PricingPage() {
                         plan_id: 'basic',
                         status: 'active',
                         current_period_start: new Date().toISOString(),
-                        current_period_end: new Date(new Date().setFullYear(new Date().getFullYear() + 10)).toISOString() // Permanent-ish
+                        current_period_end: new Date(new Date().setFullYear(new Date().getFullYear() + 10)).toISOString()
                     }, { onConflict: 'user_id' });
 
                 if (subError) throw subError;
@@ -110,7 +110,7 @@ export default function PricingPage() {
                     subscription_plan_id: 'basic'
                 }).eq('id', user.id);
 
-                toast('Basic Merchant Access Activated.', 'success');
+                toast('Basic Merchant Plan Activated.', 'success');
                 router.push('/seller/dashboard');
             } catch (err) {
                 console.error('Activation failed:', err);
@@ -127,13 +127,13 @@ export default function PricingPage() {
     const getPlanIcon = (planId: string) => {
         switch (planId) {
             case 'basic':
-                return <Sparkles className="h-6 w-6" />;
+                return <Sparkles className="h-5 w-5" />;
             case 'standard':
-                return <Zap className="h-6 w-6" />;
+                return <Zap className="h-5 w-5" />;
             case 'pro':
-                return <Crown className="h-6 w-6" />;
+                return <Crown className="h-5 w-5" />;
             default:
-                return <Shield className="h-6 w-6" />;
+                return <Shield className="h-5 w-5" />;
         }
     };
 
@@ -148,32 +148,34 @@ export default function PricingPage() {
     };
 
     return (
-        <div className="min-h-screen bg-background text-foreground transition-all duration-300 pt-28 pb-20 selection:bg-primary selection:text-primary-foreground">
-            <div className="fixed inset-0 bg-[url('/grid-pattern.svg')] opacity-10 pointer-events-none z-0" />
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 pt-24 pb-28">
+            <div className="container px-4 sm:px-6 mx-auto max-w-6xl">
 
-            <div className="container px-4 mx-auto relative z-10 max-w-7xl">
                 {/* Header */}
-                <div className="text-center mb-20 space-y-8">
+                <div className="text-center mb-16 space-y-6">
                     <Link
-                        href="/"
-                        className="inline-flex items-center text-[#FF6200] hover:text-[#FF7A29] text-[10px] font-black uppercase tracking-[0.2em] mb-4"
+                        href="/seller/dashboard"
+                        className="inline-flex items-center text-slate-500 hover:text-slate-900 dark:hover:text-white text-xs font-bold uppercase tracking-wider mb-2"
                     >
-                        <ArrowLeft className="mr-2 h-4 w-4" /> Return to Core
+                        <ArrowLeft className="mr-2 h-4 w-4" /> Return to Dashboard
                     </Link>
 
-                    <div className="space-y-4">
-                        <h1 className="text-5xl md:text-7xl font-black uppercase tracking-tighter italic leading-none">
-                            Power Your <span className="text-[#FF6200]">Campus Empire</span>
+                    <div className="space-y-3">
+                        <Badge className="bg-[#FF6200]/10 text-[#FF6200] border-[#FF6200]/20 font-black text-[10px] uppercase tracking-widest px-3.5 py-1 rounded-full">
+                            Merchant Growth Plans
+                        </Badge>
+                        <h1 className="text-4xl sm:text-5xl md:text-6xl font-black uppercase tracking-tight text-slate-900 dark:text-white">
+                            Scale Your <span className="text-[#FF6200]">Storefront</span>
                         </h1>
-                        <p className="text-foreground/60 text-lg md:text-xl font-medium leading-relaxed italic max-w-3xl mx-auto">
-                            Choose the plan that scales with your ambition. <span className="text-foreground">No hidden fees.</span> Cancel anytime.
+                        <p className="text-slate-500 dark:text-slate-400 text-base md:text-lg font-medium max-w-2xl mx-auto">
+                            Choose the plan built to maximize your listing visibility, buyer reach, and seller performance.
                         </p>
                     </div>
 
-                    {/* Annual/Monthly Toggle & Merchant Note */}
-                    <div className="flex flex-col items-center gap-6">
-                        <div className="flex items-center justify-center gap-4 glass-card p-4 rounded-3xl border-white/5 inline-flex">
-                            <span className={`text-sm font-black uppercase tracking-widest transition-colors ${!isAnnual ? 'text-foreground' : 'text-foreground/30'}`}>
+                    {/* Annual/Monthly Toggle & Merchant Status */}
+                    <div className="flex flex-col items-center gap-4 pt-2">
+                        <div className="flex items-center justify-center gap-4 bg-white dark:bg-slate-900 px-5 py-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm inline-flex">
+                            <span className={`text-xs font-bold uppercase tracking-wider transition-colors ${!isAnnual ? 'text-slate-900 dark:text-white' : 'text-slate-400'}`}>
                                 Monthly
                             </span>
                             <Switch
@@ -181,39 +183,39 @@ export default function PricingPage() {
                                 onCheckedChange={setIsAnnual}
                                 className="data-[state=checked]:bg-[#FF6200]"
                             />
-                            <span className={`text-sm font-black uppercase tracking-widest transition-colors ${isAnnual ? 'text-foreground' : 'text-foreground/30'}`}>
+                            <span className={`text-xs font-bold uppercase tracking-wider transition-colors ${isAnnual ? 'text-slate-900 dark:text-white' : 'text-slate-400'}`}>
                                 Annual
                             </span>
                             {isAnnual && (
-                                <Badge className="bg-[#FF6200]/10 text-[#FF6200] border-[#FF6200]/20 text-[8px] font-black uppercase tracking-widest">
+                                <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[9px] font-bold uppercase tracking-wider">
                                     Save 10%
                                 </Badge>
                             )}
                         </div>
 
                         {user?.role === 'student_seller' ? (
-                            <div className="flex items-center gap-2 px-6 py-2 bg-[#FF6200]/10 border border-[#FF6200]/20 rounded-full animate-in fade-in zoom-in duration-500">
-                                <ShieldCheck className="h-3 w-3 text-[#FF6200]" />
-                                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#FF6200]">Merchant Status Verified: Dashboard Unlocked</span>
+                            <div className="flex items-center gap-2 px-4 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
+                                <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Verified Merchant Account</span>
                             </div>
                         ) : (
-                            <div className="flex items-center gap-2 px-6 py-2 bg-[#FF6200]/10 border border-[#FF6200]/20 rounded-full animate-pulse">
-                                <Shield className="h-3 w-3 text-[#FF6200]" />
-                                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[#FF6200]">Merchant Exclusive: Plans for Sellers only</span>
+                            <div className="flex items-center gap-2 px-4 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-full">
+                                <Shield className="h-3.5 w-3.5 text-amber-500" />
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">Seller Exclusive Plans</span>
                             </div>
                         )}
                     </div>
                 </div>
 
-                {/* Pricing Cards */}
+                {/* Pricing Cards Grid */}
                 {loading ? (
-                    <div className="text-center py-20">
-                        <Loader2 className="h-12 w-12 animate-spin text-[#FF6200] mx-auto mb-6" />
-                        <p className="text-[10px] font-black uppercase tracking-widest text-foreground/30">Loading Plans...</p>
+                    <div className="text-center py-16">
+                        <Loader2 className="h-10 w-10 animate-spin text-[#FF6200] mx-auto mb-4" />
+                        <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Loading Available Plans...</p>
                     </div>
                 ) : (
-                    <div className="flex flex-wrap justify-center gap-8 mb-20">
-                        {plans.map((plan, index) => {
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+                        {plans.map((plan) => {
                             const isCurrentPlan = currentPlan === plan.id;
                             const isFree = plan.id === 'basic';
                             const isPro = plan.id === 'pro' || plan.id === 'beta_campus_founder';
@@ -223,55 +225,60 @@ export default function PricingPage() {
                             return (
                                 <Card
                                     key={plan.id}
-                                    className={`w-full max-w-sm relative overflow-hidden transition-all duration-500 ${isPro
-                                        ? 'bg-gradient-to-b from-[#FF6200]/10 to-black border-[#FF6200]/30 scale-105 shadow-[0_0_50px_rgba(255,98,0,0.2)] z-20'
-                                        : 'bg-zinc-900/40 border-white/5 hover:border-[#FF6200]/20 z-10'
-                                        } rounded-[2.5rem]`}
+                                    className={`relative overflow-hidden transition-all duration-300 rounded-3xl flex flex-col justify-between ${
+                                        isPro
+                                            ? 'bg-white dark:bg-slate-900 border-2 border-[#FF6200] shadow-lg shadow-[#FF6200]/5'
+                                            : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm hover:border-slate-300 dark:hover:border-slate-700'
+                                    }`}
                                 >
                                     {isPro && (
-                                        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#FF6200] to-transparent" />
+                                        <div className="bg-[#FF6200] text-white text-center py-1 text-[10px] font-black uppercase tracking-widest">
+                                            Most Popular
+                                        </div>
                                     )}
 
-                                    <CardHeader className="p-8 pb-4">
-                                        {isPro && (
-                                            <Badge className="bg-[#FF6200] text-black border-none text-[8px] font-black uppercase tracking-widest mb-4 w-fit">
-                                                Founding Member
-                                            </Badge>
-                                        )}
-
-                                        <div className={`h-14 w-14 rounded-2xl flex items-center justify-center mb-6 ${isPro ? 'bg-[#FF6200]/20 border-[#FF6200]/50' : 'bg-white/5 border-white/10'
-                                            } border`}>
-                                            <div className={isPro ? 'text-[#FF6200]' : 'text-white/40'}>
+                                    <CardHeader className="p-6 sm:p-8 pb-4">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <div className={`h-11 w-11 rounded-xl flex items-center justify-center ${
+                                                isPro ? 'bg-[#FF6200]/10 text-[#FF6200]' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                                            }`}>
                                                 {getPlanIcon(plan.id)}
                                             </div>
+                                            {isCurrentPlan && (
+                                                <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[9px] font-bold uppercase tracking-wider">
+                                                    Current Plan
+                                                </Badge>
+                                            )}
                                         </div>
 
-                                        <CardTitle className="text-2xl font-black uppercase tracking-tighter italic mb-2">
+                                        <CardTitle className="text-xl font-black uppercase tracking-tight text-slate-900 dark:text-white">
                                             {plan.name}
                                         </CardTitle>
 
-                                        <CardDescription className="text-foreground/40 text-sm font-medium italic">
+                                        <CardDescription className="text-slate-500 dark:text-slate-400 text-xs font-medium">
                                             {plan.description}
                                         </CardDescription>
 
-                                        <div className="mt-6">
+                                        <div className="mt-5">
                                             {plan.id === 'pro' && price === 0 ? (
-                                                <div className="text-4xl font-black uppercase tracking-tighter italic">
+                                                <div className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
                                                     Custom
                                                 </div>
                                             ) : (
                                                 <>
-                                                    <div className="flex items-baseline gap-2">
-                                                        <span className="text-4xl font-black text-[#FF6200]">
-                                                            ₦{price.toLocaleString()}
+                                                    <div className="flex items-baseline gap-1.5">
+                                                        <span className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
+                                                            {price === 0 ? 'Free' : `₦${price.toLocaleString()}`}
                                                         </span>
-                                                        <span className="text-foreground/30 text-sm font-black uppercase">
-                                                            /{isAnnual ? 'year' : 'month'}
-                                                        </span>
+                                                        {price > 0 && (
+                                                            <span className="text-slate-400 text-xs font-bold uppercase">
+                                                                /{isAnnual ? 'year' : 'month'}
+                                                            </span>
+                                                        )}
                                                     </div>
                                                     {isAnnual && savings > 0 && (
-                                                        <p className="text-[10px] text-[#FF6200] font-black uppercase tracking-widest mt-2">
-                                                            Save ₦{savings.toLocaleString()}/year
+                                                        <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider mt-1">
+                                                            Save ₦{savings.toLocaleString()} annually
                                                         </p>
                                                     )}
                                                 </>
@@ -279,12 +286,13 @@ export default function PricingPage() {
                                         </div>
                                     </CardHeader>
 
-                                    <CardContent className="p-8 pt-6">
-                                        <ul className="space-y-4">
+                                    <CardContent className="p-6 sm:p-8 pt-4 flex-1">
+                                        <div className="h-px bg-slate-100 dark:bg-slate-800 mb-6" />
+                                        <ul className="space-y-3">
                                             {plan.features.map((feature, idx) => (
-                                                <li key={idx} className="flex items-start gap-3">
-                                                    <Check className={`h-4 w-4 mt-0.5 flex-shrink-0 text-[#FF6200]`} />
-                                                    <span className="text-xs text-foreground/60 font-medium leading-relaxed">
+                                                <li key={idx} className="flex items-start gap-2.5">
+                                                    <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0 text-[#FF6200]" />
+                                                    <span className="text-xs text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
                                                         {feature}
                                                     </span>
                                                 </li>
@@ -292,23 +300,24 @@ export default function PricingPage() {
                                         </ul>
                                     </CardContent>
 
-                                    <CardFooter className="p-8 pt-0">
+                                    <CardFooter className="p-6 sm:p-8 pt-0">
                                         {isCurrentPlan ? (
                                             <Button
                                                 disabled
-                                                className="w-full h-14 rounded-2xl bg-white/5 border border-white/10 text-foreground/30 font-black uppercase tracking-widest cursor-not-allowed"
+                                                className="w-full h-12 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 font-bold uppercase tracking-wider text-xs cursor-not-allowed border-none"
                                             >
-                                                Current Plan
+                                                Active Plan
                                             </Button>
                                         ) : (
                                             <Button
                                                 onClick={() => handleSelectPlan(plan.id)}
-                                                className={`w-full h-14 rounded-2xl font-black uppercase tracking-widest transition-all ${isPro
-                                                    ? 'bg-[#FF6200] text-black hover:bg-[#FF7A29]'
-                                                    : 'bg-white/5 border border-white/10 hover:bg-[#FF6200] hover:text-black hover:border-[#FF6200]'
-                                                    }`}
+                                                className={`w-full h-12 rounded-xl font-bold uppercase tracking-wider text-xs transition-all ${
+                                                    isPro
+                                                        ? 'bg-[#FF6200] text-white hover:bg-[#FF7A29] shadow-sm'
+                                                        : 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100'
+                                                }`}
                                             >
-                                                {isFree ? 'Get Started' : 'Join Beta'}
+                                                {isFree ? 'Choose Free Plan' : 'Select Plan'}
                                             </Button>
                                         )}
                                     </CardFooter>
@@ -318,44 +327,44 @@ export default function PricingPage() {
                     </div>
                 )}
 
-                {/* Features Comparison */}
-                <div className="glass-card p-12 rounded-[3.5rem] border-white/5 mb-20">
-                    <h2 className="text-3xl font-black uppercase tracking-tighter italic mb-8 text-center">
-                        Why Upgrade? <span className="text-foreground/40">The Numbers</span>
+                {/* Features Value Prop */}
+                <div className="bg-white dark:bg-slate-900 p-8 sm:p-10 rounded-3xl border border-slate-200 dark:border-slate-800 mb-16 shadow-sm">
+                    <h2 className="text-2xl font-black uppercase tracking-tight text-slate-900 dark:text-white mb-8 text-center">
+                        Merchant <span className="text-[#FF6200]">Advantage</span>
                     </h2>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                         {[
                             {
-                                icon: <TrendingUp className="h-6 w-6" />,
+                                icon: <TrendingUp className="h-5 w-5" />,
                                 stat: '3x',
-                                label: 'More Visibility',
-                                description: 'Pro merchants get 3x more views on average'
+                                label: 'Increased Visibility',
+                                description: 'Pro stores receive up to 3x higher placement across categories'
                             },
                             {
-                                icon: <Zap className="h-6 w-6" />,
-                                stat: '< 2hrs',
-                                label: 'Response Time',
-                                description: 'Priority support with dedicated assistance'
+                                icon: <Zap className="h-5 w-5" />,
+                                stat: 'Instant',
+                                label: 'Priority Search',
+                                description: 'Featured search results ensure faster buyer inquiry response'
                             },
                             {
-                                icon: <Shield className="h-6 w-6" />,
+                                icon: <Shield className="h-5 w-5" />,
                                 stat: '100%',
                                 label: 'Verified Badge',
-                                description: 'Build trust with instant verification'
+                                description: 'Boost credibility and buyer trust with authenticated store status'
                             }
                         ].map((item, idx) => (
-                            <div key={idx} className="text-center space-y-4">
-                                <div className="h-14 w-14 rounded-2xl bg-[#FF6200]/10 border border-[#FF6200]/20 flex items-center justify-center mx-auto">
-                                    <div className="text-[#FF6200]">{item.icon}</div>
+                            <div key={idx} className="text-center space-y-2">
+                                <div className="h-12 w-12 rounded-xl bg-[#FF6200]/10 text-[#FF6200] flex items-center justify-center mx-auto mb-3">
+                                    {item.icon}
                                 </div>
-                                <div className="text-4xl font-black text-[#FF6200] uppercase tracking-tighter italic">
+                                <div className="text-3xl font-black text-[#FF6200] tracking-tight">
                                     {item.stat}
                                 </div>
-                                <div className="text-sm font-black uppercase tracking-widest text-foreground">
+                                <div className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">
                                     {item.label}
                                 </div>
-                                <p className="text-xs text-foreground/40 font-medium italic">
+                                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                                     {item.description}
                                 </p>
                             </div>
@@ -364,35 +373,35 @@ export default function PricingPage() {
                 </div>
 
                 {/* FAQ Section */}
-                <div className="text-center space-y-8">
-                    <h2 className="text-3xl font-black uppercase tracking-tighter italic">
-                        Frequently Asked <span className="text-foreground/40">Questions</span>
+                <div className="space-y-6">
+                    <h2 className="text-2xl font-black uppercase tracking-tight text-slate-900 dark:text-white text-center">
+                        Frequently Asked Questions
                     </h2>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {[
                             {
-                                q: 'Can I cancel anytime?',
-                                a: 'Yes! You can cancel your subscription at any time. You\'ll retain access until the end of your billing period.'
+                                q: 'Can I cancel or change plans anytime?',
+                                a: 'Yes. You can manage or upgrade your subscription plan whenever you need from your seller dashboard.'
                             },
                             {
-                                q: 'What payment methods do you accept?',
-                                a: 'We accept all major Nigerian debit/credit cards, bank transfers, and USSD payments via Paystack.'
+                                q: 'How are subscription payments processed?',
+                                a: 'We accept debit/credit cards, bank transfers, and USSD securely through Paystack.'
                             },
                             {
-                                q: 'Can I upgrade or downgrade my plan?',
-                                a: 'Absolutely! You can change your plan at any time. Upgrades are prorated, and downgrades take effect at the next billing cycle.'
+                                q: 'What happens when my paid plan expires?',
+                                a: 'Your account automatically switches to the Free Basic plan so your storefront remains active without interruption.'
                             },
                             {
-                                q: 'Is there a free trial?',
-                                a: 'The Free Tier is available indefinitely. Paid plans don\'t have a trial, but you can cancel within the first 7 days for a full refund.'
+                                q: 'Is there a limit on free listings?',
+                                a: 'The Basic Plan supports up to 5 active listings simultaneously with full escrow protection.'
                             }
                         ].map((faq, idx) => (
-                            <div key={idx} className="glass-card p-6 rounded-2xl border-white/5">
-                                <h3 className="text-sm font-black uppercase tracking-widest text-foreground mb-3">
+                            <div key={idx} className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-2">
+                                <h3 className="text-sm font-bold text-slate-900 dark:text-white">
                                     {faq.q}
                                 </h3>
-                                <p className="text-xs text-foreground/40 font-medium leading-relaxed">
+                                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
                                     {faq.a}
                                 </p>
                             </div>
