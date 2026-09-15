@@ -2,7 +2,7 @@
 import React from 'react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { Menu, User, Bell, LogOut, Globe } from 'lucide-react';
+import { Menu, User, Bell, LogOut, Globe, Search } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Sidebar, SidebarItem } from '@/components/sidebar';
 import { useAuth } from '@/contexts/AuthContext';
@@ -27,54 +27,54 @@ export function DashboardHeader({ title, sidebarItems }: DashboardHeaderProps) {
     const pathname = usePathname();
 
     return (
-        <header className="sticky top-0 z-40 flex h-24 w-full items-center justify-between border-b border-zinc-100 dark:border-zinc-800 bg-[#FAFAFA]/90 dark:bg-zinc-950/90 backdrop-blur-2xl px-6 md:px-12">
-            <div className="flex items-center gap-6">
+        <header className="sticky top-0 z-40 flex h-16 w-full items-center justify-between border-b border-zinc-200 dark:border-white/5 bg-white/95 dark:bg-[#0B1120]/95 backdrop-blur-md px-4 md:px-8">
+            <div className="flex items-center gap-4">
                 <Sheet>
                     <SheetTrigger asChild>
-                        <Button variant="ghost" size="icon" className="md:hidden text-foreground">
-                            <Menu className="h-6 w-6" />
+                        <Button variant="ghost" size="icon" className="md:hidden text-foreground h-10 w-10 rounded-xl">
+                            <Menu className="h-5 w-5" />
                             <span className="sr-only">Toggle Menu</span>
                         </Button>
                     </SheetTrigger>
-                    <SheetContent side="left" className="p-0 w-72 bg-background border-r border-border">
+                    <SheetContent side="left" className="p-0 w-[260px] bg-background border-r border-border">
                         <Sidebar items={sidebarItems} title={title} className="border-0 shadow-none" />
                     </SheetContent>
                 </Sheet>
                 <div className="flex flex-col">
-                    <h1 className="text-xl md:text-2xl font-black italic tracking-widest text-[#FF6200] uppercase">
+                    <h1 className="text-lg md:text-xl font-bold text-foreground">
                         {title}
                     </h1>
-                    <span className="text-zinc-500 text-[10px] hidden md:block">
-                        Logged in as <span className="font-black text-foreground uppercase tracking-widest">{user?.displayName}</span> 
+                    <span className="text-zinc-500 dark:text-zinc-400 text-xs hidden md:block">
+                        Logged in as <span className="font-semibold text-foreground">{user?.displayName}</span>
                     </span>
                 </div>
             </div>
 
-            <div className="flex items-center gap-4 md:gap-8">
-                <Link href="/" className="hidden md:flex items-center gap-3 text-zinc-500 hover:text-primary transition-all text-[10px] items-center uppercase font-black tracking-widest bg-white dark:bg-zinc-900 px-5 py-2.5 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
-                    <Globe className="h-3 w-3" />
-                    Marketplace Site
+            <div className="flex items-center gap-3">
+                <Link href="/" className="hidden md:flex items-center gap-2 text-zinc-500 dark:text-zinc-400 hover:text-primary transition-all text-xs font-medium bg-zinc-100 dark:bg-white/5 px-4 py-2 rounded-xl border border-zinc-200 dark:border-white/10">
+                    <Globe className="h-3.5 w-3.5" />
+                    Marketplace
                 </Link>
 
                 <ThemeToggle />
                 {user && <NotificationBell />}
 
-                <div className="flex items-center gap-4 pl-6 border-l border-zinc-100 dark:border-zinc-800">
+                <div className="flex items-center gap-3 pl-3 border-l border-zinc-200 dark:border-white/10">
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <div className="h-10 w-10 rounded-2xl bg-white border border-zinc-200 shadow-sm border-none flex items-center justify-center text-[#FF6200] shadow-[0_0_15px_rgba(255,184,0,0.1)] group cursor-pointer hover:scale-105 transition-transform">
-                                <User className="h-5 w-5" />
+                            <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-[#FF6200] to-amber-400 flex items-center justify-center text-white text-sm font-bold cursor-pointer hover:scale-105 transition-transform">
+                                {(user?.displayName || user?.email || 'U').charAt(0).toUpperCase()}
                             </div>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" sideOffset={15} className="w-64 bg-[#FAFAFA] border border-zinc-200 p-2 text-zinc-900 z-[999] rounded-[2rem] shadow-2xl backdrop-blur-3xl">
-                            <div className="px-4 py-3 mb-2 border-b border-zinc-100">
-                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Your Profile</p>
-                                <p className="text-sm font-black truncate uppercase">{user?.displayName}</p>
+                        <DropdownMenuContent align="end" sideOffset={12} className="w-56 bg-white dark:bg-[#0F1A2E] border border-zinc-200 dark:border-white/10 p-1.5 z-[999] rounded-xl shadow-2xl">
+                            <div className="px-3 py-3 mb-1 border-b border-zinc-100 dark:border-white/5">
+                                <p className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">Your Profile</p>
+                                <p className="text-sm font-bold truncate text-foreground">{user?.displayName}</p>
                             </div>
-                            <DropdownMenuItem asChild className="focus:bg-white rounded-xl cursor-pointer py-3 group outline-none transition-colors border border-transparent focus:border-zinc-100">
-                                <Link href="/settings" className="flex items-center gap-4 w-full px-2">
-                                    <User className="h-4 w-4 text-zinc-500 group-hover:text-[#FF6200]" />
-                                    <span className="font-bold uppercase text-[10px] tracking-widest text-zinc-500 group-hover:text-zinc-900">Account Settings</span>
+                            <DropdownMenuItem asChild className="focus:bg-zinc-100 dark:focus:bg-white/5 rounded-lg cursor-pointer py-2.5">
+                                <Link href="/settings" className="flex items-center gap-3 w-full px-2">
+                                    <User className="h-4 w-4 text-zinc-500" />
+                                    <span className="text-sm font-medium">Account Settings</span>
                                 </Link>
                             </DropdownMenuItem>
                         </DropdownMenuContent>

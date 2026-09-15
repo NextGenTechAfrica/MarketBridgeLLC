@@ -7,7 +7,8 @@ import { Logo } from '@/components/logo';
 import { useAuth } from '@/contexts/AuthContext';
 import {
     Menu, User, LogOut, LayoutDashboard, Crown, Zap,
-    ShoppingBag, Store, ChevronDown, X, MessageCircle
+    ShoppingBag, Store, ChevronDown, X, MessageCircle,
+    Search, ShoppingCart, MapPin, Bell
 } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
 import {
@@ -29,6 +30,7 @@ export const Header = () => {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [currentNode, setCurrentNode] = useState<string>('Abuja');
     const { setShowDialog } = useLocation();
+    const [searchQuery, setSearchQuery] = useState('');
 
     useEffect(() => {
         const saved = localStorage.getItem('mb-preferred-node');
@@ -44,99 +46,104 @@ export const Header = () => {
         router.push('/');
     };
 
+    const handleSearch = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (searchQuery.trim()) {
+            router.push(`/marketplace?q=${encodeURIComponent(searchQuery.trim())}`);
+            setSearchQuery('');
+        }
+    };
+
     const isActive = (path: string) => {
         if (path === '/') return pathname === '/';
         return pathname?.startsWith(path);
     };
 
-    const navLinks = [
-        { href: '/marketplace', label: 'Browse' },
-    ];
-
     return (
         <>
-            <header className="sticky top-0 left-0 right-0 z-[100] bg-white/90 dark:bg-zinc-950/90 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800 h-16 shadow-sm">
-                <div className="max-w-6xl mx-auto px-4 sm:px-6 h-full flex items-center justify-between gap-4">
+            <header className="sticky top-0 left-0 right-0 z-[100] bg-white/95 dark:bg-[#0B1120]/95 backdrop-blur-md border-b border-zinc-200 dark:border-white/5 h-16 shadow-sm">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 h-full flex items-center gap-4">
 
-                    {/* Left: Logo + Campus Node */}
-                    <div className="flex items-center gap-4 shrink-0">
-                        <Logo />
-                        <button
-                            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-zinc-100 dark:bg-zinc-900/80 hover:bg-zinc-200 dark:hover:bg-zinc-800 border border-zinc-200 dark:border-zinc-800/50 rounded-full transition-all group"
-                            onClick={() => {
-                                setShowDialog(true);
-                            }}
-                        >
-                            <span className="relative flex h-1.5 w-1.5">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FF6200] opacity-75" />
-                                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#FF6200]" />
-                            </span>
-                            <span className="text-[11px] font-bold text-zinc-600 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-zinc-100 transition-colors">
-                                {currentNode}
-                            </span>
-                            <ChevronDown className="h-3 w-3 text-zinc-400 dark:text-zinc-500" />
-                        </button>
+                    {/* Logo (visible when no sidebar) */}
+                    <div className="flex items-center gap-3 shrink-0 md:hidden">
+                        <Logo size="sm" />
                     </div>
 
-                    {/* Centre: Nav Links (desktop) */}
-                    <nav className="hidden md:flex items-center gap-1">
-                        {navLinks.map((link) => (
-                            <Link
-                                key={link.href}
-                                href={link.href}
-                                className={cn(
-                                    'px-4 py-2 rounded-full text-sm font-bold transition-all',
-                                    isActive(link.href)
-                                        ? 'bg-zinc-100 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-800'
-                                        : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-900/50'
-                                )}
-                            >
-                                {link.label}
-                            </Link>
-                        ))}
-                    </nav>
+                    {/* Logo for desktop (visible only on public pages - sidebar handles it on dashboard) */}
+                    <div className="hidden md:flex items-center gap-3 shrink-0">
+                        <Logo size="sm" />
+                    </div>
 
-                    {/* Right: Auth actions */}
-                    <div className="flex items-center gap-2 shrink-0">
-
-                        <div className="flex items-center gap-2">
-                            <ThemeToggle />
-                            {user && <NotificationBell />}
-                            {!user && !loading && (
-                                <Link href="/login" className="hidden md:block">
-                                    <Button size="sm" className="bg-[#FF6200] hover:bg-[#FF7A29] text-white font-black uppercase tracking-wider text-[11px] rounded-full px-5 py-2 transition-all">
-                                        Sign In
-                                    </Button>
-                                </Link>
-                            )}
+                    {/* Search Bar */}
+                    <form onSubmit={handleSearch} className="flex-1 max-w-xl hidden sm:block">
+                        <div className="relative">
+                            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+                            <input
+                                type="text"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                placeholder="Search products, sellers, or categories..."
+                                className="w-full pl-10 pr-4 py-2.5 bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 rounded-xl text-sm text-foreground placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#FF6200]/30 focus:border-[#FF6200]/50 transition-all"
+                            />
                         </div>
+                    </form>
 
+                    {/* Right side actions */}
+                    <div className="flex items-center gap-2 shrink-0 ml-auto">
+
+                        {/* Location Selector */}
+                        <button
+                            className="hidden lg:flex items-center gap-1.5 px-3 py-2 bg-zinc-100 dark:bg-white/5 hover:bg-zinc-200 dark:hover:bg-white/10 border border-zinc-200 dark:border-white/10 rounded-xl transition-all group"
+                            onClick={() => setShowDialog(true)}
+                        >
+                            <MapPin className="h-3.5 w-3.5 text-[#FF6200]" />
+                            <span className="text-xs font-medium text-zinc-600 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors">
+                                {currentNode}
+                            </span>
+                            <ChevronDown className="h-3 w-3 text-zinc-400" />
+                        </button>
+
+                        <ThemeToggle />
+
+                        {user && <NotificationBell />}
+
+                        {/* Cart Link (for buyers / unauthenticated) */}
+                        {(!user || user.role === 'student_buyer' || user.role === 'buyer') && (
+                            <Link
+                                href="/cart"
+                                className="relative p-2.5 rounded-xl bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 hover:bg-zinc-200 dark:hover:bg-white/10 transition-all hidden sm:flex"
+                            >
+                                <ShoppingCart className="h-4 w-4 text-zinc-600 dark:text-zinc-400" />
+                            </Link>
+                        )}
+
+                        {/* Sign In Button */}
+                        {!user && !loading && (
+                            <Link href="/login" className="hidden md:block">
+                                <Button size="sm" className="bg-[#FF6200] hover:bg-[#FF7A29] text-white font-semibold text-sm rounded-xl px-5 h-10 transition-all">
+                                    Get Started
+                                </Button>
+                            </Link>
+                        )}
+
+                        {/* User Menu (Desktop) */}
                         {user && (
                             <div className="hidden md:flex items-center gap-2">
-                                {/* Coins */}
-                                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-[#FF6200]/10 border border-[#FF6200]/20 rounded-full cursor-help" title="MarketCoins balance">
+                                {/* MarketCoins */}
+                                <div className="flex items-center gap-1.5 px-3 py-2 bg-[#FF6200]/8 border border-[#FF6200]/15 rounded-xl" title="MarketCoins balance">
                                     <Zap className="h-3.5 w-3.5 text-[#FF6200]" />
-                                    <span className="text-xs font-black text-zinc-900 dark:text-white">{(user.coins_balance || 0).toLocaleString()}</span>
-                                    <span className="text-[9px] font-black text-[#FF6200]/90 uppercase">MC</span>
+                                    <span className="text-xs font-semibold text-zinc-900 dark:text-white">{(user.coins_balance || 0).toLocaleString()}</span>
+                                    <span className="text-[9px] font-bold text-[#FF6200]/80 uppercase">MC</span>
                                 </div>
-
-                                {/* Messages Link */}
-                                <Link
-                                    href="/chats"
-                                    className="px-3 py-1.5 flex items-center gap-2 rounded-full border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors shadow-sm text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white"
-                                >
-                                    <MessageCircle className="h-4 w-4" />
-                                    <span className="text-xs font-bold hidden lg:inline">Messages</span>
-                                </Link>
 
                                 {/* Profile Dropdown */}
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
-                                        <button className="flex items-center gap-2 pl-1.5 pr-3 py-1.5 rounded-full border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all shadow-sm group">
-                                            <div className="h-7 w-7 rounded-full bg-gradient-to-tr from-[#FF6200] to-amber-400 flex items-center justify-center text-[10px] font-black text-white shrink-0">
+                                        <button className="flex items-center gap-2 pl-1.5 pr-3 py-1.5 rounded-xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-white/5 hover:bg-zinc-50 dark:hover:bg-white/10 transition-all shadow-sm group">
+                                            <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-[#FF6200] to-amber-400 flex items-center justify-center text-[11px] font-bold text-white shrink-0">
                                                 {(user.displayName || user.email || 'U').charAt(0).toUpperCase()}
                                             </div>
-                                            <span className="text-xs font-bold text-zinc-700 dark:text-zinc-300 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors max-w-[80px] truncate">
+                                            <span className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 max-w-[80px] truncate">
                                                 {user.displayName?.split(' ')[0] || 'Account'}
                                             </span>
                                             <ChevronDown className="h-3 w-3 text-zinc-400" />
@@ -146,62 +153,62 @@ export const Header = () => {
                                         <DropdownMenuContent
                                             align="end"
                                             sideOffset={12}
-                                            className="w-64 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-1.5 text-zinc-900 dark:text-white z-[999] shadow-2xl rounded-2xl"
+                                            className="w-64 bg-white dark:bg-[#0F1A2E] border border-zinc-200 dark:border-white/10 p-1.5 text-zinc-900 dark:text-white z-[999] shadow-2xl rounded-xl"
                                         >
                                             {/* Account info */}
-                                            <div className="px-3 py-3 mb-1 border-b border-zinc-100 dark:border-zinc-800/50 bg-zinc-50/50 dark:bg-zinc-900/50 rounded-lg">
-                                                <p className="text-xs font-black text-zinc-900 dark:text-white truncate">{user.displayName || 'MarketBridge User'}</p>
-                                                <p className="text-[11px] text-zinc-500 dark:text-zinc-400 font-medium truncate mt-0.5">{user.email}</p>
+                                            <div className="px-3 py-3 mb-1 border-b border-zinc-100 dark:border-white/5 bg-zinc-50/50 dark:bg-white/5 rounded-lg">
+                                                <p className="text-sm font-bold text-zinc-900 dark:text-white truncate">{user.displayName || 'MarketBridge User'}</p>
+                                                <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate mt-0.5">{user.email}</p>
                                             </div>
 
                                             {(user.role === 'student_seller' || user.role === 'seller') && (
-                                                <DropdownMenuItem asChild className="rounded-xl cursor-pointer focus:bg-zinc-100 dark:focus:bg-zinc-800 my-0.5">
+                                                <DropdownMenuItem asChild className="rounded-lg cursor-pointer focus:bg-zinc-100 dark:focus:bg-white/5 my-0.5">
                                                     <Link href="/seller/dashboard" className="flex items-center gap-3 px-3 py-2.5">
                                                         <Store className="h-4 w-4 text-[#FF6200]" />
-                                                        <span className="text-sm font-bold">Seller Dashboard</span>
+                                                        <span className="text-sm font-medium">Seller Dashboard</span>
                                                     </Link>
                                                 </DropdownMenuItem>
                                             )}
 
-                                            <DropdownMenuItem asChild className="rounded-xl cursor-pointer focus:bg-zinc-100 dark:focus:bg-zinc-800 my-0.5">
+                                            <DropdownMenuItem asChild className="rounded-lg cursor-pointer focus:bg-zinc-100 dark:focus:bg-white/5 my-0.5">
                                                 <Link href="/marketplace" className="flex items-center gap-3 px-3 py-2.5">
                                                     <ShoppingBag className="h-4 w-4 text-zinc-500" />
-                                                    <span className="text-sm font-bold">Browse Market</span>
+                                                    <span className="text-sm font-medium">Browse Market</span>
                                                 </Link>
                                             </DropdownMenuItem>
 
-                                            <DropdownMenuItem asChild className="rounded-xl cursor-pointer focus:bg-zinc-100 dark:focus:bg-zinc-800 my-0.5">
+                                            <DropdownMenuItem asChild className="rounded-lg cursor-pointer focus:bg-zinc-100 dark:focus:bg-white/5 my-0.5">
                                                 <Link href="/chats" className="flex items-center gap-3 px-3 py-2.5">
                                                     <MessageCircle className="h-4 w-4 text-zinc-500" />
-                                                    <span className="text-sm font-bold">My Communications</span>
+                                                    <span className="text-sm font-medium">Messages</span>
                                                 </Link>
                                             </DropdownMenuItem>
 
-                                            <DropdownMenuItem asChild className="rounded-xl cursor-pointer focus:bg-zinc-100 dark:focus:bg-zinc-800 my-0.5">
+                                            <DropdownMenuItem asChild className="rounded-lg cursor-pointer focus:bg-zinc-100 dark:focus:bg-white/5 my-0.5">
                                                 <Link href="/settings" className="flex items-center gap-3 px-3 py-2.5">
                                                     <User className="h-4 w-4 text-zinc-500" />
-                                                    <span className="text-sm font-bold">My Account</span>
+                                                    <span className="text-sm font-medium">My Account</span>
                                                 </Link>
                                             </DropdownMenuItem>
 
                                             {['ceo', 'operations_admin', 'marketing_admin', 'systems_admin', 'it_support', 'technical_admin', 'admin'].includes(user.role) && (
-                                                <DropdownMenuItem asChild className="rounded-xl cursor-pointer focus:bg-zinc-100 dark:focus:bg-zinc-800 my-0.5">
+                                                <DropdownMenuItem asChild className="rounded-lg cursor-pointer focus:bg-zinc-100 dark:focus:bg-white/5 my-0.5">
                                                     <Link href="/admin" className="flex items-center gap-3 px-3 py-2.5">
                                                         <Crown className="h-4 w-4 text-[#FF6200]" />
-                                                        <span className="text-sm font-bold text-[#FF6200]">Admin Panel</span>
+                                                        <span className="text-sm font-medium text-[#FF6200]">Admin Panel</span>
                                                     </Link>
                                                 </DropdownMenuItem>
                                             )}
 
-                                            <div className="my-1 border-t border-zinc-100 dark:border-zinc-800/50" />
+                                            <div className="my-1 border-t border-zinc-100 dark:border-white/5" />
 
                                             <DropdownMenuItem
                                                 onClick={handleSignOut}
-                                                className="rounded-xl cursor-pointer focus:bg-red-50 dark:focus:bg-red-950/30 text-red-600 dark:text-red-400 my-0.5 hover:text-red-700 dark:hover:text-red-300"
+                                                className="rounded-lg cursor-pointer focus:bg-red-50 dark:focus:bg-red-950/30 text-red-600 dark:text-red-400 my-0.5"
                                             >
                                                 <div className="flex items-center gap-3 px-3 py-2.5 w-full">
                                                     <LogOut className="h-4 w-4" />
-                                                    <span className="text-sm font-bold">Log out</span>
+                                                    <span className="text-sm font-medium">Log out</span>
                                                 </div>
                                             </DropdownMenuItem>
                                         </DropdownMenuContent>
@@ -214,7 +221,7 @@ export const Header = () => {
 
                         {/* Mobile Hamburger */}
                         <button
-                            className="md:hidden h-9 w-9 flex items-center justify-center rounded-full border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all"
+                            className="md:hidden h-10 w-10 flex items-center justify-center rounded-xl border border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-white/5 hover:bg-zinc-100 dark:hover:bg-white/10 transition-all"
                             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                             aria-label="Toggle menu"
                         >
@@ -226,26 +233,58 @@ export const Header = () => {
 
             {/* Mobile Slide-down Menu */}
             {mobileMenuOpen && (
-                <div className="fixed top-16 left-0 right-0 z-[99] bg-white dark:bg-zinc-950 border-b border-zinc-200 dark:border-zinc-800 px-6 py-6 flex flex-col gap-4 md:hidden shadow-xl">
-                    {navLinks.map((link) => (
-                        <Link
-                            key={link.href}
-                            href={link.href}
-                            onClick={() => setMobileMenuOpen(false)}
-                            className="text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white font-bold text-lg transition-colors p-2"
-                        >
-                            {link.label}
-                        </Link>
-                    ))}
-                    <div className="border-t border-zinc-100 dark:border-zinc-800 pt-4 flex flex-col gap-3 mt-2">
+                <div className="fixed top-16 left-0 right-0 z-[99] bg-white dark:bg-[#0B1120] border-b border-zinc-200 dark:border-white/5 px-6 py-6 flex flex-col gap-3 md:hidden shadow-xl">
+                    {/* Mobile Search */}
+                    <form onSubmit={handleSearch} className="mb-2">
+                        <div className="relative">
+                            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+                            <input
+                                type="text"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                placeholder="Search..."
+                                className="w-full pl-10 pr-4 py-2.5 bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#FF6200]/30"
+                            />
+                        </div>
+                    </form>
+
+                    {/* Location on mobile */}
+                    <button
+                        className="flex items-center gap-2 px-4 py-3 bg-zinc-100 dark:bg-white/5 rounded-xl text-left"
+                        onClick={() => { setShowDialog(true); setMobileMenuOpen(false); }}
+                    >
+                        <MapPin className="h-4 w-4 text-[#FF6200]" />
+                        <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">{currentNode}</span>
+                        <ChevronDown className="h-3 w-3 text-zinc-400 ml-auto" />
+                    </button>
+
+                    <Link
+                        href="/marketplace"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="flex items-center gap-3 px-4 py-3 text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white font-medium text-sm transition-colors rounded-xl hover:bg-zinc-50 dark:hover:bg-white/5"
+                    >
+                        <ShoppingBag className="h-4 w-4" />
+                        Browse Market
+                    </Link>
+
+                    <div className="border-t border-zinc-100 dark:border-white/5 pt-3 flex flex-col gap-2">
                         {user ? (
                             <>
-                                <Link href="/settings" onClick={() => setMobileMenuOpen(false)} className="text-zinc-600 dark:text-zinc-300 hover:text-white font-bold p-2">My Account</Link>
-                                <button onClick={() => { setMobileMenuOpen(false); handleSignOut(); }} className="text-red-500 font-bold text-left p-2">Log out</button>
+                                <Link href="/settings" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 text-zinc-700 dark:text-zinc-300 font-medium text-sm rounded-xl hover:bg-zinc-50 dark:hover:bg-white/5">
+                                    <User className="h-4 w-4" />
+                                    My Account
+                                </Link>
+                                <button onClick={() => { setMobileMenuOpen(false); handleSignOut(); }} className="flex items-center gap-3 px-4 py-3 text-red-500 font-medium text-sm text-left rounded-xl hover:bg-red-50 dark:hover:bg-red-500/10">
+                                    <LogOut className="h-4 w-4" />
+                                    Log out
+                                </button>
                             </>
                         ) : (
                             !loading && (
-                                <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="text-zinc-600 dark:text-zinc-300 hover:text-white font-bold p-2">Sign In</Link>
+                                <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 text-zinc-700 dark:text-zinc-300 font-medium text-sm rounded-xl hover:bg-zinc-50 dark:hover:bg-white/5">
+                                    <User className="h-4 w-4" />
+                                    Sign In
+                                </Link>
                             )
                         )}
                     </div>

@@ -6,30 +6,30 @@
 
 @layer base {
   :root {
-    --radius: 1rem;
-    /* MarketBridge Clean Light Theme (Chowdeck style) */
-    --background: 0 0% 98%;
-    /* #FAFAFA */
-    --foreground: 0 0% 10%;
-    /* #1A1A1A */
+    --radius: 0.75rem;
+    /* MarketBridge Clean Light Theme */
+    --background: 0 0% 97%;
+    /* #F7F7F7 */
+    --foreground: 216 28% 12%;
+    /* #161D2A */
 
     --card: 0 0% 100%;
     /* #FFF */
-    --card-foreground: 0 0% 10%;
+    --card-foreground: 216 28% 12%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 10%;
+    --popover-foreground: 216 28% 12%;
 
     --primary: 23 100% 50%;
     /* #FF6200 */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 0 0% 96%;
-    /* #F5F5F5 */
-    --secondary-foreground: 0 0% 10%;
+    --secondary: 220 14% 96%;
+    /* #F3F4F6 */
+    --secondary-foreground: 216 28% 12%;
 
-    --muted: 0 0% 90%;
-    --muted-foreground: 0 0% 45%;
+    --muted: 220 14% 93%;
+    --muted-foreground: 220 9% 46%;
 
     --accent: 23 100% 50%;
     --accent-foreground: 0 0% 100%;
@@ -37,50 +37,49 @@
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 90%;
-    --input: 0 0% 90%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
     --ring: 23 100% 50%;
 
     --chart-1: 23 100% 50%;
-    --chart-2: 0 0% 20%;
-    --chart-3: 0 0% 40%;
+    --chart-2: 216 28% 20%;
+    --chart-3: 220 9% 46%;
     --chart-4: 23 100% 60%;
     --chart-5: 23 100% 40%;
 
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 0 0% 10%;
+    --sidebar-background: 216 50% 8%;
+    /* #0A1628 — dark navy */
+    --sidebar-foreground: 220 14% 80%;
     --sidebar-primary: 23 100% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 96%;
-    --sidebar-accent-foreground: 0 0% 10%;
-    --sidebar-border: 0 0% 90%;
+    --sidebar-accent: 216 40% 16%;
+    --sidebar-accent-foreground: 220 14% 90%;
+    --sidebar-border: 216 40% 16%;
     --sidebar-ring: 23 100% 50%;
   }
 
   .dark {
-    --background: 0 0% 4%;
-    /* #0A0A0A — slightly off-black, easier on eyes */
-    --foreground: 0 0% 95%;
-    /* #F2F2F2 — slightly off-white to reduce glare */
+    --background: 216 50% 5%;
+    /* #0B1120 — deep navy */
+    --foreground: 220 14% 93%;
+    /* #ECEDEE */
 
-    --card: 0 0% 7%;
-    /* #121212 */
-    --card-foreground: 0 0% 93%;
+    --card: 216 45% 8%;
+    /* #0F1A2E */
+    --card-foreground: 220 14% 93%;
 
-    --popover: 0 0% 7%;
-    --popover-foreground: 0 0% 93%;
+    --popover: 216 45% 8%;
+    --popover-foreground: 220 14% 93%;
 
     --primary: 23 100% 50%;
     /* #FF6200 stays consistent */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 0 0% 12%;
-    /* Slightly lighter for better button/card contrast */
-    --secondary-foreground: 0 0% 90%;
+    --secondary: 216 40% 14%;
+    --secondary-foreground: 220 14% 90%;
 
-    --muted: 0 0% 16%;
-    --muted-foreground: 0 0% 60%;
-    /* Bumped from 65% for better readability on dark bg */
+    --muted: 216 35% 18%;
+    --muted-foreground: 220 9% 58%;
 
     --accent: 23 100% 50%;
     --accent-foreground: 0 0% 100%;
@@ -88,10 +87,18 @@
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 18%;
-    /* Slightly brighter borders so cards are distinguishable */
-    --input: 0 0% 18%;
+    --border: 216 35% 18%;
+    --input: 216 35% 18%;
     --ring: 23 100% 50%;
+
+    --sidebar-background: 216 50% 8%;
+    --sidebar-foreground: 220 14% 80%;
+    --sidebar-primary: 23 100% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 216 40% 16%;
+    --sidebar-accent-foreground: 220 14% 90%;
+    --sidebar-border: 216 40% 16%;
+    --sidebar-ring: 23 100% 50%;
   }
 }
 
@@ -135,16 +142,18 @@
 }
 
 @layer utilities {
+  /* ─── Glass / Card Effects ─── */
   .glass-card {
-    @apply bg-white/60 dark:bg-zinc-900/60 backdrop-blur-xl border border-black/5 dark:border-white/5 shadow-xl;
+    @apply bg-white/80 dark:bg-[#0F1A2E]/80 backdrop-blur-xl border border-black/5 dark:border-white/5 shadow-lg;
   }
 
   .glass-border {
     @apply border border-black/5 dark:border-white/5;
   }
 
+  /* ─── Brand Effects ─── */
   .text-glow {
-    text-shadow: 0 0 30px hsla(23, 100%, 50%, 0.6);
+    text-shadow: 0 0 30px hsla(23, 100%, 50%, 0.5);
   }
 
   .bg-orange-gradient {
@@ -155,7 +164,7 @@
     position: absolute;
     width: 600px;
     height: 600px;
-    background: radial-gradient(circle, hsla(23, 100%, 50%, 0.1) 0%, transparent 70%);
+    background: radial-gradient(circle, hsla(23, 100%, 50%, 0.08) 0%, transparent 70%);
     filter: blur(100px);
     z-index: -1;
     pointer-events: none;
@@ -166,10 +175,47 @@
   }
 
   .glow-on-hover:hover {
-    box-shadow: 0 0 20px hsla(23, 100%, 50%, 0.3);
+    box-shadow: 0 0 20px hsla(23, 100%, 50%, 0.2);
     transform: translateY(-2px);
   }
 
+  /* ─── Sidebar Styles ─── */
+  .mb-sidebar {
+    background: hsl(var(--sidebar-background));
+    color: hsl(var(--sidebar-foreground));
+  }
+
+  .mb-sidebar-item {
+    @apply flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200;
+    color: hsl(var(--sidebar-foreground));
+  }
+
+  .mb-sidebar-item:hover {
+    background: hsl(var(--sidebar-accent));
+    color: hsl(var(--sidebar-accent-foreground));
+  }
+
+  .mb-sidebar-item-active {
+    background: hsl(var(--sidebar-primary));
+    color: hsl(var(--sidebar-primary-foreground));
+    box-shadow: 0 4px 20px hsla(23, 100%, 50%, 0.3);
+  }
+
+  /* ─── Content Container (with sidebar offset) ─── */
+  .mb-content {
+    @apply flex-1 min-h-screen;
+  }
+
+  /* ─── Card Variants ─── */
+  .mb-stat-card {
+    @apply bg-card border border-border rounded-xl p-5 transition-all duration-200;
+  }
+
+  .mb-stat-card:hover {
+    @apply border-primary/20 shadow-md;
+  }
+
+  /* ─── Animations ─── */
   @keyframes float {
     0% {
       transform: translateY(0px);
@@ -203,19 +249,6 @@
     animation: scroll-text 40s linear infinite;
   }
 
-  .clip-corner {
-    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%);
-  }
-
-  .clip-diagonal-section {
-    clip-path: polygon(0 0, 100% 0, 100% 85%, 0 100%);
-  }
-
-  .mask-linear-fade {
-    -webkit-mask-image: linear-gradient(to right, transparent, black 16px, black calc(100% - 16px), transparent);
-    mask-image: linear-gradient(to right, transparent, black 16px, black calc(100% - 16px), transparent);
-  }
-
   @keyframes subtle-zoom {
     from {
       transform: scale(1.05);
@@ -227,6 +260,34 @@
 
   .animate-subtle-zoom {
     animation: subtle-zoom 45s infinite alternate ease-in-out;
+  }
+
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fade-in-up {
+    animation: fade-in-up 0.5s ease-out forwards;
+  }
+
+  .clip-corner {
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%);
+  }
+
+  .clip-diagonal-section {
+    clip-path: polygon(0 0, 100% 0, 100% 85%, 0 100%);
+  }
+
+  .mask-linear-fade {
+    -webkit-mask-image: linear-gradient(to right, transparent, black 16px, black calc(100% - 16px), transparent);
+    mask-image: linear-gradient(to right, transparent, black 16px, black calc(100% - 16px), transparent);
   }
 }
 
@@ -286,16 +347,16 @@
 }
 
 .dark ::-webkit-scrollbar-track {
-  background: #18181b;
+  background: #0B1120;
 }
 
 .dark ::-webkit-scrollbar-thumb {
-  background: #3f3f46;
+  background: #1E2D45;
   border-radius: 4px;
 }
 
 .dark ::-webkit-scrollbar-thumb:hover {
-  background: #52525b;
+  background: #2A3D5A;
 }
 
 /* Firefox */
@@ -307,5 +368,5 @@ html {
 
 .dark html,
 html.dark {
-  scrollbar-color: #3f3f46 #18181b;
+  scrollbar-color: #1E2D45 #0B1120;
 }

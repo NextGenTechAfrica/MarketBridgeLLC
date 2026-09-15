@@ -3,15 +3,15 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
 import { Logo } from '@/components/logo';
-import { LogOut } from 'lucide-react';
+import { LogOut, Settings } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
 export interface SidebarItem {
     label: string;
     href: string;
     icon: React.ElementType;
+    badge?: number;
 }
 
 interface SidebarProps {
@@ -22,79 +22,100 @@ interface SidebarProps {
 
 export function Sidebar({ items, title, className }: SidebarProps) {
     const pathname = usePathname();
-    const { logout } = useAuth();
+    const { user, logout } = useAuth();
 
     return (
-        <div className={cn("pb-12 min-h-screen border-r border-border bg-card/60 backdrop-blur-2xl flex flex-col transition-colors duration-300", className)}>
-            <div className="space-y-10 py-10 px-8">
-                <div className="px-2">
-                    <div className="mb-14">
-                        <Logo showText={true} className="scale-110" />
-                        {title && (
-                            <p className="mt-6 text-[10px] font-black text-muted-foreground/60 uppercase tracking-[0.4em] italic text-center">
-                                // {title}
-                            </p>
-                        )}
-                    </div>
-
-                    <div className="space-y-2">
-                        {items.map((item) => {
-                            // Logic: 
-                            // 1. If it's an exact match, it's active.
-                            // 2. If it's a sub-path, it's active ONLY if no other sidebar item has a longer matching prefix.
-                            const isExact = pathname === item.href;
-                            
-                            // Check if any other item is a better match for the current pathname
-                            const hasBetterMatch = items.some(otherItem => 
-                                otherItem.href !== item.href && 
-                                pathname?.startsWith(otherItem.href) && 
-                                otherItem.href.length > item.href.length
-                            );
-
-                            const isSubPath = pathname?.startsWith(item.href) && 
-                                              item.href !== '/' && 
-                                              item.href !== '/admin' && 
-                                              item.href !== '/ceo' && 
-                                              item.href !== '/seller/dashboard' &&
-                                              !hasBetterMatch;
-                            
-                            const isActive = isExact || isSubPath;
-
-                            return (
-                                <Link
-                                    key={item.href}
-                                    href={item.href}
-                                    className={cn(
-                                        "flex items-center gap-5 px-5 py-4 rounded-2xl transition-all duration-300 group relative",
-                                        isActive
-                                            ? "bg-primary text-primary-foreground shadow-[0_8px_30px_rgba(255,98,0,0.25)]"
-                                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                                    )}
-                                >
-                                    {isActive && (
-                                        <div className="absolute left-[-2px] top-1/2 -translate-y-1/2 w-1.5 h-8 bg-white rounded-full opacity-80" />
-                                    )}
-                                    <item.icon className={cn(
-                                        "h-5 w-5 transition-transform group-hover:scale-110",
-                                        isActive ? "text-primary-foreground" : "text-muted-foreground opacity-70 group-hover:opacity-100"
-                                    )} />
-                                    <span className="text-[11px] font-black uppercase tracking-widest italic truncate">
-                                        {item.label}
-                                    </span>
-                                </Link>
-                            );
-                        })}
-                    </div>
-                </div>
+        <div className={cn(
+            "pb-6 min-h-screen flex flex-col transition-colors duration-300 w-[260px]",
+            "mb-sidebar",
+            className
+        )}>
+            {/* Logo Area */}
+            <div className="px-6 pt-7 pb-5">
+                <Logo showText={true} className="scale-100" variant="sidebar" />
             </div>
 
-            <div className="mt-auto px-10 py-10 border-t border-border">
+            {/* Navigation Items */}
+            <nav className="flex-1 px-4 space-y-1 overflow-y-auto">
+                {items.map((item) => {
+                    const isExact = pathname === item.href;
+                    const hasBetterMatch = items.some(otherItem =>
+                        otherItem.href !== item.href &&
+                        pathname?.startsWith(otherItem.href) &&
+                        otherItem.href.length > item.href.length
+                    );
+                    const isSubPath = pathname?.startsWith(item.href) &&
+                        item.href !== '/' &&
+                        item.href !== '/admin' &&
+                        item.href !== '/ceo' &&
+                        item.href !== '/seller/dashboard' &&
+                        !hasBetterMatch;
+                    const isActive = isExact || isSubPath;
+
+                    return (
+                        <Link
+                            key={item.href}
+                            href={item.href}
+                            className={cn(
+                                "mb-sidebar-item relative",
+                                isActive && "mb-sidebar-item-active"
+                            )}
+                        >
+                            <item.icon className={cn(
+                                "h-[18px] w-[18px] shrink-0",
+                                isActive ? "text-white" : "opacity-60"
+                            )} />
+                            <span className="truncate">{item.label}</span>
+                            {item.badge && item.badge > 0 && (
+                                <span className={cn(
+                                    "ml-auto text-[11px] font-bold rounded-full px-2 py-0.5 min-w-[22px] text-center",
+                                    isActive
+                                        ? "bg-white/20 text-white"
+                                        : "bg-[#FF6200]/15 text-[#FF6200]"
+                                )}>
+                                    {item.badge}
+                                </span>
+                            )}
+                        </Link>
+                    );
+                })}
+            </nav>
+
+            {/* Quick Actions Section (optional, for buyer sidebar) */}
+            {title && (
+                <div className="px-4 mt-2 mb-4">
+                    <p className="px-4 mb-2 text-[10px] font-semibold uppercase tracking-wider opacity-40">
+                        Quick Actions
+                    </p>
+                </div>
+            )}
+
+            {/* User Profile / Logout */}
+            <div className="mt-auto px-4 pt-4 border-t border-white/5">
+                {user && (
+                    <div className="mb-3 px-4 py-3 rounded-xl flex items-center gap-3 bg-white/5">
+                        <div className="h-9 w-9 rounded-full bg-gradient-to-tr from-[#FF6200] to-amber-400 flex items-center justify-center text-xs font-bold text-white shrink-0">
+                            {(user.displayName || user.email || 'U').charAt(0).toUpperCase()}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-white truncate">
+                                {user.displayName?.split(' ')[0] || 'User'}
+                            </p>
+                            <p className="text-[11px] opacity-50 truncate">
+                                {user.role === 'student_seller' || user.role === 'seller' ? 'Seller' : 'Buyer'}
+                            </p>
+                        </div>
+                        <Link href="/settings" className="p-1.5 rounded-lg hover:bg-white/10 transition-colors">
+                            <Settings className="h-4 w-4 opacity-50 hover:opacity-100" />
+                        </Link>
+                    </div>
+                )}
                 <button
-                    className="flex items-center gap-5 w-full px-4 py-4 text-muted-foreground hover:text-red-500 transition-all duration-300 group rounded-2xl hover:bg-red-500/5 active:scale-95"
+                    className="mb-sidebar-item w-full text-red-400 hover:bg-red-500/10 hover:text-red-300"
                     onClick={() => logout()}
                 >
-                    <LogOut className="h-5 w-5 group-hover:rotate-12 transition-transform" />
-                    <span className="text-[11px] font-black uppercase tracking-[0.2em] italic">Sign Out</span>
+                    <LogOut className="h-[18px] w-[18px] shrink-0" />
+                    <span>Sign Out</span>
                 </button>
             </div>
         </div>

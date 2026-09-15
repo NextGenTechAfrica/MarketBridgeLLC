@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, ShoppingBag, ShoppingCart, User, Crown, MessageCircle } from 'lucide-react';
+import { Home, ShoppingBag, ShoppingCart, User, Crown, MessageCircle, Search } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCart } from '@/contexts/CartContext';
 import { cn } from '@/lib/utils';
@@ -28,13 +28,13 @@ export const MobileBottomNav = () => {
         },
         {
             href: '/marketplace',
-            label: 'Market',
-            icon: ShoppingBag,
+            label: 'Explore',
+            icon: Search,
             show: true,
         },
         {
             href: '/chats',
-            label: 'Chats',
+            label: 'Messages',
             icon: MessageCircle,
             show: !!user,
         },
@@ -57,15 +57,15 @@ export const MobileBottomNav = () => {
                 if (role === 'student_seller' || role === 'seller') return '/seller/dashboard';
                 return '/orders';
             })(),
-            label: (user && ['ceo', 'operations_admin', 'marketing_admin', 'systems_admin', 'it_support', 'technical_admin', 'admin'].includes(user.role)) ? 'Command' : (user ? 'Account' : 'Login'),
+            label: (user && ['ceo', 'operations_admin', 'marketing_admin', 'systems_admin', 'it_support', 'technical_admin', 'admin'].includes(user.role)) ? 'Admin' : (user ? 'Account' : 'Login'),
             icon: (user && ['ceo', 'operations_admin', 'marketing_admin', 'systems_admin', 'it_support', 'technical_admin', 'admin'].includes(user.role)) ? Crown : User,
             show: true,
         },
     ];
 
     return (
-        <nav className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-[90] w-[90%] bg-white rounded-[2rem] border border-zinc-200 shadow-lg shadow-black/5 h-20 px-8">
-            <div className="flex h-full items-center justify-between">
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 z-[90] bg-white dark:bg-[#0B1120] border-t border-zinc-200 dark:border-white/5 h-[72px] px-2 safe-area-bottom">
+            <div className="flex h-full items-center justify-around max-w-lg mx-auto">
                 {navItems.filter(item => item.show).map((item) => {
                     const isActive = pathname === item.href;
                     const Icon = item.icon;
@@ -75,22 +75,25 @@ export const MobileBottomNav = () => {
                             key={item.href}
                             href={item.href}
                             className={cn(
-                                "flex flex-col items-center justify-center gap-1 transition-all relative group",
-                                isActive ? "text-[#FF6200] scale-110" : "text-zinc-400 hover:text-zinc-600"
+                                "flex flex-col items-center justify-center gap-1 transition-all relative py-2 px-3 rounded-xl min-w-[56px]",
+                                isActive ? "text-[#FF6200]" : "text-zinc-400 dark:text-zinc-500"
                             )}
                         >
                             <div className="relative">
-                                <Icon className={cn("h-6 w-6", isActive ? "drop-shadow-[0_2px_4px_rgba(255,184,0,0.3)]" : "")} />
+                                <Icon className={cn("h-5 w-5", isActive && "drop-shadow-[0_2px_4px_rgba(255,98,0,0.3)]")} />
                                 {item.badge && item.badge > 0 && (
-                                    <span className="absolute -top-2 -right-3 h-4 w-4 rounded-full bg-[#FF6200] text-[9px] font-black text-white flex items-center justify-center">
+                                    <span className="absolute -top-1.5 -right-2.5 h-4 w-4 rounded-full bg-[#FF6200] text-[9px] font-bold text-white flex items-center justify-center">
                                         {item.badge}
                                     </span>
                                 )}
                             </div>
-                            <span className="text-[8px] font-black uppercase tracking-widest italic">{item.label}</span>
+                            <span className={cn(
+                                "text-[10px] font-medium",
+                                isActive && "font-semibold"
+                            )}>{item.label}</span>
 
                             {isActive && (
-                                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-1 h-1 bg-[#FF6200] rounded-full shadow-[0_0_8px_#FF6200]" />
+                                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-[#FF6200] rounded-full" />
                             )}
                         </Link>
                     );
