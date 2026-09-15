@@ -3,22 +3,25 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCart } from '@/contexts/CartContext';
-import { Loader2, MapPin, MessageCircle, ShoppingCart, ArrowLeft, ShieldCheck, Phone, CreditCard, Zap, AlertTriangle, Box, Activity, Store, Star, Clock, Heart } from 'lucide-react';
-import Image from 'next/image';
+import { useToast } from '@/contexts/ToastContext';
+import {
+    Loader2, MapPin, MessageCircle, ShoppingCart, ArrowLeft, ShieldCheck,
+    Phone, Zap, AlertTriangle, Box, Activity, Store, Star, Clock, Heart,
+    CheckCircle, ChevronRight, Share2, HelpCircle
+} from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { startConversation } from '@/lib/chat';
 import { ReviewsSection } from '@/components/ReviewsSection';
 import { cn } from '@/lib/utils';
 import { useSystem } from '@/contexts/SystemContext';
 import { getRelatedListings } from '@/lib/ai-search';
+import { ListingCard } from '@/components/listings/ListingCard';
 import {
-
     Dialog,
     DialogContent,
     DialogDescription,
@@ -73,31 +76,24 @@ export default function ListingDetailContent() {
     const params = useParams();
     const router = useRouter();
     const { user } = useAuth();
-    // Paystack is handled via inline hook or popup-on-demand
+    const { toast } = useToast();
+    const { addToCart } = useCart();
+    const { isDemoMode } = useSystem();
+
     const [listing, setListing] = useState<Listing | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [actionLoading, setActionLoading] = useState(false);
     const [selectedImage, setSelectedImage] = useState(0);
-    const [paymentProvider, setPaymentProvider] = useState<'card' | 'bank'>('card');
     const [isReportOpen, setIsReportOpen] = useState(false);
     const [reportReason, setReportReason] = useState('');
     const [reportDetails, setReportDetails] = useState('');
     const [isFavorite, setIsFavorite] = useState(false);
-    const { isDemoMode } = useSystem();
     const [relatedListings, setRelatedListings] = useState<any[]>([]);
     const [recentlyViewed, setRecentlyViewed] = useState<any[]>([]);
+    const [sellerRating, setSellerRating] = useState<{ avg: number; count: number } | null>(null);
 
-    const toggleFavorite = () => {
-        if (!user) {
-            router.push('/login');
-            return;
-        }
-        setIsFavorite(!isFavorite);
-        // Supabase trigger API logic is implemented via optimistic UI sync
-    };
-
-    // Negotiation State
+    // Negotiation / Offer State
     const [isOfferOpen, setIsOfferOpen] = useState(false);
     const [offerPrice, setOfferPrice] = useState<number>(0);
     const [isSubmittingOffer, setIsSubmittingOffer] = useState(false);
@@ -109,6 +105,7 @@ export default function ListingDetailContent() {
         }
     }, [listing]);
 
+    // Recently viewed persistence
     useEffect(() => {
         if (listing && listing.id) {
             try {
@@ -124,7 +121,12 @@ export default function ListingDetailContent() {
                     category: listing.category,
                     location: listing.location,
                     condition: listing.condition,
-                    created_at: listing.created_at
+                    created_at: listing.created_at,
+                    seller: {
+                        display_name: listing.dealer?.display_name,
+                        is_verified: listing.dealer?.is_verified,
+                        university: listing.dealer?.university
+                    }
                 };
                 list.unshift(minimalItem);
                 list = list.slice(0, 6);
@@ -142,24 +144,16 @@ export default function ListingDetailContent() {
             if (stored) {
                 const parsed = JSON.parse(stored);
                 const listingId = Array.isArray(params?.id) ? params?.id[0] : params?.id;
-                setRecentlyViewed(parsed.filter((item: any) => item.id !== listingId).slice(0, 5));
+                setRecentlyViewed(parsed.filter((item: any) => item.id !== listingId).slice(0, 4));
             }
         } catch (e) {
             console.error('Failed to load recently viewed:', e);
         }
     }, [listing, params?.id]);
 
-    const adjustPrice = (amount: number) => {
-        setOfferPrice(prev => Math.max(0, prev + amount));
-    };
-
-
-    const [sellerRating, setSellerRating] = useState<{ avg: number; count: number } | null>(null);
-
     useEffect(() => {
         if (params?.id) {
             fetchListing();
-            // Increment view count (fire-and-forget)
             const listingId = Array.isArray(params.id) ? params.id[0] : params.id;
             supabase.rpc('increment_listing_view', { listing_id: listingId }).then(() => null);
             const unsubListing = subscribeToListing();
@@ -177,7 +171,7 @@ export default function ListingDetailContent() {
         }
     }, [params?.id, user]);
 
-    // Fetch seller rating after listing loads
+    // Fetch seller rating
     useEffect(() => {
         if (!listing?.dealer?.id) return;
         const fetchRating = async () => {
@@ -192,6 +186,67 @@ export default function ListingDetailContent() {
         };
         fetchRating();
     }, [listing?.dealer?.id]);
+
+    const fetchListing = async () => {
+        setLoading(true);
+        setError('');
+        try {
+            const listingId = Array.isArray(params?.id) ? params?.id[0] : params?.id;
+            const { data, error: queryError } = await supabase
+                .from('listings')
+                .select(`
+                    *,
+                    dealer:users!listings_dealer_id_fkey(
+                        id,
+                        display_name,
+                        is_verified,
+                        photo_url,
+                        store_type,
+                        phone_number,
+                        subscription_plan,
+                        university,
+                        paystack_subaccount_code
+                    )
+                `)
+                .eq('id', listingId)
+                .single();
+
+            if (queryError) {
+                console.warn("Complex query failed, trying fallback...", queryError);
+
+                const { data: simpleListing, error: simpleError } = await supabase
+                    .from('listings')
+                    .select('*')
+                    .eq('id', listingId)
+                    .single();
+
+                if (simpleError) throw simpleError;
+
+                if (simpleListing) {
+                    const { data: dealerData } = await supabase
+                        .from('users')
+                        .select('id, display_name, is_verified, photo_url, store_type, phone_number, subscription_plan, university, paystack_subaccount_code')
+                        .eq('id', simpleListing.dealer_id)
+                        .single();
+
+                    const fullListing = { ...simpleListing, dealer: dealerData || {} };
+                    setListing(fullListing);
+                    getRelatedListings(fullListing.id).then(res => setRelatedListings(res)).catch(e => console.error(e));
+                    return;
+                }
+            }
+
+            setListing(data);
+            if (data) {
+                getRelatedListings(data.id).then(res => setRelatedListings(res)).catch(e => console.error(e));
+            }
+        } catch (err: unknown) {
+            console.error('Error fetching listing:', err);
+            setError('Listing not found or no longer active.');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const fetchActiveOffer = async () => {
         if (!user || !params?.id) return;
@@ -227,7 +282,9 @@ export default function ListingDetailContent() {
             )
             .subscribe();
 
-        return () => supabase.removeChannel(channel);
+        return () => {
+            supabase.removeChannel(channel);
+        };
     };
 
     const subscribeToListing = () => {
@@ -248,75 +305,27 @@ export default function ListingDetailContent() {
             )
             .subscribe();
 
-        return () => supabase.removeChannel(channel);
+        return () => {
+            supabase.removeChannel(channel);
+        };
     };
 
-    const fetchListing = async () => {
-        setLoading(true);
-        setError('');
-        try {
-            // Real data only — no mock fallback
-            const listingId = Array.isArray(params?.id) ? params?.id[0] : params?.id;
-            const { data, error } = await supabase
-                .from('listings')
-                .select(`
-                        *,
-                        dealer:users!listings_dealer_id_fkey(
-                            id,
-                            display_name,
-                            is_verified,
-                            photo_url,
-                            store_type,
-                            phone_number,
-                            subscription_plan,
-                            university
-                        )
-                    `)
-                .eq('id', listingId)
-                .single();
-
-            if (error) {
-                console.warn("Complex query failed, trying fallback...", error);
-
-                // Fallback query (step 1: get listing)
-                const { data: simpleListing, error: simpleError } = await supabase
-                    .from('listings')
-                    .select('*')
-                    .eq('id', listingId)
-                    .single();
-
-                if (simpleError) throw simpleError;
-
-                // (step 2: get dealer)
-                if (simpleListing) {
-                    const { data: dealerData } = await supabase
-                        .from('users')
-                        .select('id, display_name, is_verified, photo_url, store_type, phone_number, subscription_plan, university')
-                        .eq('id', simpleListing.dealer_id)
-                        .single();
-
-                    const fullListing = { ...simpleListing, dealer: dealerData || {} };
-                    setListing(fullListing);
-                    getRelatedListings(fullListing.id).then(res => setRelatedListings(res)).catch(e => console.error(e));
-                    return;
-                }
-            }
-
-            setListing(data);
-            if (data) {
-                getRelatedListings(data.id).then(res => setRelatedListings(res)).catch(e => console.error(e));
-            }
-        } catch (err: unknown) {
-            console.error('Error fetching listing:', err);
-            setError('Asset Signal Lost');
-        } finally {
-            setLoading(false);
+    const toggleFavorite = () => {
+        if (!user) {
+            router.push(`/login?redirect=/listings/${listing?.id}`);
+            return;
         }
+        setIsFavorite(!isFavorite);
+        toast(isFavorite ? 'Removed from wishlist' : 'Added to wishlist', 'info');
+    };
+
+    const adjustPrice = (amount: number) => {
+        setOfferPrice(prev => Math.max(0, prev + amount));
     };
 
     const handleContactDealer = async () => {
         if (!user) {
-            router.push('/login');
+            router.push(`/login?redirect=/listings/${listing?.id}`);
             return;
         }
 
@@ -342,17 +351,36 @@ export default function ListingDetailContent() {
         const finalPhone = cleanPhone.startsWith('0') ? '234' + cleanPhone.substring(1) : cleanPhone;
         const message = encodeURIComponent(`Hello, I saw your ${listing.title} on MarketBridge. Is it still available?`);
 
-        // Safety Warning before redirect
-        const proceed = confirm("Safety Alert: Negotiating on WhatsApp? \n\nPlease return here to update the price and pay securely in-app. This protects both buyer and seller and ensures platform protocol applies.\n\nProceed to WhatsApp?");
+        const proceed = confirm("Safety Reminder:\n\nWhen negotiating on WhatsApp, always return to MarketBridge to complete your payment securely in escrow.\n\nProceed to WhatsApp?");
         if (proceed) {
             window.open(`https://wa.me/${finalPhone}?text=${message}`, '_blank');
         }
     };
 
+    const handleCallDealer = () => {
+        if (!listing?.dealer?.phone_number) {
+            toast('This seller has not added a phone number yet.', 'error');
+            return;
+        }
+        window.location.href = `tel:${listing.dealer.phone_number}`;
+    };
+
+    const handleAddToCartClick = () => {
+        if (!listing) return;
+        addToCart({
+            listingId: listing.id,
+            title: listing.title,
+            price: listing.price,
+            image: listing.images?.[0] || '',
+            sellerId: listing.dealer.id,
+        });
+        toast('Added to cart', 'success');
+    };
+
     const handleMakeOffer = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!user) {
-            router.push('/login');
+            router.push(`/login?redirect=/listings/${listing?.id}`);
             return;
         }
         if (!listing) return;
@@ -364,11 +392,10 @@ export default function ListingDetailContent() {
         }
 
         if (isDemoMode && price > 5000) {
-            setError('Market Launch Phase 1 restricts all transactions to a maximum of ₦5,000 for network safety.');
+            setError('Demo Mode: Transactions are limited to ₦5,000 for testing.');
             return;
         }
 
-        // Optimistic UI updates
         setIsSubmittingOffer(true);
         const previousOffer = activeOffer;
         setActiveOffer({
@@ -392,12 +419,9 @@ export default function ListingDetailContent() {
                 });
 
             if (offerError) throw offerError;
-
-            // Alert might be annoying, but keep it per existing behavior or use a toast
-            // alert("Offer Transmitted: Waiting for seller response on the secure channel.");
+            toast('Offer submitted to seller for review', 'success');
         } catch (err: any) {
             console.error("Offer Error:", err);
-            // Revert on error
             setActiveOffer(previousOffer);
             setIsOfferOpen(false);
             setError('Failed to submit offer. Please try again.');
@@ -406,47 +430,24 @@ export default function ListingDetailContent() {
         }
     };
 
-    const handleCallDealer = () => {
-        if (!listing?.dealer?.phone_number) {
-            setError('This seller has not added a phone number yet.');
-            return;
-        }
-        window.location.href = `tel:${listing.dealer.phone_number}`;
-    };
-
-    const { addToCart } = useCart();
-
-    const handleAddToCart = () => {
-        if (!listing) return;
-        addToCart({
-            listingId: listing.id,
-            title: listing.title,
-            price: listing.price,
-            image: listing.images[0] || '',
-            sellerId: listing.dealer.id,
-        });
-        // Item added to cart via CartContext
-    };
-
     const handlePlaceOrder = async () => {
         if (!user) {
-            router.push('/login');
+            router.push(`/login?redirect=/listings/${listing?.id}`);
             return;
         }
 
         if (!listing) return;
-        
+
         const finalAmount = listing.current_offered_price || listing.price;
 
         if (isDemoMode && finalAmount > 5000) {
-            setError('Market Launch Active: You cannot process orders above ₦5,000 during Launch Phase 1. Please negotiate the price down for testing.');
+            setError('Demo Mode: Transactions are limited to ₦5,000. Please negotiate the price down for testing.');
             return;
         }
 
         setActionLoading(true);
 
         try {
-            // 1. Initialize Transaction on Server
             const response = await fetch('/api/paystack/initialize', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -462,7 +463,6 @@ export default function ListingDetailContent() {
                 throw new Error(data.error || 'Failed to initialize checkout');
             }
 
-            // 2. Redirect to Paystack
             window.location.href = data.authorization_url;
 
         } catch (err: any) {
@@ -474,21 +474,19 @@ export default function ListingDetailContent() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-[#FAFAFA] dark:bg-zinc-950 flex items-center justify-center text-zinc-900 dark:text-white">
-                <Loader2 className="h-10 w-10 animate-spin text-[#FF6200]" />
+            <div className="min-h-screen bg-background flex items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-[#FF6200]" />
             </div>
         );
     }
 
-    // Auth Gate: Check if user is logged in
+    // Unauthenticated preview gate
     if (!user && listing) {
         return (
-            <div className="min-h-screen bg-[#FAFAFA] dark:bg-zinc-950 text-zinc-900 dark:text-white relative flex flex-col pt-28 pb-20 overflow-hidden">
-                <div className="fixed inset-0 bg-[url('/grid-pattern.svg')] opacity-10 pointer-events-none z-0 dark:opacity-20" />
-
-                <div className="container px-6 mx-auto relative z-10 flex flex-col items-center justify-center flex-1 text-center space-y-8">
-                    <div className="bg-white border border-zinc-200 rounded-[2rem] shadow-sm rounded-[2.5rem] overflow-hidden p-2 border-zinc-100 relative group mb-8 max-w-sm w-full mx-auto shadow-2xl shadow-[#FF6200]/10">
-                        <div className="aspect-[4/3] rounded-[2rem] overflow-hidden relative bg-zinc-100 filter blur-sm opacity-50">
+            <div className="min-h-screen bg-background text-foreground flex flex-col pt-24 pb-20">
+                <div className="container px-4 sm:px-6 mx-auto max-w-xl text-center space-y-6">
+                    <div className="bg-card border border-border rounded-3xl overflow-hidden p-3 shadow-md max-w-sm mx-auto">
+                        <div className="aspect-[4/3] rounded-2xl overflow-hidden relative bg-muted filter blur-sm opacity-60">
                             {listing.images && listing.images.length > 0 && (
                                 <Image
                                     src={listing.images[0]}
@@ -498,30 +496,44 @@ export default function ListingDetailContent() {
                                 />
                             )}
                         </div>
-                        <div className="absolute inset-0 flex items-center justify-center bg-[#FAFAFA]/40">
-                            <ShieldCheck className="h-16 w-16 text-[#FF6200]" />
-                        </div>
                     </div>
 
-                    <h1 className="text-3xl md:text-5xl font-black uppercase tracking-tighter max-w-3xl leading-tight">
-                        Unlock Full <span className="text-[#FF6200]">Details</span>
-                    </h1>
+                    <div className="space-y-2">
+                        <Badge className="bg-[#FF6200]/10 text-[#FF6200] border-[#FF6200]/20 text-xs">
+                            Member Preview
+                        </Badge>
+                        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+                            Sign In to View Full Details
+                        </h1>
+                        <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                            Log in or create a free account to view pricing, contact verified sellers, and purchase securely.
+                        </p>
+                    </div>
 
-                    <p className="text-zinc-500 text-lg md:text-xl font-medium max-w-xl">
-                        Sign in to view price, location, seller info, and contact number for this item.
-                    </p>
-
-                    <div className="flex flex-col sm:flex-row gap-4 w-full max-w-md pt-4">
-                        <Button size="lg" asChild className="h-20 flex-1 bg-[#FF6200] text-black font-black uppercase tracking-[0.2em] hover:bg-[#FF7A29] rounded-[2rem] border-none shadow-[0_20px_40px_rgba(255,98,0,0.2)]">
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2 max-w-sm mx-auto">
+                        <Button
+                            asChild
+                            className="h-11 flex-1 bg-[#FF6200] hover:bg-[#FF7A29] text-white font-semibold rounded-xl"
+                        >
                             <Link href={`/signup?redirect=/listings/${listing.id}`}>
-                                Initialize Account
+                                Create Account
                             </Link>
                         </Button>
-                        <Button size="lg" variant="outline" asChild className="h-20 flex-1 border-zinc-200 text-zinc-900 font-black uppercase tracking-[0.2em] hover:bg-white rounded-[2rem]">
+                        <Button
+                            asChild
+                            variant="outline"
+                            className="h-11 flex-1 rounded-xl"
+                        >
                             <Link href={`/login?redirect=/listings/${listing.id}`}>
-                                Auth Session
+                                Sign In
                             </Link>
                         </Button>
+                    </div>
+
+                    <div>
+                        <Link href="/marketplace" className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
+                            <ArrowLeft className="h-3 w-3" /> Back to Marketplace
+                        </Link>
                     </div>
                 </div>
             </div>
@@ -530,99 +542,98 @@ export default function ListingDetailContent() {
 
     if (error || !listing) {
         return (
-            <div className="min-h-screen bg-[#FAFAFA] dark:bg-zinc-950 flex items-center justify-center px-4 text-zinc-900 dark:text-white">
-                <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] shadow-sm p-10 rounded-[2.5rem] border-red-500/20 text-center max-w-md">
-                    <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-6" />
-                    <p className="text-red-400 font-bold uppercase tracking-widest mb-6">{error || 'Asset Signal Lost'}</p>
-                    <Button onClick={() => router.push('/listings')} className="border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white hover:bg-white/20">
+            <div className="min-h-screen bg-background flex items-center justify-center px-4">
+                <div className="bg-card border border-border rounded-2xl p-8 text-center max-w-md space-y-4 shadow-sm">
+                    <AlertTriangle className="h-10 w-10 text-amber-500 mx-auto" />
+                    <h2 className="text-lg font-bold text-foreground">Listing Unavailable</h2>
+                    <p className="text-xs text-muted-foreground">{error || 'This listing may have been sold or removed.'}</p>
+                    <Button onClick={() => router.push('/marketplace')} className="bg-[#FF6200] hover:bg-[#FF7A29] text-white">
                         <ArrowLeft className="mr-2 h-4 w-4" />
-                        Return to Stream
+                        Return to Marketplace
                     </Button>
                 </div>
             </div>
         );
     }
 
+    const isOwner = user && user.id === listing.dealer.id;
+
     return (
-        <div className="min-h-screen bg-[#FAFAFA] dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 relative selection:bg-[#FF6200] selection:text-black pt-28 pb-20">
-            {/* Background Grid */}
-            <div className="fixed inset-0 bg-[url('/grid-pattern.svg')] opacity-10 pointer-events-none z-0 dark:opacity-20" />
+        <div className="min-h-screen bg-background text-foreground pt-16 md:pt-20 pb-20">
+            <div className="container max-w-7xl mx-auto px-4 sm:px-6 space-y-8">
+                {/* Breadcrumb Navigation */}
+                <nav className="flex items-center gap-2 text-xs text-muted-foreground pt-4">
+                    <Link href="/" className="hover:text-foreground">Home</Link>
+                    <ChevronRight className="h-3 w-3" />
+                    <Link href="/marketplace" className="hover:text-foreground">Marketplace</Link>
+                    {listing.category && (
+                        <>
+                            <ChevronRight className="h-3 w-3" />
+                            <Link href={`/marketplace?category=${encodeURIComponent(listing.category)}`} className="hover:text-foreground">
+                                {listing.category}
+                            </Link>
+                        </>
+                    )}
+                    <ChevronRight className="h-3 w-3" />
+                    <span className="text-foreground truncate max-w-[200px] font-medium">{listing.title}</span>
+                </nav>
 
-            <div className="container px-4 mx-auto relative z-10 max-w-7xl">
-                {/* Header / Breadcrumb */}
-                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12 border-b border-zinc-100 dark:border-zinc-900 pb-8">
-                    <div className="space-y-4">
-                        <Button
-                            variant="ghost"
-                            onClick={() => router.back()}
-                            className="text-[#FF6200] hover:text-[#FF7A29] hover:bg-transparent p-0 h-auto text-[10px] font-black uppercase tracking-[0.2em] font-heading"
-                        >
-                            <ArrowLeft className="mr-2 h-3 w-3" /> Return to Search
-                        </Button>
-                        <h1 className="text-3xl md:text-5xl font-black uppercase tracking-tighter italic font-heading">
-                            {listing.title}
-                        </h1>
-                        <div className="flex items-center gap-4 text-xs font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
-                            <span className="flex items-center gap-1.5 text-[#FF6200]"><Activity className="h-3 w-3" /> Available</span>
-                            <span className="w-1 h-1 rounded-full bg-zinc-700 dark:bg-zinc-300" />
-                            <span className="text-zinc-900 dark:text-white">{listing.category}</span>
-                            <span className="w-1 h-1 rounded-full bg-zinc-700 dark:bg-zinc-300" />
-                            <span>ID: #{listing.id.slice(0, 8).toUpperCase()}</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-                    {/* Left Column: Visuals */}
-                    <div className="space-y-6">
-                        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] shadow-sm rounded-[2.5rem] overflow-hidden p-2 border-zinc-100 relative group">
-                            <div className="aspect-[4/3] rounded-[2rem] overflow-hidden relative bg-zinc-100 dark:bg-zinc-800">
+                {/* Main Product Grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                    {/* Left Column: Image Gallery */}
+                    <div className="lg:col-span-7 space-y-4">
+                        <div className="bg-card border border-border rounded-3xl overflow-hidden relative shadow-sm">
+                            <div className="aspect-[4/3] relative bg-muted">
                                 {listing.images && listing.images.length > 0 ? (
                                     <Image
                                         src={listing.images[selectedImage]}
                                         alt={listing.title}
                                         fill
-                                        className="object-cover"
+                                        className="object-contain sm:object-cover"
                                         priority
                                     />
                                 ) : (
-                                    <div className="w-full h-full flex items-center justify-center text-zinc-700 font-black uppercase tracking-widest">
-                                        No Image Available
+                                    <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                                        <Store className="h-16 w-16 opacity-30" />
                                     </div>
                                 )}
 
-                                {/* Overlay Badges */}
-                                <div className="absolute top-6 left-6 flex flex-col gap-3">
+                                {/* Status Overlay Badges */}
+                                <div className="absolute top-4 left-4 flex flex-wrap gap-2">
                                     {(listing.is_verified_listing || listing.verification_status === 'verified') && (
-                                        <div className="bg-[#FF6200] text-black px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-[#FF6200]/20 font-heading italic">
-                                            <ShieldCheck className="h-3 w-3" /> Verified Seller
+                                        <div className="bg-emerald-600 text-white text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1.5 shadow-sm">
+                                            <CheckCircle className="h-3.5 w-3.5" />
+                                            <span>Verified Listing</span>
                                         </div>
+                                    )}
+                                    {listing.condition && (
+                                        <span className="bg-background/90 backdrop-blur-sm text-foreground text-xs font-medium px-3 py-1 rounded-full shadow-sm capitalize border border-border">
+                                            {listing.condition.replace('_', ' ')}
+                                        </span>
                                     )}
                                 </div>
                             </div>
                         </div>
 
-                        {/* Thumbnails */}
+                        {/* Gallery Thumbnails */}
                         {listing.images && listing.images.length > 1 && (
-                            <div className="grid grid-cols-4 gap-4">
+                            <div className="flex gap-3 overflow-x-auto pb-2">
                                 {listing.images.map((img, idx) => (
                                     <button
                                         key={idx}
-                                        title={`View image ${idx + 1} of ${listing.images.length}`}
-                                        aria-label={`View image ${idx + 1}`}
                                         onClick={() => setSelectedImage(idx)}
                                         className={cn(
-                                            "aspect-square rounded-2xl overflow-hidden border transition-all relative group",
+                                            "relative h-20 w-20 shrink-0 rounded-xl overflow-hidden border-2 transition-all",
                                             selectedImage === idx
-                                                ? "border-[#FF6200] ring-1 ring-[#FF6200]"
-                                                : "border-zinc-200 hover:border-white/30"
+                                                ? "border-[#FF6200] ring-2 ring-[#FF6200]/20"
+                                                : "border-border hover:border-muted-foreground/50 opacity-70 hover:opacity-100"
                                         )}
                                     >
                                         <Image
                                             src={img}
-                                            alt={`${listing.title} thumbnail`}
+                                            alt={`Thumbnail ${idx + 1}`}
                                             fill
-                                            className="object-cover opacity-60 group-hover:opacity-100 transition-opacity"
+                                            className="object-cover"
                                         />
                                     </button>
                                 ))}
@@ -630,381 +641,416 @@ export default function ListingDetailContent() {
                         )}
                     </div>
 
-                    {/* Right Column: Interaction & Data */}
-                    <div className="space-y-8">
-                        {/* Price Card */}
-                        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] shadow-sm rounded-[2.5rem] p-8 relative overflow-hidden">
-                            <div className="absolute top-0 right-0 p-8 opacity-50">
-                                <Zap className="h-24 w-24 text-[#FF6200]/10" />
+                    {/* Right Column: Interaction, Details, Seller */}
+                    <div className="lg:col-span-5 space-y-6">
+                        {/* Title & Metadata Card */}
+                        <div className="bg-card border border-border rounded-3xl p-6 space-y-4 shadow-sm">
+                            <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-xs font-bold uppercase tracking-wider text-[#FF6200] bg-[#FF6200]/10 px-2.5 py-1 rounded-lg">
+                                        {listing.category || 'General'}
+                                    </span>
+                                    <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                        <MapPin className="h-3.5 w-3.5" />
+                                        {listing.location || listing.dealer.university || 'Nigeria'}
+                                    </span>
+                                </div>
+
+                                <h1 className="text-2xl font-bold tracking-tight text-foreground leading-snug">
+                                    {listing.title}
+                                </h1>
                             </div>
 
-                            <div className="relative z-10">
-                                <p className="text-[10px] text-zinc-500 dark:text-zinc-400 font-black uppercase tracking-[0.3em] font-heading mb-2">Current Price</p>
-                                <div className="space-y-1 mb-6">
-                                    <div className="text-6xl font-black text-zinc-900 dark:text-white italic font-heading tracking-tighter">
+                            {/* Price Section */}
+                            <div className="pt-3 border-t border-border space-y-1">
+                                <span className="text-xs text-muted-foreground uppercase font-medium">Price</span>
+                                <div className="flex items-baseline gap-3">
+                                    <span className="text-3xl font-extrabold text-[#FF6200]">
                                         ₦{(listing.current_offered_price || listing.price).toLocaleString()}
-                                    </div>
+                                    </span>
                                     {listing.current_offered_price && listing.current_offered_price !== listing.price && (
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-sm text-zinc-500 line-through font-bold">₦{listing.price.toLocaleString()}</span>
-                                            <Badge className="bg-[#FF6200]/10 text-[#FF6200] border-none text-[8px] font-black uppercase tracking-widest">Negotiated Rate</Badge>
+                                        <div className="flex items-center gap-1.5">
+                                            <span className="text-sm text-muted-foreground line-through">
+                                                ₦{listing.price.toLocaleString()}
+                                            </span>
+                                            <Badge className="bg-[#FF6200]/10 text-[#FF6200] text-[10px]">
+                                                Negotiated
+                                            </Badge>
                                         </div>
                                     )}
                                 </div>
-
-                                {user && user.id !== listing.dealer.id ? (
-                                    <div className="space-y-4">
-                                        <div className="flex gap-4">
-                                            <div className="flex-1 flex flex-col gap-2">
-                                                <Button
-                                                    onClick={handlePlaceOrder}
-                                                    disabled={actionLoading || !listing.dealer.paystack_subaccount_code}
-                                                    className="h-16 bg-[#FF6200] text-black hover:bg-[#FF7A29] rounded-2xl font-black uppercase tracking-widest text-xs font-heading italic w-full border-none transition-all disabled:opacity-50 disabled:grayscale"
-                                                >
-                                                    {actionLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ShieldCheck className="mr-2 h-4 w-4" />}
-                                                    Confirm Purchase
-                                                </Button>
-                                                <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50 p-3 rounded-xl">
-                                                    <p className="text-[9px] font-black uppercase tracking-tight text-amber-700 dark:text-amber-400 leading-tight">
-                                                        ⚠️ This is a test/demo version. No real transactions or money will be processed. This is for testing purposes only.
-                                                    </p>
-                                                </div>
-                                                {!listing.dealer.paystack_subaccount_code && (
-                                                    <p className="text-[8px] font-black uppercase tracking-widest text-red-500 text-center px-4 animate-pulse">
-                                                        Seller Payouts Not Configured
-                                                    </p>
-                                                )}
-                                            </div>
-                                            <Button
-                                                onClick={handleAddToCart}
-                                                variant="outline"
-                                                className="h-16 aspect-square rounded-2xl border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-zinc-200 text-zinc-900 dark:text-white flex items-center justify-center p-0"
-                                            >
-                                                <ShoppingCart className="h-5 w-5" />
-                                            </Button>
-                                            <Button
-                                                onClick={toggleFavorite}
-                                                variant="outline"
-                                                className={cn("h-16 aspect-square rounded-2xl border-zinc-200 dark:border-zinc-800 flex items-center justify-center p-0 transition-colors", isFavorite ? "bg-red-50 dark:bg-red-950/20 border-red-100 dark:border-red-900/50 hover:bg-red-100" : "bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800")}
-                                            >
-                                                <Heart className={cn("h-6 w-6", isFavorite ? "fill-red-500 text-red-500" : "text-zinc-500")} />
-                                            </Button>
-                                        </div>
-
-                                        {/* Contact Grid */}
-                                        <div className="grid grid-cols-2 gap-3 pt-4 border-t border-zinc-100 dark:border-zinc-800">
-                                            {activeOffer && activeOffer.status === 'pending' ? (
-                                                <Button disabled className="h-12 rounded-xl border-[#FF6200]/20 bg-[#FF6200]/5 text-[#FF6200] text-[10px] uppercase font-bold tracking-widest opacity-80 cursor-default">
-                                                    <Clock className="mr-2 h-3 w-3 animate-pulse" /> Offer Pending
-                                                </Button>
-                                            ) : (
-                                                <Button onClick={() => setIsOfferOpen(true)} variant="outline" className="h-12 rounded-xl border-[#FF6200]/20 bg-[#FF6200]/5 text-[#FF6200] hover:bg-[#FF6200]/10 text-[10px] uppercase font-bold tracking-widest">
-                                                    <Zap className="mr-2 h-3 w-3" /> {activeOffer?.status === 'rejected' ? 'Re-Negotiate' : 'Make Offer'}
-                                                </Button>
-                                            )}
-                                            <Button onClick={handleContactDealer} variant="outline" className="h-12 rounded-xl border-zinc-200 dark:border-zinc-800 bg-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-white dark:hover:bg-zinc-900 text-[10px] uppercase font-bold tracking-widest">
-                                                <MessageCircle className="mr-2 h-3 w-3" /> Secure Chat
-                                            </Button>
-                                            <Button onClick={handleWhatsAppDealer} variant="outline" className="h-12 rounded-xl border-[#FF6200]/20 bg-[#FF6200]/5 text-[#FF6200] hover:bg-[#FF6200]/10 text-[10px] uppercase font-bold tracking-widest col-span-2">
-                                                <Phone className="mr-2 h-3 w-3" /> WhatsApp Fallback (Pay In-App)
-                                            </Button>
-                                        </div>
-
-                                        <div className="pt-4 text-center space-y-3">
-                                            <button
-                                                onClick={() => setIsReportOpen(true)}
-                                                className="text-[9px] uppercase font-bold tracking-widest text-red-500/50 hover:text-red-500 transition-colors flex items-center justify-center w-full gap-2"
-                                            >
-                                                <AlertTriangle className="h-3 w-3" /> Report Suspicious Activity
-                                            </button>
-                                            <a
-                                                href="mailto:support@marketbridge.com.ng?subject=Buyer Help Request"
-                                                className="block text-[9px] uppercase font-bold tracking-widest text-zinc-600 dark:text-zinc-400 hover:text-zinc-500 transition-colors"
-                                            >
-                                                Need Platform Help?
-                                            </a>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <div className="bg-zinc-100/50 dark:bg-zinc-800/50 rounded-2xl p-4 border border-zinc-100 dark:border-zinc-800 text-center">
-                                        <p className="text-[10px] text-zinc-500 dark:text-zinc-400 font-bold uppercase tracking-widest">Owner Mode Active</p>
-                                    </div>
-                                )}
                             </div>
-                        </div>
 
-                        {/* Specs Grid */}
-                        <div className="grid grid-cols-2 gap-4">
-                            {[
-                                { label: 'Campus', value: listing.location, icon: MapPin },
-                                { label: 'Item Brand', value: listing.make, icon: Box },
-                                { label: 'Type / Model', value: listing.model, icon: Box },
-                                { label: 'Condition', value: listing.condition, icon: Activity },
-                                { label: 'Category', value: listing.category, icon: Activity },
-                                { label: 'Notes', value: listing.mileage ? `${listing.mileage} KM` : 'Verified Student Listing', icon: Activity },
-                            ].map((spec, i) => (
-                                <div key={i} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] shadow-sm p-5 rounded-2xl">
-                                    <div className="flex items-center gap-2 mb-2 text-zinc-500 dark:text-zinc-400">
-                                        <spec.icon className="h-3 w-3" />
-                                        <span className="text-[9px] font-black uppercase tracking-widest">{spec.label}</span>
-                                    </div>
-                                    <p className="text-sm font-bold text-zinc-900 dark:text-white uppercase truncate">{spec.value || 'N/A'}</p>
+                            {/* Demo Notice */}
+                            {isDemoMode && (
+                                <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 text-xs text-amber-600 dark:text-amber-400 font-medium">
+                                    ⚠️ Demo Mode: Transaction simulation capped at ₦5,000 for test security.
                                 </div>
-                            ))}
+                            )}
+
+                            {/* Action Buttons */}
+                            {!isOwner ? (
+                                <div className="space-y-3 pt-2">
+                                    <div className="flex gap-2.5">
+                                        <Button
+                                            onClick={handlePlaceOrder}
+                                            disabled={actionLoading}
+                                            className="flex-1 h-12 bg-[#FF6200] hover:bg-[#FF7A29] text-white font-bold text-sm rounded-xl shadow-md transition-all"
+                                        >
+                                            {actionLoading ? (
+                                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                            ) : (
+                                                <ShieldCheck className="mr-2 h-4 w-4" />
+                                            )}
+                                            Buy with Escrow
+                                        </Button>
+
+                                        <Button
+                                            onClick={handleAddToCartClick}
+                                            variant="outline"
+                                            className="h-12 w-12 rounded-xl p-0 shrink-0 border-border hover:border-[#FF6200]"
+                                            title="Add to Cart"
+                                        >
+                                            <ShoppingCart className="h-5 w-5" />
+                                        </Button>
+
+                                        <Button
+                                            onClick={toggleFavorite}
+                                            variant="outline"
+                                            className={cn(
+                                                "h-12 w-12 rounded-xl p-0 shrink-0 border-border transition-colors",
+                                                isFavorite && "border-red-500/50 bg-red-500/10 text-red-500"
+                                            )}
+                                            title="Save to Wishlist"
+                                        >
+                                            <Heart className={cn("h-5 w-5", isFavorite && "fill-red-500")} />
+                                        </Button>
+                                    </div>
+
+                                    {/* Negotiation & Contact Actions */}
+                                    <div className="grid grid-cols-2 gap-2 pt-1">
+                                        {activeOffer && activeOffer.status === 'pending' ? (
+                                            <Button disabled className="h-10 text-xs font-semibold rounded-xl bg-muted text-muted-foreground col-span-1">
+                                                <Clock className="mr-1.5 h-3.5 w-3.5 animate-pulse" /> Offer Pending
+                                            </Button>
+                                        ) : (
+                                            <Button
+                                                onClick={() => setIsOfferOpen(true)}
+                                                variant="outline"
+                                                className="h-10 text-xs font-semibold rounded-xl border-[#FF6200]/30 text-[#FF6200] hover:bg-[#FF6200]/10"
+                                            >
+                                                <Zap className="mr-1.5 h-3.5 w-3.5" /> Make Offer
+                                            </Button>
+                                        )}
+
+                                        <Button
+                                            onClick={handleContactDealer}
+                                            variant="outline"
+                                            className="h-10 text-xs font-semibold rounded-xl"
+                                        >
+                                            <MessageCircle className="mr-1.5 h-3.5 w-3.5 text-muted-foreground" /> Chat Seller
+                                        </Button>
+
+                                        <Button
+                                            onClick={handleWhatsAppDealer}
+                                            variant="outline"
+                                            className="h-10 text-xs font-semibold rounded-xl col-span-2 border-border text-muted-foreground hover:text-foreground"
+                                        >
+                                            <Phone className="mr-1.5 h-3.5 w-3.5 text-emerald-500" /> WhatsApp Chat (Pay In-App)
+                                        </Button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="bg-muted p-4 rounded-xl text-center">
+                                    <p className="text-xs font-semibold text-muted-foreground">You are viewing your own listing</p>
+                                    <Button
+                                        asChild
+                                        size="sm"
+                                        variant="outline"
+                                        className="mt-2 text-xs"
+                                    >
+                                        <Link href={`/seller/listings/${listing.id}/edit`}>
+                                            Edit Listing
+                                        </Link>
+                                    </Button>
+                                </div>
+                            )}
+
+                            {/* Trust Badge */}
+                            <div className="bg-muted/50 rounded-xl p-3 flex items-center gap-3 text-xs text-muted-foreground">
+                                <ShieldCheck className="h-5 w-5 text-emerald-500 shrink-0" />
+                                <span>MarketBridge Escrow Protection: Funds released only upon order confirmation.</span>
+                            </div>
                         </div>
 
-                        {/* Merchant Intelligence */}
-                        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] shadow-sm p-8 rounded-[2.5rem] bg-white/[0.03] dark:bg-zinc-900/[0.03] backdrop-blur-xl relative overflow-hidden group">
-                            <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-10 transition-opacity">
-                                <ShieldCheck className="h-24 w-24 text-[#FF6200]" />
-                            </div>
-                            <h3 className="text-zinc-900 dark:text-white font-black uppercase text-xs tracking-[0.2em] font-heading mb-6 flex items-center gap-3 relative z-10">
-                                <span className="h-1.5 w-1.5 rounded-full bg-[#FF6200]" />
-                                Seller Information
+                        {/* Seller Information Card */}
+                        <div className="bg-card border border-border rounded-3xl p-6 space-y-4 shadow-sm">
+                            <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                                Seller Profile
                             </h3>
-                            <div className="flex items-center gap-6 relative z-10">
-                                <div className="h-20 w-20 rounded-[1.5rem] bg-[#FAFAFA] dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex items-center justify-center overflow-hidden relative">
+
+                            <div className="flex items-center gap-4">
+                                <div className="h-14 w-14 rounded-2xl bg-muted flex items-center justify-center overflow-hidden relative shrink-0 border border-border">
                                     {listing.dealer.photo_url ? (
                                         <Image src={listing.dealer.photo_url} alt={listing.dealer.display_name} fill className="object-cover" />
                                     ) : (
-                                        <Store className="h-8 w-8 text-zinc-700 dark:text-zinc-300" />
+                                        <Store className="h-6 w-6 text-muted-foreground" />
                                     )}
                                 </div>
-                                <div>
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <h4 className="text-xl font-black uppercase tracking-tighter italic text-zinc-900 dark:text-white">{listing.dealer.display_name}</h4>
-                                        {listing.dealer.is_verified && <ShieldCheck className="h-4 w-4 text-[#FF6200]" />}
+
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-1.5">
+                                        <h4 className="font-bold text-foreground truncate">{listing.dealer.display_name}</h4>
+                                        {listing.dealer.is_verified && (
+                                            <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" title="Verified Seller" />
+                                        )}
                                     </div>
-                                    <p className="text-[10px] text-zinc-500 dark:text-zinc-400 font-black uppercase tracking-widest mb-4">{listing.dealer.university || 'Verified Institution'}</p>
-                                    <div className="flex items-center gap-4">
+                                    <p className="text-xs text-muted-foreground truncate">{listing.dealer.university || 'Verified Campus Seller'}</p>
+
+                                    <div className="flex items-center gap-2 mt-1">
                                         <button
                                             onClick={() => {
-                                                const element = document.getElementById('reviews-section');
-                                                if (element) {
-                                                    element.scrollIntoView({ behavior: 'smooth' });
-                                                }
+                                                const el = document.getElementById('reviews-section');
+                                                el?.scrollIntoView({ behavior: 'smooth' });
                                             }}
-                                            className="flex items-center gap-1.5 hover:underline cursor-pointer focus:outline-none"
+                                            className="flex items-center gap-1 text-xs text-amber-500 font-semibold hover:underline"
                                         >
-                                            <Star className="h-3 w-3 fill-[#FF6200] text-[#FF6200]" />
-                                            <span className="text-[10px] font-black italic">
-                                                {sellerRating ? `${sellerRating.avg} (${sellerRating.count} reviews)` : 'New Seller'}
-                                            </span>
+                                            <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                                            <span>{sellerRating ? `${sellerRating.avg} (${sellerRating.count})` : 'New Seller'}</span>
                                         </button>
-                                        <span className="w-1 h-1 rounded-full bg-zinc-200 dark:bg-zinc-700" />
-                                        <div className="text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest">{listing.dealer.store_type || 'DIGITAL'}</div>
+                                        <span className="text-muted-foreground text-xs">•</span>
+                                        <span className="text-xs text-muted-foreground capitalize">{listing.dealer.store_type || 'Digital Store'}</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Description */}
-                        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] shadow-sm p-8 rounded-[2.5rem]">
-                            <h3 className="text-zinc-900 dark:text-white font-black uppercase text-xs tracking-[0.2em] font-heading mb-6 flex items-center gap-3">
-                                <span className="h-1.5 w-1.5 rounded-full bg-[#FF6200]" />
-                                Item Description
+                        {/* Item Specifications */}
+                        <div className="bg-card border border-border rounded-3xl p-6 space-y-3 shadow-sm">
+                            <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                                Item Specifications
                             </h3>
-                            <p className="text-zinc-500 dark:text-zinc-400 text-sm leading-relaxed font-medium whitespace-pre-wrap">
+
+                            <div className="grid grid-cols-2 gap-3 text-xs">
+                                <div className="bg-muted/50 p-3 rounded-xl">
+                                    <span className="text-muted-foreground block text-[10px] uppercase font-medium">Category</span>
+                                    <span className="font-semibold text-foreground">{listing.category}</span>
+                                </div>
+                                <div className="bg-muted/50 p-3 rounded-xl">
+                                    <span className="text-muted-foreground block text-[10px] uppercase font-medium">Condition</span>
+                                    <span className="font-semibold text-foreground capitalize">{listing.condition?.replace('_', ' ') || 'Good'}</span>
+                                </div>
+                                <div className="bg-muted/50 p-3 rounded-xl">
+                                    <span className="text-muted-foreground block text-[10px] uppercase font-medium">Location</span>
+                                    <span className="font-semibold text-foreground">{listing.location || 'Campus Delivery'}</span>
+                                </div>
+                                <div className="bg-muted/50 p-3 rounded-xl">
+                                    <span className="text-muted-foreground block text-[10px] uppercase font-medium">Listing ID</span>
+                                    <span className="font-semibold text-foreground font-mono">#{listing.id.slice(0, 8).toUpperCase()}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Description Card */}
+                        <div className="bg-card border border-border rounded-3xl p-6 space-y-3 shadow-sm">
+                            <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                                Description
+                            </h3>
+                            <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
                                 {listing.description}
                             </p>
+
+                            <div className="pt-3 border-t border-border flex justify-between items-center text-xs">
+                                <button
+                                    onClick={() => setIsReportOpen(true)}
+                                    className="text-muted-foreground hover:text-red-500 font-medium flex items-center gap-1 transition-colors"
+                                >
+                                    <AlertTriangle className="h-3.5 w-3.5" /> Report listing
+                                </button>
+                                <a
+                                    href="mailto:support@marketbridge.com.ng?subject=Buyer Help Request"
+                                    className="text-muted-foreground hover:text-[#FF6200] transition-colors"
+                                >
+                                    Need help?
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Reviews Section */}
-                <div id="reviews-section" className="mt-16 pt-16 border-t border-zinc-200 dark:border-zinc-800">
-                    <h2 className="text-2xl font-black uppercase tracking-tighter italic font-heading mb-8 flex items-center gap-3">
-                        <span className="h-2 w-2 rounded-full bg-[#FF6200]" />
-                        Ratings & Reviews
+                {/* Ratings & Reviews Section */}
+                <div id="reviews-section" className="pt-8 border-t border-border">
+                    <h2 className="text-xl font-bold tracking-tight text-foreground mb-6">
+                        Customer Reviews & Ratings
                     </h2>
                     <ReviewsSection listingId={listing.id} sellerId={listing.dealer.id} />
                 </div>
 
-                {/* Similar Listings Section */}
+                {/* Similar Listings */}
                 {relatedListings.length > 0 && (
-                    <div className="mt-16 pt-16 border-t border-zinc-200 dark:border-zinc-800">
-                        <h2 className="text-2xl font-black uppercase tracking-tighter italic font-heading mb-8 flex items-center gap-3">
-                            <span className="h-2 w-2 rounded-full bg-[#FF6200]" />
-                            Similar <span className="text-[#FF6200]">Listings</span>
-                        </h2>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                            {relatedListings.map((item) => (
-                                <Link key={item.id} href={`/listings/${item.id}`} className="group block bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] p-4 shadow-sm hover:border-[#FF6200]/20 transition-all">
-                                    <div className="aspect-[4/3] rounded-[1.5rem] overflow-hidden bg-zinc-100 dark:bg-zinc-800 relative mb-4">
-                                        {item.images && item.images.length > 0 ? (
-                                            <Image src={item.images[0]} alt={item.title} fill className="object-cover group-hover:scale-105 transition-transform duration-300" />
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center text-zinc-500 font-bold uppercase text-[10px]">No Image</div>
-                                        )}
-                                    </div>
-                                    <h3 className="font-black uppercase tracking-tighter italic text-zinc-900 dark:text-white group-hover:text-[#FF6200] transition-colors truncate">{item.title}</h3>
-                                    <p className="text-[#FF6200] font-black italic mt-1">₦{item.price.toLocaleString()}</p>
-                                    <p className="text-[9px] text-zinc-500 font-bold uppercase tracking-widest mt-2">{item.location || 'Campus'}</p>
-                                </Link>
+                    <div className="pt-8 border-t border-border space-y-6">
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-xl font-bold tracking-tight text-foreground">
+                                Similar <span className="text-[#FF6200]">Listings</span>
+                            </h2>
+                            <Link href={`/marketplace?category=${encodeURIComponent(listing.category)}`} className="text-xs font-semibold text-[#FF6200] hover:underline">
+                                View all in {listing.category}
+                            </Link>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5">
+                            {relatedListings.slice(0, 4).map((item) => (
+                                <ListingCard key={item.id} listing={item} />
                             ))}
                         </div>
                     </div>
                 )}
 
-                {/* Recently Viewed Section */}
+                {/* Recently Viewed */}
                 {recentlyViewed.length > 0 && (
-                    <div className="mt-16 pt-16 border-t border-zinc-200 dark:border-zinc-800">
-                        <h2 className="text-2xl font-black uppercase tracking-tighter italic font-heading mb-8 flex items-center gap-3">
-                            <span className="h-2 w-2 rounded-full bg-[#FF6200]" />
-                            Recently <span className="text-[#FF6200]">Viewed</span>
+                    <div className="pt-8 border-t border-border space-y-6">
+                        <h2 className="text-xl font-bold tracking-tight text-foreground">
+                            Recently Viewed
                         </h2>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5">
                             {recentlyViewed.map((item) => (
-                                <Link key={item.id} href={`/listings/${item.id}`} className="group block bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[1.5rem] p-3 shadow-sm hover:border-[#FF6200]/20 transition-all">
-                                    <div className="aspect-[4/3] rounded-[1rem] overflow-hidden bg-zinc-100 dark:bg-zinc-800 relative mb-3">
-                                        {item.images && item.images.length > 0 ? (
-                                            <Image src={item.images[0]} alt={item.title} fill className="object-cover group-hover:scale-105 transition-transform duration-300" />
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center text-zinc-500 font-bold uppercase text-[9px]">No Image</div>
-                                        )}
-                                    </div>
-                                    <h3 className="font-black uppercase tracking-tighter italic text-xs text-zinc-900 dark:text-white group-hover:text-[#FF6200] transition-colors truncate">{item.title}</h3>
-                                    <p className="text-[#FF6200] font-black italic text-xs mt-0.5">₦{item.price.toLocaleString()}</p>
-                                </Link>
+                                <ListingCard key={item.id} listing={item} />
                             ))}
                         </div>
                     </div>
                 )}
-                        {/* Offer Dialog */}
+            </div>
+
+            {/* Offer Negotiation Dialog */}
             <Dialog open={isOfferOpen} onOpenChange={setIsOfferOpen}>
-                <DialogContent className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white sm:max-w-sm rounded-[2.5rem] overflow-hidden p-0">
-                    <form onSubmit={handleMakeOffer}>
-                        <div className="p-8 space-y-8">
-                            <div className="text-center space-y-2">
-                                <DialogTitle className="text-2xl font-black uppercase italic tracking-tighter italic">
-                                    Make an <span className="text-[#FF6200]">Offer</span>
-                                </DialogTitle>
-                                <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">
-                                    Adjust your offer using the controls below
-                                </p>
-                            </div>
+                <DialogContent className="bg-card border-border text-foreground sm:max-w-md rounded-2xl p-6 space-y-6">
+                    <form onSubmit={handleMakeOffer} className="space-y-6">
+                        <DialogHeader>
+                            <DialogTitle className="text-lg font-bold text-center">
+                                Make an Offer
+                            </DialogTitle>
+                            <DialogDescription className="text-xs text-center text-muted-foreground">
+                                Propose a price to the seller. If accepted, you will be notified to complete payment.
+                            </DialogDescription>
+                        </DialogHeader>
 
-                            <div className="flex flex-col items-center justify-center space-y-6 py-4">
-                                <div className="text-center">
-                                    <p className="text-[10px] text-zinc-400 font-black uppercase tracking-widest mb-2">Your Offer</p>
-                                    <div className="text-5xl font-black text-zinc-900 dark:text-white tracking-tighter tabular-nums">
-                                        ₦{offerPrice.toLocaleString()}
-                                    </div>
-                                </div>
-
-                                <div className="flex items-center gap-4 w-full px-4">
-                                    <Button 
-                                        type="button"
-                                        onClick={() => adjustPrice(-500)}
-                                        className="h-14 w-14 rounded-2xl bg-zinc-100 text-zinc-900 border-none hover:bg-red-50 hover:text-red-500 transition-all font-black text-xl"
-                                    >
-                                        -
-                                    </Button>
-                                    <div className="flex-1 text-center">
-                                        <div className="h-[1px] w-full bg-zinc-100 relative">
-                                            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-3 text-[9px] font-black uppercase tracking-widest text-zinc-300">
-                                                Adjustment
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <Button 
-                                        type="button"
-                                        onClick={() => adjustPrice(500)}
-                                        className="h-14 w-14 rounded-2xl bg-zinc-100 text-zinc-900 border-none hover:bg-green-50 hover:text-green-500 transition-all font-black text-xl"
-                                    >
-                                        +
-                                    </Button>
-                                </div>
-                                
-                                <div className="grid grid-cols-2 gap-2 w-full pt-4">
-                                     <Button 
-                                        type="button"
-                                        variant="outline"
-                                        onClick={() => setOfferPrice(listing.price)}
-                                        className="h-10 rounded-xl border-zinc-100 text-[9px] font-black uppercase tracking-widest text-zinc-500"
-                                    >
-                                        Reset
-                                    </Button>
-                                    <Button 
-                                        type="button"
-                                        variant="outline"
-                                        onClick={() => adjustPrice(2000)}
-                                        className="h-10 rounded-xl border-zinc-100 text-[9px] font-black uppercase tracking-widest text-[#FF6200]"
-                                    >
-                                        Add +2k
-                                    </Button>
+                        <div className="flex flex-col items-center justify-center space-y-4 py-2">
+                            <div className="text-center">
+                                <span className="text-xs text-muted-foreground uppercase font-medium">Your Proposed Price</span>
+                                <div className="text-4xl font-extrabold text-[#FF6200] tabular-nums mt-1">
+                                    ₦{offerPrice.toLocaleString()}
                                 </div>
                             </div>
 
-                            <div className="bg-[#FF6200]/10 border border-[#FF6200]/20 p-4 rounded-2xl">
-                                <p className="text-[9px] text-[#FF6200] font-black uppercase leading-tight text-center">
-                                    All negotiations are secured by MarketBridge.
-                                </p>
+                            <div className="flex items-center gap-3 w-full justify-center">
+                                <Button
+                                    type="button"
+                                    onClick={() => adjustPrice(-500)}
+                                    variant="outline"
+                                    className="h-10 w-12 text-lg font-bold rounded-xl"
+                                >
+                                    -500
+                                </Button>
+                                <Button
+                                    type="button"
+                                    onClick={() => adjustPrice(500)}
+                                    variant="outline"
+                                    className="h-10 w-12 text-lg font-bold rounded-xl"
+                                >
+                                    +500
+                                </Button>
+                                <Button
+                                    type="button"
+                                    onClick={() => adjustPrice(2000)}
+                                    variant="outline"
+                                    className="h-10 px-3 text-xs font-bold rounded-xl"
+                                >
+                                    +2,000
+                                </Button>
+                                <Button
+                                    type="button"
+                                    onClick={() => setOfferPrice(listing.price)}
+                                    variant="ghost"
+                                    className="h-10 px-2 text-xs text-muted-foreground"
+                                >
+                                    Reset
+                                </Button>
                             </div>
                         </div>
 
-                         <div className="flex p-4 bg-zinc-50 border-t border-zinc-100 gap-3">
-                            <Button type="button" variant="ghost" onClick={() => setIsOfferOpen(false)} className="flex-1 h-14 rounded-2xl text-zinc-500 font-bold uppercase tracking-widest text-[10px]">Close</Button>
+                        <DialogFooter className="gap-2 sm:gap-0">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setIsOfferOpen(false)}
+                                className="rounded-xl"
+                            >
+                                Cancel
+                            </Button>
                             <Button
                                 type="submit"
                                 disabled={isSubmittingOffer}
-                                className="flex-2 h-14 bg-[#FF6200] text-black hover:bg-[#FF7A29] font-black uppercase tracking-widest text-[10px] rounded-2xl transition-all border-none px-8"
+                                className="bg-[#FF6200] hover:bg-[#FF7A29] text-white font-bold rounded-xl"
                             >
-                                {isSubmittingOffer ? <Loader2 className="h-4 w-4 animate-spin" /> : "Send Offer"}
+                                {isSubmittingOffer ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                                Submit Offer
                             </Button>
-                        </div>
+                        </DialogFooter>
                     </form>
                 </DialogContent>
             </Dialog>
 
-            {/* Report Dialog */}
+            {/* Report Listing Dialog */}
             <Dialog open={isReportOpen} onOpenChange={setIsReportOpen}>
-                <DialogContent className="bg-zinc-50 border-zinc-200 text-zinc-900 sm:max-w-md">
+                <DialogContent className="bg-card border-border text-foreground sm:max-w-md rounded-2xl p-6 space-y-4">
                     <DialogHeader>
-                        <DialogTitle className="text-[#FF6200] uppercase font-black tracking-widest flex items-center gap-2">
-                            <AlertTriangle className="h-5 w-5" /> Report Issue
+                        <DialogTitle className="text-base font-bold text-red-500 flex items-center gap-2">
+                            <AlertTriangle className="h-5 w-5" /> Report Listing
                         </DialogTitle>
-                        <DialogDescription className="text-zinc-500 text-xs">
-                            Help us keep MarketBridge safe. Reports are anonymous and reviewed by Campus Admins.
+                        <DialogDescription className="text-xs text-muted-foreground">
+                            Reports are reviewed by platform admins to maintain marketplace safety.
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="space-y-4 py-4">
-                        <div className="space-y-2">
-                            <Label className="text-xs uppercase font-bold text-zinc-500">Reason</Label>
+
+                    <div className="space-y-4 py-2">
+                        <div className="space-y-1.5">
+                            <Label className="text-xs font-semibold">Reason</Label>
                             <Select onValueChange={setReportReason}>
-                                <SelectTrigger className="bg-[#FAFAFA]/50 border-zinc-200 text-xs">
-                                    <SelectValue placeholder="Select a reason" />
+                                <SelectTrigger className="text-xs rounded-xl">
+                                    <SelectValue placeholder="Select reason" />
                                 </SelectTrigger>
-                                <SelectContent className="bg-zinc-100 border-zinc-200 text-zinc-900">
-                                    <SelectItem value="fraud">Fraud / Scam</SelectItem>
-                                    <SelectItem value="fake_item">Fake / Counterfeit Item</SelectItem>
-                                    <SelectItem value="harassment">Harassment / Abusive Dealer</SelectItem>
+                                <SelectContent>
+                                    <SelectItem value="fraud">Fraud / Potential Scam</SelectItem>
+                                    <SelectItem value="fake_item">Counterfeit / Misleading</SelectItem>
+                                    <SelectItem value="harassment">Inappropriate Content</SelectItem>
                                     <SelectItem value="wrong_category">Wrong Category</SelectItem>
                                     <SelectItem value="other">Other</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
-                        <div className="space-y-2">
-                            <Label className="text-xs uppercase font-bold text-zinc-500">Details</Label>
+
+                        <div className="space-y-1.5">
+                            <Label className="text-xs font-semibold">Details</Label>
                             <Textarea
                                 value={reportDetails}
                                 onChange={(e) => setReportDetails(e.target.value)}
-                                placeholder="Describe the issue..."
-                                className="bg-[#FAFAFA]/50 border-zinc-200 text-xs min-h-[100px]"
+                                placeholder="Please provide additional details..."
+                                className="text-xs rounded-xl min-h-[90px]"
                             />
                         </div>
                     </div>
-                    <DialogFooter>
-                        <Button variant="ghost" onClick={() => setIsReportOpen(false)} className="text-zinc-500 hover:text-zinc-900">Cancel</Button>
+
+                    <DialogFooter className="gap-2 sm:gap-0">
+                        <Button variant="outline" onClick={() => setIsReportOpen(false)} className="rounded-xl text-xs">
+                            Cancel
+                        </Button>
                         <Button
                             onClick={() => {
                                 const subject = `REPORT: ${listing.id} - ${reportReason.toUpperCase()}`;
                                 const body = `Reporting Listing: ${listing.title} (ID: ${listing.id})\nDealer: ${listing.dealer.display_name}\nReason: ${reportReason}\nDetails: ${reportDetails}\n\nSubmitted by User: ${user?.email || 'Anonymous'}`;
                                 window.location.href = `mailto:safety@marketbridge.ng?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
                                 setIsReportOpen(false);
-                                console.warn('UI_ALERT: Report initiated');
                             }}
-                            className="bg-red-600 text-zinc-900 hover:bg-red-700 font-bold uppercase tracking-widest text-xs"
+                            className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-xl"
                         >
                             Submit Report
                         </Button>
@@ -1012,6 +1058,5 @@ export default function ListingDetailContent() {
                 </DialogContent>
             </Dialog>
         </div>
-    </div>
-);
+    );
 }

@@ -29,7 +29,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         }
 
         const title = `${listing.title} - ₦${listing.price.toLocaleString()} | MarketBridge`;
-        const description = listing.description?.slice(0, 155) || 'Buy and sell on MarketBridge campus marketplace.';
+        const description = listing.description?.slice(0, 155) || 'Buy and sell securely on MarketBridge marketplace.';
         const imageUrl = listing.images?.[0] || 'https://marketbridgellc.vercel.app/icon.png';
 
         return {
@@ -94,8 +94,8 @@ export default async function ListingDetailPage({ params }: PageProps) {
                 />
             )}
             <Suspense fallback={
-                <div className="min-h-screen bg-[#FAFAFA] flex items-center justify-center text-zinc-900">
-                    <Loader2 className="h-10 w-10 animate-spin text-[#FF6200]" />
+                <div className="min-h-screen bg-background flex items-center justify-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-[#FF6200]" />
                 </div>
             }>
                 <ListingDetailContent />
