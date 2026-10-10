@@ -50,7 +50,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });
     }
 
-    const typedOrder = order as {
+    const typedOrder = order as unknown as {
       id: string;
       status: string;
       buyer_id: string;

@@ -239,7 +239,7 @@ export async function acceptPriceOffer(
 
   if (listingErr || !listing) return { success: false, error: 'Listing not found' };
 
-  const typedListing = listing as {
+  const typedListing = listing as unknown as {
     price: number;
     title: string;
     seller: { subscription_tier: string | null; subscription_expires_at: string | null } | null;
@@ -358,7 +358,7 @@ export async function rejectPriceOffer(
 
   if (offerErr || !offer) return { success: false, error: 'Offer not found' };
 
-  const typedOffer = offer as {
+  const typedOffer = offer as unknown as {
     id: string;
     status: string;
     chat_id: string;

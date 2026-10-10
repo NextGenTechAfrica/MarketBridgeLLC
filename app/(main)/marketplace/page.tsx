@@ -10,7 +10,8 @@ import { Badge } from '@/components/ui/badge';
 import { createClient } from '@/lib/supabase/client';
 import {
     Loader2, Search, MapPin, ShieldCheck, SlidersHorizontal,
-    LayoutGrid, List, X, Sparkles, Filter, ChevronRight, ArrowUpDown
+    LayoutGrid, List, X, Sparkles, Filter, ChevronRight, ArrowUpDown,
+    CheckCircle2, RotateCcw, Truck, Store
 } from 'lucide-react';
 import { CATEGORIES } from '@/lib/categories';
 import { cn } from '@/lib/utils';
@@ -22,11 +23,19 @@ import { ListingCard } from '@/components/listings/ListingCard';
 const supabase = createClient();
 
 const UNIVERSITIES = [
-    "Baze University",
-    "Nile University of Nigeria",
-    "Veritas University",
-    "University of Abuja",
-    "Other Abuja Institution"
+    { id: 'all', name: 'All Campuses', short: 'All' },
+    { id: 'baze', name: 'Baze University', short: 'Baze' },
+    { id: 'nile', name: 'Nile University of Nigeria', short: 'Nile' },
+    { id: 'veritas', name: 'Veritas University', short: 'Veritas' },
+    { id: 'uniabuja', name: 'University of Abuja', short: 'UniAbuja' },
+];
+
+const CONDITIONS = [
+    { id: 'all', label: 'All Conditions' },
+    { id: 'brand_new', label: 'Brand New' },
+    { id: 'like_new', label: 'Like New' },
+    { id: 'good', label: 'Good' },
+    { id: 'fair', label: 'Fair' },
 ];
 
 interface Listing {
@@ -119,7 +128,7 @@ function ListingsContent() {
     useEffect(() => {
         fetchListings();
 
-        // Real-time subscription for new listings
+        // Real-time subscription for active listings
         const channel = supabase
             .channel('public:listings')
             .on(
@@ -130,8 +139,7 @@ function ListingsContent() {
                     table: 'listings',
                     filter: 'status=eq.active'
                 },
-                (payload: any) => {
-                    console.log('New listing detected:', payload);
+                () => {
                     fetchListings();
                 }
             )
@@ -140,19 +148,11 @@ function ListingsContent() {
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [category, condition, campus, search, user?.id, authLoading]);
+    }, [category, condition, campus, search]);
 
     const fetchListings = async () => {
-        if (authLoading) return;
-
         setLoading(true);
         setError('');
-
-        if (!user) {
-            setListings([]);
-            setLoading(false);
-            return;
-        }
 
         try {
             let resultData: Listing[] = [];
@@ -166,21 +166,25 @@ function ListingsContent() {
                     location: campus || undefined,
                     minPrice: minPrice ? parseInt(minPrice) : undefined,
                     maxPrice: maxPrice ? parseInt(maxPrice) : undefined,
-                    limit: 50
+                    limit: 60
                 });
 
                 resultData = results as Listing[];
 
-                await trackSearch({
-                    userId: user?.id,
-                    query: search,
-                    resultsCount: results.length
-                });
+                if (user?.id) {
+                    await trackSearch({
+                        userId: user.id,
+                        query: search,
+                        resultsCount: results.length
+                    }).catch(() => null);
+                }
             } else {
                 const buildQuery = (baseQuery: any) => {
                     let q = baseQuery.eq('status', 'active');
                     if (category && category !== 'All Categories') q = q.eq('category', category);
-                    if (campus && campus !== 'Global' && campus !== '') q = q.eq('campus', campus);
+                    if (campus && campus !== 'Global' && campus !== '' && campus !== 'all') {
+                        q = q.ilike('location', `%${campus}%`);
+                    }
                     if (minPrice) q = q.gte('price', parseInt(minPrice));
                     if (maxPrice) q = q.lte('price', parseInt(maxPrice));
                     if (condition !== 'all') q = q.eq('condition', condition);
@@ -189,7 +193,7 @@ function ListingsContent() {
 
                 const selectFields = `
                     *,
-                    seller:users!listings_seller_id_fkey(
+                    seller:users!listings_dealer_id_fkey(
                         id,
                         display_name,
                         is_verified,
@@ -198,29 +202,27 @@ function ListingsContent() {
                     )
                 `;
 
-                // Sponsored first
-                const { data: sponsored } = await buildQuery(
-                    supabase.from('listings').select(selectFields)
-                        .eq('is_sponsored', true)
-                        .gt('sponsored_until', new Date().toISOString())
-                )
-                    .order('sponsored_tier', { ascending: false })
-                    .order('created_at', { ascending: false })
-                    .limit(8);
+                // Try query with seller relation
+                try {
+                    const { data, error: fetchError } = await buildQuery(
+                        supabase.from('listings').select(selectFields)
+                    )
+                        .order('created_at', { ascending: false })
+                        .limit(80);
 
-                // Regular listings
-                const { data: regular, error: fetchError } = await buildQuery(
-                    supabase.from('listings').select(selectFields)
-                        .or('is_sponsored.eq.false,sponsored_until.lt.' + new Date().toISOString())
-                )
-                    .order('created_at', { ascending: false })
-                    .limit(80);
+                    if (fetchError) throw fetchError;
+                    resultData = (data as Listing[]) || [];
+                } catch (relationErr) {
+                    console.warn('Listing relation query failed, falling back to basic query:', relationErr);
+                    const { data: basicData, error: basicErr } = await buildQuery(
+                        supabase.from('listings').select('*')
+                    )
+                        .order('created_at', { ascending: false })
+                        .limit(80);
 
-                if (fetchError) throw fetchError;
-
-                const sponsoredIds = new Set((sponsored || []).map((l: Listing) => l.id));
-                const deduped = (regular || []).filter((l: Listing) => !sponsoredIds.has(l.id));
-                resultData = [...(sponsored || []), ...deduped];
+                    if (basicErr) throw basicErr;
+                    resultData = (basicData as Listing[]) || [];
+                }
             }
 
             setListings(resultData);
@@ -246,11 +248,11 @@ function ListingsContent() {
         if (sortBy === 'price_desc') {
             return sorted.sort((a, b) => b.price - a.price);
         }
-        return sorted; // default order from database (sponsored then newest)
+        return sorted;
     }, [listings, sortBy]);
 
     const activeFilterCount = (category !== 'All Categories' ? 1 : 0) +
-        (campus ? 1 : 0) +
+        (campus && campus !== 'all' ? 1 : 0) +
         (condition !== 'all' ? 1 : 0) +
         (minPrice || maxPrice ? 1 : 0);
 
@@ -261,62 +263,59 @@ function ListingsContent() {
         setMinPrice('');
         setMaxPrice('');
         setCondition('all');
+        fetchListings();
     };
 
     return (
-        <div className="min-h-screen bg-background text-foreground flex flex-col pt-16 md:pt-20 pb-20">
-            {/* Top Search & Filter Banner */}
+        <div className="min-h-screen bg-background text-foreground flex flex-col pb-20">
+            {/* ─── Top Category Ribbon & Search Header ─── */}
             <div className="bg-card border-b border-border py-6 px-4 sm:px-6">
-                <div className="container max-w-7xl mx-auto space-y-4">
+                <div className="max-w-7xl mx-auto space-y-4">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div>
                             <div className="flex items-center gap-2 mb-1">
                                 <span className="h-2 w-2 rounded-full bg-[#FF6200] animate-pulse" />
-                                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Marketplace</span>
+                                <span className="text-xs font-bold uppercase tracking-wider text-[#FF6200]">Campus Marketplace</span>
                             </div>
-                            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
-                                Explore <span className="text-[#FF6200]">Listings</span>
+                            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground font-heading">
+                                Browse <span className="text-[#FF6200]">Verified Deals</span>
                             </h1>
-                            <p className="text-xs sm:text-sm text-muted-foreground">
-                                Discover products and services from verified students and merchants.
+                            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+                                Trade safely with classmates across Abuja universities with zero-fraud escrow protection.
                             </p>
                         </div>
 
-                        {/* Search Input */}
+                        {/* Search Input Bar */}
                         <form onSubmit={handleSearch} className="flex-1 max-w-xl relative">
                             <div className="relative">
                                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                 <input
                                     type="text"
-                                    placeholder="Search by keyword, product name, brand..."
+                                    placeholder="Search textbooks, laptops, food, hostellers..."
                                     value={search}
                                     onChange={(e) => setSearch(e.target.value)}
-                                    className="w-full bg-background border border-border pl-10 pr-24 h-11 rounded-xl text-sm placeholder:text-muted-foreground focus:outline-none focus:border-[#FF6200] focus:ring-1 focus:ring-[#FF6200] transition-all"
+                                    className="w-full bg-background border border-border pl-10 pr-24 h-12 rounded-2xl text-sm placeholder:text-muted-foreground focus:outline-none focus:border-[#FF6200] focus:ring-2 focus:ring-[#FF6200]/20 transition-all shadow-sm"
                                 />
                                 <Button
                                     type="submit"
                                     size="sm"
-                                    className="absolute right-1.5 top-1/2 -translate-y-1/2 h-8 px-4 bg-[#FF6200] hover:bg-[#FF7A29] text-white font-semibold text-xs rounded-lg"
+                                    className="absolute right-1.5 top-1/2 -translate-y-1/2 h-9 px-4 bg-[#FF6200] hover:bg-[#E55800] text-white font-bold text-xs rounded-xl shadow-sm"
                                 >
                                     Search
                                 </Button>
                             </div>
 
-                            {/* Search Suggestions */}
+                            {/* Suggestions Dropdown */}
                             {suggestions.length > 0 && (
-                                <div className="absolute left-0 right-0 top-full mt-1.5 bg-card border border-border rounded-xl shadow-lg z-50 overflow-hidden max-h-56 overflow-y-auto">
-                                    {suggestions.map((sug, idx) => (
+                                <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-2xl shadow-xl z-50 p-2 space-y-1">
+                                    {suggestions.map((sug, i) => (
                                         <button
-                                            key={idx}
+                                            key={i}
                                             type="button"
-                                            onClick={() => {
-                                                setSearch(sug);
-                                                setSuggestions([]);
-                                            }}
-                                            className="w-full text-left px-4 py-2.5 hover:bg-muted text-xs font-medium text-foreground transition-colors border-b border-border/50 last:border-none flex items-center justify-between"
+                                            onClick={() => { setSearch(sug); fetchListings(); setSuggestions([]); }}
+                                            className="w-full text-left px-3 py-2 text-xs text-foreground hover:bg-zinc-100 dark:hover:bg-white/5 rounded-xl transition-colors font-medium"
                                         >
-                                            <span>{sug}</span>
-                                            <ChevronRight className="h-3 w-3 text-muted-foreground" />
+                                            {sug}
                                         </button>
                                     ))}
                                 </div>
@@ -324,347 +323,345 @@ function ListingsContent() {
                         </form>
                     </div>
 
-                    {/* Quick Filters Row */}
-                    <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-                        <div className="flex flex-wrap items-center gap-2">
-                            {/* Mobile Filters Toggle Button */}
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setShowMobileFilters(!showMobileFilters)}
-                                className="lg:hidden h-9 px-3 gap-1.5 text-xs font-medium rounded-lg"
-                            >
-                                <SlidersHorizontal className="h-3.5 w-3.5 text-[#FF6200]" />
-                                Filters
-                                {activeFilterCount > 0 && (
-                                    <Badge className="ml-1 bg-[#FF6200] text-white text-[10px] h-4 min-w-[16px] px-1">
-                                        {activeFilterCount}
-                                    </Badge>
+                    {/* Campus Quick Pills Bar */}
+                    <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none pt-1">
+                        {UNIVERSITIES.map((uni) => (
+                            <button
+                                key={uni.id}
+                                type="button"
+                                onClick={() => setCampus(uni.id === 'all' ? '' : uni.short)}
+                                className={cn(
+                                    "px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5",
+                                    (uni.id === 'all' && !campus) || campus === uni.short
+                                        ? "bg-[#FF6200] text-white shadow-sm shadow-[#FF6200]/30"
+                                        : "bg-zinc-100 dark:bg-white/5 border border-border text-muted-foreground hover:text-foreground hover:border-[#FF6200]/40"
                                 )}
-                            </Button>
-
-                            {/* Campus Selector */}
-                            <select
-                                title="Filter by Campus"
-                                aria-label="Filter by Campus"
-                                value={campus}
-                                onChange={(e) => setCampus(e.target.value)}
-                                className="h-9 bg-background border border-border px-3 rounded-lg text-xs font-medium focus:outline-none focus:border-[#FF6200] cursor-pointer"
                             >
-                                <option value="">All Locations / Campus</option>
-                                {UNIVERSITIES.map(u => (
-                                    <option key={u} value={u}>{u}</option>
-                                ))}
-                                <option value="Global">Everywhere</option>
-                            </select>
-
-                            {/* Condition Filter */}
-                            <select
-                                title="Filter by Condition"
-                                aria-label="Filter by Condition"
-                                value={condition}
-                                onChange={(e) => setCondition(e.target.value)}
-                                className="h-9 bg-background border border-border px-3 rounded-lg text-xs font-medium focus:outline-none focus:border-[#FF6200] cursor-pointer"
-                            >
-                                <option value="all">All Conditions</option>
-                                <option value="brand_new">Brand New</option>
-                                <option value="like_new">Like New</option>
-                                <option value="used_good">Used (Good)</option>
-                                <option value="used_fair">Used (Fair)</option>
-                            </select>
-
-                            {activeFilterCount > 0 && (
-                                <button
-                                    onClick={clearAllFilters}
-                                    className="text-xs text-muted-foreground hover:text-[#FF6200] font-medium flex items-center gap-1 px-2 py-1 transition-colors"
-                                >
-                                    <X className="h-3 w-3" /> Clear filters
-                                </button>
-                            )}
-                        </div>
-
-                        {/* Sort and View Mode */}
-                        <div className="flex items-center gap-3 ml-auto">
-                            <div className="flex items-center gap-1.5">
-                                <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground" />
-                                <select
-                                    title="Sort listings"
-                                    aria-label="Sort listings"
-                                    value={sortBy}
-                                    onChange={(e: any) => setSortBy(e.target.value)}
-                                    className="h-9 bg-background border border-border px-2.5 rounded-lg text-xs font-medium focus:outline-none focus:border-[#FF6200] cursor-pointer"
-                                >
-                                    <option value="newest">Featured & Newest</option>
-                                    <option value="price_asc">Price: Low to High</option>
-                                    <option value="price_desc">Price: High to Low</option>
-                                </select>
-                            </div>
-
-                            <div className="hidden sm:flex items-center bg-muted p-0.5 rounded-lg border border-border">
-                                <button
-                                    onClick={() => setViewMode('grid')}
-                                    className={cn(
-                                        "p-1.5 rounded-md transition-colors",
-                                        viewMode === 'grid' ? "bg-card text-[#FF6200] shadow-sm" : "text-muted-foreground hover:text-foreground"
-                                    )}
-                                    title="Grid view"
-                                >
-                                    <LayoutGrid className="h-4 w-4" />
-                                </button>
-                                <button
-                                    onClick={() => setViewMode('list')}
-                                    className={cn(
-                                        "p-1.5 rounded-md transition-colors",
-                                        viewMode === 'list' ? "bg-card text-[#FF6200] shadow-sm" : "text-muted-foreground hover:text-foreground"
-                                    )}
-                                    title="List view"
-                                >
-                                    <List className="h-4 w-4" />
-                                </button>
-                            </div>
-                        </div>
+                                <MapPin className="h-3 w-3" />
+                                <span>{uni.name}</span>
+                            </button>
+                        ))}
                     </div>
                 </div>
             </div>
 
-            {/* Main Content Layout */}
-            <div className="container max-w-7xl mx-auto px-4 sm:px-6 pt-6">
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                    {/* Desktop Left Sidebar: Categories */}
-                    <aside className="hidden lg:block lg:col-span-3 space-y-6">
-                        <div className="bg-card border border-border rounded-2xl p-5 space-y-4 shadow-sm">
+            {/* ─── Main Content Grid: Filters Sidebar + Listings ─── */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 w-full flex-1">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+
+                    {/* ──── Desktop Filters Sidebar (Left ~25%) ──── */}
+                    <aside className="hidden lg:block lg:col-span-3 space-y-6 sticky top-24">
+                        <div className="bg-card border border-border rounded-3xl p-5 shadow-sm space-y-5">
                             <div className="flex items-center justify-between pb-3 border-b border-border">
-                                <h2 className="text-sm font-bold text-foreground">Categories</h2>
-                                {category !== 'All Categories' && (
+                                <div className="flex items-center gap-2">
+                                    <SlidersHorizontal className="h-4 w-4 text-[#FF6200]" />
+                                    <span className="font-bold text-sm text-foreground">Filters</span>
+                                    {activeFilterCount > 0 && (
+                                        <Badge className="bg-[#FF6200] text-white text-[10px] h-5 w-5 rounded-full p-0 flex items-center justify-center">
+                                            {activeFilterCount}
+                                        </Badge>
+                                    )}
+                                </div>
+                                {activeFilterCount > 0 && (
                                     <button
-                                        onClick={() => setCategory('All Categories')}
-                                        className="text-[11px] font-semibold text-[#FF6200] hover:underline"
+                                        type="button"
+                                        onClick={clearAllFilters}
+                                        className="text-xs text-[#FF6200] hover:underline font-semibold cursor-pointer"
                                     >
-                                        Reset
+                                        Reset All
                                     </button>
                                 )}
                             </div>
 
-                            <div className="space-y-1">
-                                <button
-                                    onClick={() => setCategory('All Categories')}
-                                    className={cn(
-                                        "w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all text-left",
-                                        category === 'All Categories'
-                                            ? "bg-[#FF6200] text-white font-bold shadow-sm"
-                                            : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                                    )}
-                                >
-                                    <span>All Categories</span>
-                                    <span className="text-[11px] opacity-80">{listings.length}</span>
-                                </button>
-
-                                {CATEGORIES.map((cat) => {
-                                    const IconComponent = cat.icon;
-                                    const isSelected = category.toLowerCase() === cat.name.toLowerCase();
-
-                                    return (
+                            {/* Categories Filter */}
+                            <div className="space-y-2">
+                                <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Category</h3>
+                                <div className="space-y-1 max-h-56 overflow-y-auto pr-1">
+                                    <button
+                                        type="button"
+                                        onClick={() => setCategory('All Categories')}
+                                        className={cn(
+                                            "w-full text-left px-3 py-2 rounded-xl text-xs font-semibold transition-colors flex items-center justify-between cursor-pointer",
+                                            category === 'All Categories'
+                                                ? "bg-[#FF6200] text-white"
+                                                : "text-muted-foreground hover:bg-zinc-100 dark:hover:bg-white/5 hover:text-foreground"
+                                        )}
+                                    >
+                                        <span>All Categories</span>
+                                    </button>
+                                    {CATEGORIES.map((cat) => (
                                         <button
                                             key={cat.id}
+                                            type="button"
                                             onClick={() => setCategory(cat.name)}
                                             className={cn(
-                                                "w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all text-left",
-                                                isSelected
-                                                    ? "bg-[#FF6200] text-white font-bold shadow-sm"
-                                                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                                                "w-full text-left px-3 py-2 rounded-xl text-xs font-semibold transition-colors flex items-center justify-between cursor-pointer",
+                                                category.toLowerCase() === cat.name.toLowerCase()
+                                                    ? "bg-[#FF6200] text-white"
+                                                    : "text-muted-foreground hover:bg-zinc-100 dark:hover:bg-white/5 hover:text-foreground"
                                             )}
                                         >
-                                            <div className="flex items-center gap-2.5">
-                                                <IconComponent className={cn("h-4 w-4", isSelected ? "text-white" : cat.color)} />
+                                            <div className="flex items-center gap-2">
+                                                <cat.icon className="h-3.5 w-3.5" />
                                                 <span>{cat.name}</span>
                                             </div>
-                                            <ChevronRight className={cn("h-3.5 w-3.5 opacity-60", isSelected ? "text-white" : "")} />
                                         </button>
-                                    );
-                                })}
+                                    ))}
+                                </div>
                             </div>
 
-                            {/* Price Range Filter Widget */}
-                            <div className="pt-4 border-t border-border space-y-3">
-                                <h3 className="text-xs font-bold text-foreground">Price Range (₦)</h3>
+                            {/* Condition Filter */}
+                            <div className="space-y-2 pt-3 border-t border-border">
+                                <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Condition</h3>
+                                <div className="space-y-1">
+                                    {CONDITIONS.map((cond) => (
+                                        <button
+                                            key={cond.id}
+                                            type="button"
+                                            onClick={() => setCondition(cond.id)}
+                                            className={cn(
+                                                "w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer",
+                                                condition === cond.id
+                                                    ? "bg-zinc-900 text-white dark:bg-white dark:text-zinc-900"
+                                                    : "text-muted-foreground hover:bg-zinc-100 dark:hover:bg-white/5 hover:text-foreground"
+                                            )}
+                                        >
+                                            {cond.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Price Range Filter */}
+                            <div className="space-y-3 pt-3 border-t border-border">
+                                <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Price Range (₦)</h3>
                                 <div className="grid grid-cols-2 gap-2">
                                     <input
                                         type="number"
                                         placeholder="Min"
                                         value={minPrice}
                                         onChange={(e) => setMinPrice(e.target.value)}
-                                        className="w-full bg-background border border-border px-3 py-1.5 rounded-lg text-xs font-medium focus:outline-none focus:border-[#FF6200]"
+                                        className="h-9 px-3 rounded-xl bg-background border border-border text-xs focus:outline-none focus:border-[#FF6200]"
                                     />
                                     <input
                                         type="number"
                                         placeholder="Max"
                                         value={maxPrice}
                                         onChange={(e) => setMaxPrice(e.target.value)}
-                                        className="w-full bg-background border border-border px-3 py-1.5 rounded-lg text-xs font-medium focus:outline-none focus:border-[#FF6200]"
+                                        className="h-9 px-3 rounded-xl bg-background border border-border text-xs focus:outline-none focus:border-[#FF6200]"
                                     />
                                 </div>
                                 <Button
+                                    type="button"
                                     onClick={() => fetchListings()}
                                     size="sm"
-                                    variant="outline"
-                                    className="w-full h-8 text-xs font-semibold rounded-lg hover:border-[#FF6200] hover:text-[#FF6200]"
+                                    className="w-full h-8 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-bold text-xs rounded-xl"
                                 >
-                                    Apply Price Filter
+                                    Apply Price
                                 </Button>
                             </div>
                         </div>
 
-                        {/* Buyer Protection / Trust Widget */}
-                        <div className="bg-[#FF6200]/5 border border-[#FF6200]/20 rounded-2xl p-4 space-y-2">
-                            <div className="flex items-center gap-2 text-[#FF6200]">
-                                <ShieldCheck className="h-5 w-5" />
-                                <span className="text-xs font-bold uppercase tracking-wider">Buyer Protection</span>
+                        {/* Escrow Guarantee Banner in Sidebar */}
+                        <div className="p-4 rounded-3xl bg-orange-500/5 dark:bg-orange-500/10 border border-[#FF6200]/20 space-y-2">
+                            <div className="flex items-center gap-2 text-[#FF6200] font-bold text-xs">
+                                <ShieldCheck className="h-4 w-4" />
+                                <span>Zero-Fraud Escrow Guarantee</span>
                             </div>
                             <p className="text-[11px] text-muted-foreground leading-relaxed">
-                                Payments are held securely in escrow until you inspect and confirm your order.
+                                Never pay upfront to strangers. Funds remain in escrow until you verify items on campus.
                             </p>
                         </div>
                     </aside>
 
-                    {/* Mobile Filters Drawer Modal */}
-                    {showMobileFilters && (
-                        <div className="fixed inset-0 z-50 lg:hidden bg-black/60 backdrop-blur-sm flex justify-end">
-                            <div className="w-full max-w-xs bg-card h-full p-6 space-y-6 overflow-y-auto">
-                                <div className="flex items-center justify-between pb-4 border-b border-border">
-                                    <h2 className="font-bold text-foreground">Filters</h2>
-                                    <button onClick={() => setShowMobileFilters(false)}>
-                                        <X className="h-5 w-5 text-muted-foreground" />
+                    {/* ──── Listings Results Area (Right ~75%) ──── */}
+                    <div className="lg:col-span-9 space-y-6">
+
+                        {/* Controls Header (Results count, sorting, view mode, mobile filters button) */}
+                        <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-2xl bg-card border border-border">
+                            <div className="flex items-center gap-3">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setShowMobileFilters(true)}
+                                    className="lg:hidden rounded-xl text-xs font-bold gap-1.5"
+                                >
+                                    <Filter className="h-3.5 w-3.5 text-[#FF6200]" />
+                                    <span>Filters</span>
+                                    {activeFilterCount > 0 && <span className="text-[#FF6200]">({activeFilterCount})</span>}
+                                </Button>
+
+                                <span className="text-xs sm:text-sm text-muted-foreground font-medium">
+                                    Showing <strong className="text-foreground">{sortedListings.length}</strong> listings
+                                    {category !== 'All Categories' && <span> in <strong className="text-[#FF6200]">{category}</strong></span>}
+                                </span>
+                            </div>
+
+                            <div className="flex items-center gap-3 ml-auto">
+                                {/* Sorting Select */}
+                                <div className="flex items-center gap-2 text-xs">
+                                    <span className="text-muted-foreground hidden sm:inline">Sort:</span>
+                                    <select
+                                        value={sortBy}
+                                        onChange={(e: any) => setSortBy(e.target.value)}
+                                        className="h-9 px-3 rounded-xl bg-background border border-border text-xs font-semibold focus:outline-none focus:border-[#FF6200]"
+                                    >
+                                        <option value="newest">Newest First</option>
+                                        <option value="price_asc">Price: Low to High</option>
+                                        <option value="price_desc">Price: High to Low</option>
+                                    </select>
+                                </div>
+
+                                {/* View Mode Toggles */}
+                                <div className="flex items-center border border-border rounded-xl p-0.5 bg-background">
+                                    <button
+                                        type="button"
+                                        onClick={() => setViewMode('grid')}
+                                        className={cn(
+                                            "p-1.5 rounded-lg transition-colors cursor-pointer",
+                                            viewMode === 'grid' ? "bg-zinc-200 dark:bg-zinc-800 text-foreground" : "text-muted-foreground"
+                                        )}
+                                        title="Grid View"
+                                    >
+                                        <LayoutGrid className="h-4 w-4" />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setViewMode('list')}
+                                        className={cn(
+                                            "p-1.5 rounded-lg transition-colors cursor-pointer",
+                                            viewMode === 'list' ? "bg-zinc-200 dark:bg-zinc-800 text-foreground" : "text-muted-foreground"
+                                        )}
+                                        title="List View"
+                                    >
+                                        <List className="h-4 w-4" />
                                     </button>
                                 </div>
-
-                                <div className="space-y-4">
-                                    <h3 className="text-xs font-bold text-foreground">Categories</h3>
-                                    <div className="space-y-1">
-                                        <button
-                                            onClick={() => { setCategory('All Categories'); setShowMobileFilters(false); }}
-                                            className={cn(
-                                                "w-full text-left px-3 py-2 rounded-lg text-xs font-medium",
-                                                category === 'All Categories' ? "bg-[#FF6200] text-white" : "hover:bg-muted"
-                                            )}
-                                        >
-                                            All Categories
-                                        </button>
-                                        {CATEGORIES.map((cat) => (
-                                            <button
-                                                key={cat.id}
-                                                onClick={() => { setCategory(cat.name); setShowMobileFilters(false); }}
-                                                className={cn(
-                                                    "w-full text-left px-3 py-2 rounded-lg text-xs font-medium",
-                                                    category.toLowerCase() === cat.name.toLowerCase() ? "bg-[#FF6200] text-white" : "hover:bg-muted"
-                                                )}
-                                            >
-                                                {cat.name}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                <div className="pt-4 border-t border-border">
-                                    <Button
-                                        onClick={() => { fetchListings(); setShowMobileFilters(false); }}
-                                        className="w-full bg-[#FF6200] hover:bg-[#FF7A29] text-white"
-                                    >
-                                        Apply Filters
-                                    </Button>
-                                </div>
                             </div>
-                        </div>
-                    )}
-
-                    {/* Listings Display Area */}
-                    <div className="lg:col-span-9 space-y-6">
-                        {/* Results Header Status */}
-                        <div className="flex items-center justify-between">
-                            <p className="text-xs sm:text-sm text-muted-foreground font-medium">
-                                Showing <span className="font-bold text-foreground">{sortedListings.length} items</span>
-                                {category !== 'All Categories' && <span> in <strong className="text-[#FF6200]">{category}</strong></span>}
-                            </p>
                         </div>
 
                         {/* Loading State */}
                         {loading && (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
-                                {[...Array(6)].map((_, i) => (
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-5">
+                                {[1, 2, 3, 4, 5, 6].map((i) => (
                                     <div key={i} className="bg-card border border-border rounded-2xl p-4 space-y-3">
-                                        <Skeleton className="h-44 w-full rounded-xl bg-muted" />
-                                        <Skeleton className="h-4 w-3/4 bg-muted" />
-                                        <Skeleton className="h-3 w-1/2 bg-muted" />
-                                        <div className="flex justify-between pt-2 border-t border-border">
-                                            <Skeleton className="h-5 w-20 bg-muted" />
-                                            <Skeleton className="h-4 w-16 bg-muted" />
-                                        </div>
+                                        <Skeleton className="h-44 w-full rounded-xl" />
+                                        <Skeleton className="h-4 w-3/4" />
+                                        <Skeleton className="h-5 w-1/2" />
                                     </div>
                                 ))}
                             </div>
                         )}
 
                         {/* Error State */}
-                        {error && (
-                            <div className="bg-destructive/10 border border-destructive/20 p-6 rounded-2xl text-destructive text-sm font-medium">
+                        {error && !loading && (
+                            <div className="p-6 rounded-2xl bg-destructive/10 border border-destructive/20 text-destructive text-sm font-medium">
                                 {error}
                             </div>
                         )}
 
-                        {/* Unauthenticated State */}
-                        {!loading && !error && !user && (
-                            <div className="py-12 flex flex-col items-center gap-4 bg-card border border-border rounded-2xl p-8 text-center">
-                                <EmptyState
-                                    icon={<ShieldCheck className="w-12 h-12 text-[#FF6200]" />}
-                                    title="Sign In to Browse Marketplace"
-                                    description="Log in to view live listings, negotiate prices, and make secure transactions."
-                                    actionLabel="Log In"
-                                    onAction={() => router.push('/login?redirect=/marketplace')}
-                                />
-                                <Link href="/">
-                                    <Button variant="ghost" size="sm" className="text-xs">
-                                        ← Return to Homepage
-                                    </Button>
-                                </Link>
+                        {/* Zero Results */}
+                        {!loading && !error && sortedListings.length === 0 && (
+                            <div className="bg-card border border-border rounded-3xl p-12 text-center space-y-4 max-w-md mx-auto">
+                                <Store className="h-12 w-12 text-[#FF6200] mx-auto opacity-30" />
+                                <h3 className="text-lg font-bold text-foreground">No Listings Found</h3>
+                                <p className="text-xs text-muted-foreground leading-relaxed">
+                                    No items match your active filters. Try searching with different terms or reset your filters.
+                                </p>
+                                <Button
+                                    onClick={clearAllFilters}
+                                    variant="outline"
+                                    className="rounded-xl border-[#FF6200] text-[#FF6200] hover:bg-[#FF6200]/10 text-xs font-bold"
+                                >
+                                    Reset Filters
+                                </Button>
                             </div>
                         )}
 
-                        {/* Zero Results State */}
-                        {!loading && !error && user && sortedListings.length === 0 && (
-                            <div className="bg-card border border-border rounded-2xl p-12 text-center">
-                                <EmptyState
-                                    icon={<Search className="w-12 h-12 text-[#FF6200]" />}
-                                    title="No Listings Found"
-                                    description="Try searching with different keywords or clearing your active filters."
-                                    actionLabel="Clear All Filters"
-                                    onAction={clearAllFilters}
-                                />
-                            </div>
-                        )}
-
-                        {/* Listings Grid / List */}
+                        {/* Listings Cards Grid / List */}
                         {!loading && !error && sortedListings.length > 0 && (
                             <div className={cn(
                                 viewMode === 'grid'
-                                    ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5"
+                                    ? "grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6"
                                     : "flex flex-col gap-4"
                             )}>
-                                {sortedListings.map((listing) => (
+                                {sortedListings.map((item) => (
                                     <ListingCard
-                                        key={listing.id}
-                                        listing={listing}
+                                        key={item.id}
+                                        listing={item}
                                         variant={viewMode === 'grid' ? 'grid' : 'horizontal'}
                                     />
                                 ))}
                             </div>
                         )}
+
                     </div>
+
                 </div>
             </div>
+
+            {/* ──── Mobile Filters Modal ──── */}
+            {showMobileFilters && (
+                <div className="fixed inset-0 z-50 lg:hidden bg-black/60 backdrop-blur-sm flex justify-end">
+                    <div className="w-full max-w-xs bg-card h-full p-6 space-y-6 overflow-y-auto">
+                        <div className="flex items-center justify-between pb-4 border-b border-border">
+                            <h2 className="font-bold text-foreground text-sm">Filters</h2>
+                            <button onClick={() => setShowMobileFilters(false)}>
+                                <X className="h-5 w-5 text-muted-foreground" />
+                            </button>
+                        </div>
+
+                        <div className="space-y-4">
+                            <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Categories</h3>
+                            <div className="space-y-1 max-h-60 overflow-y-auto">
+                                <button
+                                    onClick={() => { setCategory('All Categories'); setShowMobileFilters(false); }}
+                                    className={cn(
+                                        "w-full text-left px-3 py-2 rounded-xl text-xs font-semibold",
+                                        category === 'All Categories' ? "bg-[#FF6200] text-white" : "hover:bg-muted"
+                                    )}
+                                >
+                                    All Categories
+                                </button>
+                                {CATEGORIES.map((cat) => (
+                                    <button
+                                        key={cat.id}
+                                        onClick={() => { setCategory(cat.name); setShowMobileFilters(false); }}
+                                        className={cn(
+                                            "w-full text-left px-3 py-2 rounded-xl text-xs font-semibold",
+                                            category.toLowerCase() === cat.name.toLowerCase() ? "bg-[#FF6200] text-white" : "hover:bg-muted"
+                                        )}
+                                    >
+                                        {cat.name}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="pt-4 border-t border-border space-y-2">
+                            <Button
+                                onClick={() => { fetchListings(); setShowMobileFilters(false); }}
+                                className="w-full bg-[#FF6200] hover:bg-[#E55800] text-white font-bold rounded-xl text-xs"
+                            >
+                                Apply Filters
+                            </Button>
+                            <Button
+                                variant="outline"
+                                onClick={() => { clearAllFilters(); setShowMobileFilters(false); }}
+                                className="w-full rounded-xl text-xs"
+                            >
+                                Reset All
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
 
-export default function ListingsPage() {
+export default function MarketplacePage() {
     return (
         <Suspense fallback={
             <div className="min-h-screen bg-background flex items-center justify-center">

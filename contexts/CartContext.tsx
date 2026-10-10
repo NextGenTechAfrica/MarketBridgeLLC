@@ -13,11 +13,13 @@ interface CartItem {
 
 interface CartContextType {
     items: CartItem[];
-    addToCart: (item: Omit<CartItem, 'quantity'>) => void;
+    addToCart: (item: Omit<CartItem, 'quantity'>, quantity?: number) => void;
+    updateQuantity: (listingId: string, quantity: number) => void;
     removeFromCart: (listingId: string) => void;
     clearCart: () => void;
     total: number;
     itemCount: number;
+    cartCount: number;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -50,16 +52,31 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         }
     }, [items, isInitialized]);
 
-    const addToCart = (newItem: Omit<CartItem, 'quantity'>) => {
+    const addToCart = (newItem: Omit<CartItem, 'quantity'>, quantity: number = 1) => {
+        const qtyToAdd = Math.max(1, quantity);
         setItems((prevItems) => {
             const existingItem = prevItems.find((item) => item.listingId === newItem.listingId);
             if (existingItem) {
-                // If item exists, do nothing (or increment quantity if we supported multiple of same item)
-                // For this marketplace, we assume 1 quantity per listing for now unless specified otherwise
-                return prevItems;
+                return prevItems.map((item) =>
+                    item.listingId === newItem.listingId
+                        ? { ...item, quantity: item.quantity + qtyToAdd }
+                        : item
+                );
             }
-            return [...prevItems, { ...newItem, quantity: 1 }];
+            return [...prevItems, { ...newItem, quantity: qtyToAdd }];
         });
+    };
+
+    const updateQuantity = (listingId: string, quantity: number) => {
+        if (quantity <= 0) {
+            removeFromCart(listingId);
+            return;
+        }
+        setItems((prevItems) =>
+            prevItems.map((item) =>
+                item.listingId === listingId ? { ...item, quantity } : item
+            )
+        );
     };
 
     const removeFromCart = (listingId: string) => {
@@ -71,17 +88,19 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     };
 
     const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-    const itemCount = items.length;
+    const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
 
     return (
         <CartContext.Provider
             value={{
                 items,
                 addToCart,
+                updateQuantity,
                 removeFromCart,
                 clearCart,
                 total,
                 itemCount,
+                cartCount: itemCount,
             }}
         >
             {children}

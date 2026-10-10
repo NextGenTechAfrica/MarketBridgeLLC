@@ -110,9 +110,9 @@ export function ListingCard({ listing, variant = 'grid', className }: ListingCar
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
                             <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
                             <span className="truncate max-w-[120px]">{location}</span>
-                            {isVerified && (
-                                <ShieldCheck className="h-4 w-4 text-emerald-500 shrink-0" title="Verified Seller" />
-                            )}
+                                <span title="Verified Seller">
+                                    <ShieldCheck className="h-4 w-4 text-emerald-500 shrink-0" />
+                                </span>
                         </div>
                     </div>
                 </div>

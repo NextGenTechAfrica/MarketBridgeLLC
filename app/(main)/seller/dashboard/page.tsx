@@ -770,7 +770,7 @@ export default function SellerDashboardPage() {
                     </div>
 
                     {/* Grow Your Sales Card */}
-                    <div className="bg-gradient-to-r from-orange-500 to-[#FF5500] text-white px-5 py-3.5 rounded-2xl flex items-center gap-4 shadow-md shadow-orange-500/20">
+                    <div className="bg-gradient-to-r from-orange-500 to-[#FF6200] text-white px-5 py-3.5 rounded-2xl flex items-center gap-4 shadow-md shadow-orange-500/20">
                         <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
                             <TrendingUp className="h-5 w-5 text-white" />
                         </div>
@@ -824,7 +824,7 @@ export default function SellerDashboardPage() {
                     <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm space-y-2">
                         <div className="flex items-center justify-between text-slate-500">
                             <span className="text-xs font-semibold">Active Listings</span>
-                            <div className="w-6 h-6 rounded-lg bg-orange-50 text-[#FF5500] flex items-center justify-center">
+                            <div className="w-6 h-6 rounded-lg bg-orange-50 text-[#FF6200] flex items-center justify-center">
                                 <Package className="h-3.5 w-3.5" />
                             </div>
                         </div>
@@ -889,8 +889,8 @@ export default function SellerDashboardPage() {
                                 <svg viewBox="0 0 500 180" className="w-full h-full overflow-visible">
                                     <defs>
                                         <linearGradient id="salesGrad" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="0%" stopColor="#FF5500" stopOpacity="0.25" />
-                                            <stop offset="100%" stopColor="#FF5500" stopOpacity="0.0" />
+                                            <stop offset="0%" stopColor="#FF6200" stopOpacity="0.25" />
+                                            <stop offset="100%" stopColor="#FF6200" stopOpacity="0.0" />
                                         </linearGradient>
                                     </defs>
 
@@ -916,19 +916,19 @@ export default function SellerDashboardPage() {
                                     <path
                                         d="M 50 135 C 110 110, 150 120, 210 85 C 270 50, 330 65, 390 40 C 430 25, 460 20, 480 15"
                                         fill="none"
-                                        stroke="#FF5500"
+                                        stroke="#FF6200"
                                         strokeWidth="3"
                                         strokeLinecap="round"
                                     />
 
                                     {/* Dots */}
-                                    <circle cx="50" cy="135" r="3.5" fill="#FF5500" />
-                                    <circle cx="125" cy="115" r="3.5" fill="#FF5500" />
-                                    <circle cx="210" cy="85" r="3.5" fill="#FF5500" />
-                                    <circle cx="295" cy="55" r="3.5" fill="#FF5500" />
-                                    <circle cx="365" cy="48" r="3.5" fill="#FF5500" />
-                                    <circle cx="425" cy="28" r="3.5" fill="#FF5500" />
-                                    <circle cx="480" cy="15" r="4.5" fill="#FF5500" stroke="#fff" strokeWidth="2" />
+                                    <circle cx="50" cy="135" r="3.5" fill="#FF6200" />
+                                    <circle cx="125" cy="115" r="3.5" fill="#FF6200" />
+                                    <circle cx="210" cy="85" r="3.5" fill="#FF6200" />
+                                    <circle cx="295" cy="55" r="3.5" fill="#FF6200" />
+                                    <circle cx="365" cy="48" r="3.5" fill="#FF6200" />
+                                    <circle cx="425" cy="28" r="3.5" fill="#FF6200" />
+                                    <circle cx="480" cy="15" r="4.5" fill="#FF6200" stroke="#fff" strokeWidth="2" />
 
                                     {/* X-axis date labels */}
                                     <text x="42" y="172" className="text-[10px] fill-slate-400 font-medium">Sep 8</text>
@@ -946,7 +946,7 @@ export default function SellerDashboardPage() {
                         <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm space-y-4">
                             <div className="flex items-center justify-between">
                                 <h3 className="text-base font-bold text-slate-900">My Listings</h3>
-                                <Link href="/seller/listings" className="text-xs font-bold text-slate-500 hover:text-[#FF5500] flex items-center gap-1 transition-colors">
+                                <Link href="/seller/listings" className="text-xs font-bold text-slate-500 hover:text-[#FF6200] flex items-center gap-1 transition-colors">
                                     View All <ArrowRight className="h-3 w-3" />
                                 </Link>
                             </div>
@@ -979,7 +979,7 @@ export default function SellerDashboardPage() {
                         <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm space-y-4">
                             <div className="flex items-center justify-between">
                                 <h3 className="text-base font-bold text-slate-900">Recent Orders</h3>
-                                <Link href="/seller/orders" className="text-xs font-bold text-slate-500 hover:text-[#FF5500] flex items-center gap-1 transition-colors">
+                                <Link href="/seller/orders" className="text-xs font-bold text-slate-500 hover:text-[#FF6200] flex items-center gap-1 transition-colors">
                                     View All <ArrowRight className="h-3 w-3" />
                                 </Link>
                             </div>
@@ -1052,7 +1052,7 @@ export default function SellerDashboardPage() {
                             <h3 className="text-base font-bold text-slate-900">Top Selling Categories</h3>
                             <div className="space-y-3">
                                 {[
-                                    { name: 'Electronics', pct: 32, barColor: 'bg-[#FF5500]' },
+                                    { name: 'Electronics', pct: 32, barColor: 'bg-[#FF6200]' },
                                     { name: 'Fashion', pct: 22, barColor: 'bg-pink-500' },
                                     { name: 'Books', pct: 15, barColor: 'bg-blue-500' },
                                     { name: 'Accessories', pct: 12, barColor: 'bg-emerald-500' },
@@ -1083,7 +1083,7 @@ export default function SellerDashboardPage() {
                                         <PlusCircle className="h-4 w-4" />
                                     </div>
                                     <div className="min-w-0">
-                                        <p className="text-xs font-bold text-slate-900 group-hover:text-[#FF5500] transition-colors">Add New Listing</p>
+                                        <p className="text-xs font-bold text-slate-900 group-hover:text-[#FF6200] transition-colors">Add New Listing</p>
                                         <p className="text-[10px] text-slate-400">Upload a product</p>
                                     </div>
                                 </Link>
@@ -1096,7 +1096,7 @@ export default function SellerDashboardPage() {
                                         <ShoppingBag className="h-4 w-4" />
                                     </div>
                                     <div className="min-w-0">
-                                        <p className="text-xs font-bold text-slate-900 group-hover:text-[#FF5500] transition-colors">View Orders</p>
+                                        <p className="text-xs font-bold text-slate-900 group-hover:text-[#FF6200] transition-colors">View Orders</p>
                                         <p className="text-[10px] text-slate-400">Manage your orders</p>
                                     </div>
                                 </Link>
@@ -1108,11 +1108,11 @@ export default function SellerDashboardPage() {
                                     }}
                                     className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 border border-slate-100 transition-colors group text-left"
                                 >
-                                    <div className="w-8 h-8 rounded-lg bg-orange-50 text-[#FF5500] flex items-center justify-center shrink-0">
+                                    <div className="w-8 h-8 rounded-lg bg-orange-50 text-[#FF6200] flex items-center justify-center shrink-0">
                                         <DollarSign className="h-4 w-4" />
                                     </div>
                                     <div className="min-w-0">
-                                        <p className="text-xs font-bold text-slate-900 group-hover:text-[#FF5500] transition-colors">Withdraw Earnings</p>
+                                        <p className="text-xs font-bold text-slate-900 group-hover:text-[#FF6200] transition-colors">Withdraw Earnings</p>
                                         <p className="text-[10px] text-slate-400">Get your money</p>
                                     </div>
                                 </button>
@@ -1125,7 +1125,7 @@ export default function SellerDashboardPage() {
                                         <Sparkles className="h-4 w-4" />
                                     </div>
                                     <div className="min-w-0">
-                                        <p className="text-xs font-bold text-slate-900 group-hover:text-[#FF5500] transition-colors">Promote Your Store</p>
+                                        <p className="text-xs font-bold text-slate-900 group-hover:text-[#FF6200] transition-colors">Promote Your Store</p>
                                         <p className="text-[10px] text-slate-400">Increase your visibility</p>
                                     </div>
                                 </Link>
@@ -1135,16 +1135,16 @@ export default function SellerDashboardPage() {
                         {/* Student Sellers Build Your Future Card */}
                         <div className="bg-[#0B0F19] text-white rounded-2xl p-6 shadow-md space-y-4 border border-white/5 relative overflow-hidden text-center">
                             <div className="w-12 h-12 rounded-2xl bg-white/10 text-white flex items-center justify-center mx-auto">
-                                <Crown className="h-6 w-6 text-[#FF5500]" />
+                                <Crown className="h-6 w-6 text-[#FF6200]" />
                             </div>
                             <div className="space-y-1">
                                 <h4 className="text-sm font-bold text-white">Student Sellers</h4>
-                                <p className="text-xs font-semibold text-[#FF5500]">Build Your Future</p>
+                                <p className="text-xs font-semibold text-[#FF6200]">Build Your Future</p>
                                 <p className="text-[11px] text-slate-400">Sell. Earn. Grow.</p>
                             </div>
                             <Link
                                 href="/faq"
-                                className="inline-flex items-center justify-center w-full py-2.5 bg-[#FF5500] hover:bg-[#FF6611] text-white font-bold text-xs rounded-xl transition-all shadow-md shadow-[#FF5500]/25"
+                                className="inline-flex items-center justify-center w-full py-2.5 bg-[#FF6200] hover:bg-[#E55800] text-white font-bold text-xs rounded-xl transition-all shadow-md shadow-[#FF6200]/25"
                             >
                                 View Tips
                             </Link>

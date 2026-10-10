@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
   // ── 4. Delegate to idempotent handler ─────────────────────────────────────
   try {
     await PaystackWebhookHandler.handleEvent(
-      event as Parameters<typeof PaystackWebhookHandler.handleEvent>[0]
+      event as unknown as Parameters<typeof PaystackWebhookHandler.handleEvent>[0]
     );
     return new NextResponse('OK', { status: 200 });
   } catch (err) {

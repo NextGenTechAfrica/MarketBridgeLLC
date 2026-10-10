@@ -55,14 +55,14 @@ interface OrderSummary {
 }
 
 const categories = [
-    { label: 'Electronics', icon: Laptop, color: 'bg-blue-50 text-blue-600', href: '/marketplace?category=Electronics' },
-    { label: 'Fashion', icon: Shirt, color: 'bg-pink-50 text-pink-600', href: '/marketplace?category=Fashion' },
-    { label: 'Books', icon: BookOpen, color: 'bg-emerald-50 text-emerald-600', href: '/marketplace?category=Books' },
-    { label: 'Accessories', icon: Glasses, color: 'bg-orange-50 text-[#FF5500]', href: '/marketplace?category=Accessories' },
-    { label: 'Home & Living', icon: HomeIcon, color: 'bg-indigo-50 text-indigo-600', href: '/marketplace?category=Home' },
-    { label: 'Study Materials', icon: FileText, color: 'bg-teal-50 text-teal-600', href: '/marketplace?category=Study' },
-    { label: 'Services', icon: Wrench, color: 'bg-amber-50 text-amber-600', href: '/marketplace?category=Services' },
-    { label: 'More', icon: Grid, color: 'bg-slate-100 text-slate-600', href: '/marketplace' },
+    { label: 'Electronics', icon: Laptop, color: 'bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400', href: '/marketplace?category=Electronics' },
+    { label: 'Fashion', icon: Shirt, color: 'bg-pink-50 text-pink-600 dark:bg-pink-950/40 dark:text-pink-400', href: '/marketplace?category=Fashion' },
+    { label: 'Books', icon: BookOpen, color: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400', href: '/marketplace?category=Books' },
+    { label: 'Accessories', icon: Glasses, color: 'bg-orange-50 text-[#FF6200] dark:bg-orange-950/40 dark:text-orange-400', href: '/marketplace?category=Accessories' },
+    { label: 'Home & Living', icon: HomeIcon, color: 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400', href: '/marketplace?category=Home' },
+    { label: 'Study Materials', icon: FileText, color: 'bg-teal-50 text-teal-600 dark:bg-teal-950/40 dark:text-teal-400', href: '/marketplace?category=Study' },
+    { label: 'Services', icon: Wrench, color: 'bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400', href: '/marketplace?category=Services' },
+    { label: 'More', icon: Grid, color: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300', href: '/marketplace' },
 ];
 
 const hotDeals = [
@@ -184,7 +184,7 @@ export default function BuyerDashboardPage() {
                 (o: any) => o.status === 'pending' || o.status === 'paid' || o.status === 'confirmed'
             );
 
-            setRecentOrders((ordersData as OrderSummary[]) || []);
+            setRecentOrders((ordersData as unknown as OrderSummary[]) || []);
 
             // 2. Fetch wallet balance
             const { data: walletData } = await supabase
@@ -235,7 +235,7 @@ export default function BuyerDashboardPage() {
                 <div className="space-y-4 max-w-lg z-10">
                     <h1 className="text-3xl sm:text-4xl font-black tracking-tight leading-tight">
                         Everything You Need <br />
-                        <span className="text-[#FF5500]">All in One Place</span>
+                        <span className="text-[#FF6200]">All in One Place</span>
                     </h1>
                     <p className="text-slate-400 text-sm sm:text-base leading-relaxed">
                         Buy from verified student sellers. Get great deals, safe transactions and fast support.
@@ -243,7 +243,7 @@ export default function BuyerDashboardPage() {
                     <div className="pt-2">
                         <Link
                             href="/marketplace"
-                            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#FF5500] hover:bg-[#FF6611] text-white font-bold text-sm rounded-xl transition-all shadow-md shadow-[#FF5500]/30 active:scale-95"
+                            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#FF6200] hover:bg-[#E55800] text-white font-bold text-sm rounded-xl transition-all shadow-md shadow-[#FF6200]/30 active:scale-95"
                         >
                             Explore Now <ArrowRight className="h-4 w-4" />
                         </Link>
@@ -264,7 +264,7 @@ export default function BuyerDashboardPage() {
                 </div>
 
                 {/* Subtle Orange Backdrop Glow */}
-                <div className="absolute top-0 right-0 w-80 h-80 bg-[#FF5500]/15 rounded-full blur-[90px] pointer-events-none" />
+                <div className="absolute top-0 right-0 w-80 h-80 bg-[#FF6200]/15 rounded-full blur-[90px] pointer-events-none" />
             </div>
 
             {/* ─── 2. CATEGORY ICONS ROW (Image 2 Left) ─── */}
@@ -273,12 +273,12 @@ export default function BuyerDashboardPage() {
                     <Link
                         key={i}
                         href={cat.href}
-                        className="bg-white hover:bg-slate-50 border border-slate-200/80 rounded-2xl p-3.5 flex flex-col items-center justify-center gap-2 text-center transition-all hover:shadow-sm hover:-translate-y-0.5 group"
+                        className="bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/80 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3.5 flex flex-col items-center justify-center gap-2 text-center transition-all hover:shadow-sm hover:-translate-y-0.5 group"
                     >
                         <div className={`w-11 h-11 rounded-xl ${cat.color} flex items-center justify-center transition-transform group-hover:scale-105`}>
                             <cat.icon className="h-5 w-5" />
                         </div>
-                        <span className="text-xs font-semibold text-slate-700 group-hover:text-slate-900 truncate w-full">
+                        <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white truncate w-full">
                             {cat.label}
                         </span>
                     </Link>
@@ -288,10 +288,10 @@ export default function BuyerDashboardPage() {
             {/* ─── 3. HOT DEALS SECTION (Image 2 Left) ─── */}
             <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-black text-slate-900 tracking-tight">
+                    <h2 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">
                         Hot Deals
                     </h2>
-                    <Link href="/marketplace" className="text-xs font-bold text-slate-500 hover:text-[#FF5500] flex items-center gap-1 transition-colors">
+                    <Link href="/marketplace" className="text-xs font-bold text-slate-500 hover:text-[#FF6200] dark:text-slate-400 dark:hover:text-[#FF6200] flex items-center gap-1 transition-colors">
                         View All <ArrowRight className="h-3 w-3" />
                     </Link>
                 </div>
@@ -301,9 +301,9 @@ export default function BuyerDashboardPage() {
                         <Link
                             key={item.id}
                             href={`/marketplace`}
-                            className="bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col group"
+                            className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col group hover:border-[#FF6200]/40"
                         >
-                            <div className="relative w-full h-44 bg-slate-100 overflow-hidden">
+                            <div className="relative w-full h-44 bg-slate-100 dark:bg-slate-800 overflow-hidden">
                                 <Image
                                     src={item.image}
                                     alt={item.title}
@@ -313,11 +313,11 @@ export default function BuyerDashboardPage() {
                             </div>
                             <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
                                 <div>
-                                    <h3 className="text-sm font-bold text-slate-900 group-hover:text-[#FF5500] transition-colors truncate">
+                                    <h3 className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-[#FF6200] transition-colors truncate">
                                         {item.title}
                                     </h3>
                                     <div className="flex items-baseline gap-2 mt-1">
-                                        <span className="text-base font-black text-slate-900">
+                                        <span className="text-base font-black text-slate-900 dark:text-white">
                                             ₦{item.price.toLocaleString()}
                                         </span>
                                         {item.originalPrice && (
@@ -328,16 +328,16 @@ export default function BuyerDashboardPage() {
                                     </div>
                                 </div>
 
-                                <div className="space-y-1.5 pt-2 border-t border-slate-100">
+                                <div className="space-y-1.5 pt-2 border-t border-slate-100 dark:border-slate-800">
                                     <div className="flex items-center gap-1 text-xs font-bold text-amber-500">
                                         <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
                                         <span>{item.rating}</span>
                                         <span className="text-slate-400 font-normal">({item.reviews})</span>
                                     </div>
-                                    <div className="flex items-center justify-between text-xs text-slate-500">
+                                    <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
                                         <span className="truncate">by {item.seller}</span>
                                         {item.isVerified && (
-                                            <span className="text-[10px] font-bold text-emerald-600 flex items-center gap-1 shrink-0">
+                                            <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1 shrink-0">
                                                 <CheckCircle2 className="h-3 w-3" /> Verified Seller
                                             </span>
                                         )}
@@ -354,10 +354,10 @@ export default function BuyerDashboardPage() {
                 {/* Left 3 cols: Recommended Grid */}
                 <div className="lg:col-span-3 space-y-4">
                     <div className="flex items-center justify-between">
-                        <h2 className="text-xl font-black text-slate-900 tracking-tight">
+                        <h2 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">
                             Recommended For You
                         </h2>
-                        <Link href="/marketplace" className="text-xs font-bold text-slate-500 hover:text-[#FF5500] flex items-center gap-1 transition-colors">
+                        <Link href="/marketplace" className="text-xs font-bold text-slate-500 hover:text-[#FF6200] dark:text-slate-400 dark:hover:text-[#FF6200] flex items-center gap-1 transition-colors">
                             View All <ArrowRight className="h-3 w-3" />
                         </Link>
                     </div>
@@ -367,9 +367,9 @@ export default function BuyerDashboardPage() {
                             <Link
                                 key={item.id}
                                 href={`/marketplace`}
-                                className="bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col group"
+                                className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col group hover:border-[#FF6200]/40"
                             >
-                                <div className="relative w-full h-32 bg-slate-100 overflow-hidden">
+                                <div className="relative w-full h-32 bg-slate-100 dark:bg-slate-800 overflow-hidden">
                                     <Image
                                         src={item.image}
                                         alt={item.title}
@@ -379,14 +379,14 @@ export default function BuyerDashboardPage() {
                                 </div>
                                 <div className="p-3 flex-1 flex flex-col justify-between space-y-2">
                                     <div>
-                                        <h3 className="text-xs font-bold text-slate-900 truncate">
+                                        <h3 className="text-xs font-bold text-slate-900 dark:text-white truncate">
                                             {item.title}
                                         </h3>
-                                        <p className="text-sm font-black text-slate-900 mt-0.5">
+                                        <p className="text-sm font-black text-slate-900 dark:text-white mt-0.5">
                                             ₦{item.price.toLocaleString()}
                                         </p>
                                     </div>
-                                    <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1 border-t border-slate-100">
+                                    <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 pt-1 border-t border-slate-100 dark:border-slate-800">
                                         <span className="flex items-center gap-0.5 font-bold text-amber-500">
                                             ★ {item.rating}
                                         </span>
@@ -399,21 +399,21 @@ export default function BuyerDashboardPage() {
                 </div>
 
                 {/* Right 1 col: Safe & Secure Card (Image 2 Left) */}
-                <div className="bg-white rounded-2xl border border-slate-200/80 p-6 flex flex-col justify-between shadow-sm space-y-4">
+                <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-6 flex flex-col justify-between shadow-sm space-y-4">
                     <div className="space-y-3">
-                        <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
                             <ShieldCheck className="h-6 w-6" />
                         </div>
-                        <h3 className="text-base font-bold text-slate-900">
+                        <h3 className="text-base font-bold text-slate-900 dark:text-white">
                             Safe & Secure
                         </h3>
-                        <p className="text-xs text-slate-500 leading-relaxed">
-                            Payments are protected, sellers are verified, and your data is safe.
+                        <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                            Payments are protected, sellers are verified, and your transactions are secured through escrow.
                         </p>
                     </div>
                     <Link
                         href="/faq"
-                        className="inline-flex items-center justify-center w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition-all"
+                        className="inline-flex items-center justify-center w-full py-2.5 bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 text-white font-bold text-xs rounded-xl transition-all"
                     >
                         Learn More
                     </Link>
@@ -423,12 +423,12 @@ export default function BuyerDashboardPage() {
             {/* ─── 5. RECENT ORDERS & POST A REQUEST (Image 2 Left) ─── */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Recent Orders (2 cols) */}
-                <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm space-y-4">
+                <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-6 shadow-sm space-y-4">
                     <div className="flex items-center justify-between">
-                        <h2 className="text-base font-bold text-slate-900">
+                        <h2 className="text-base font-bold text-slate-900 dark:text-white">
                             Your Recent Orders
                         </h2>
-                        <Link href="/orders" className="text-xs font-bold text-slate-500 hover:text-[#FF5500] flex items-center gap-1 transition-colors">
+                        <Link href="/orders" className="text-xs font-bold text-slate-500 hover:text-[#FF6200] dark:text-slate-400 dark:hover:text-[#FF6200] flex items-center gap-1 transition-colors">
                             See All <ArrowRight className="h-3 w-3" />
                         </Link>
                     </div>
@@ -438,10 +438,10 @@ export default function BuyerDashboardPage() {
                             recentOrders.map((order) => (
                                 <div
                                     key={order.id}
-                                    className="flex items-center justify-between p-3.5 rounded-xl border border-slate-100 hover:bg-slate-50 transition-colors gap-4"
+                                    className="flex items-center justify-between p-3.5 rounded-xl border border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors gap-4"
                                 >
                                     <div className="flex items-center gap-3 min-w-0">
-                                        <div className="w-12 h-12 rounded-lg bg-slate-100 relative overflow-hidden shrink-0">
+                                        <div className="w-12 h-12 rounded-lg bg-slate-100 dark:bg-slate-800 relative overflow-hidden shrink-0">
                                             {order.listing?.images?.[0] ? (
                                                 <Image
                                                     src={order.listing.images[0]}
@@ -454,11 +454,11 @@ export default function BuyerDashboardPage() {
                                             )}
                                         </div>
                                         <div className="min-w-0">
-                                            <p className="text-sm font-bold text-slate-900 truncate">
+                                            <p className="text-sm font-bold text-slate-900 dark:text-white truncate">
                                                 {order.listing?.title || `Order #${order.id.slice(0, 8)}`}
                                             </p>
-                                            <p className="text-xs text-slate-500">
-                                                ₦{order.amount?.toLocaleString()} • <span className="capitalize font-semibold text-[#FF5500]">{order.status}</span>
+                                            <p className="text-xs text-slate-500 dark:text-slate-400">
+                                                ₦{order.amount?.toLocaleString()} • <span className="capitalize font-semibold text-[#FF6200]">{order.status}</span>
                                             </p>
                                         </div>
                                     </div>
@@ -468,7 +468,7 @@ export default function BuyerDashboardPage() {
                                         </span>
                                         <Link
                                             href={`/orders`}
-                                            className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition-colors"
+                                            className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-lg transition-colors"
                                         >
                                             View Details
                                         </Link>
@@ -482,21 +482,21 @@ export default function BuyerDashboardPage() {
                                 { title: 'Nike Air Force 1', price: '₦55,000', status: 'In Transit', date: '10 Sep 2025' },
                                 { title: 'Calculus Textbook', price: '₦12,000', status: 'Delivered', date: '5 Sep 2025' },
                             ].map((o, idx) => (
-                                <div key={idx} className="flex items-center justify-between p-3.5 rounded-xl border border-slate-100 hover:bg-slate-50 transition-colors gap-4">
+                                <div key={idx} className="flex items-center justify-between p-3.5 rounded-xl border border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors gap-4">
                                     <div className="flex items-center gap-3 min-w-0">
-                                        <div className="w-11 h-11 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400 shrink-0">
+                                        <div className="w-11 h-11 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 shrink-0">
                                             <Package className="h-5 w-5" />
                                         </div>
                                         <div className="min-w-0">
-                                            <p className="text-xs sm:text-sm font-bold text-slate-900 truncate">{o.title}</p>
-                                            <p className="text-[11px] sm:text-xs text-slate-500">
-                                                {o.price} • <span className="font-semibold text-emerald-600">{o.status}</span>
+                                            <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">{o.title}</p>
+                                            <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">
+                                                {o.price} • <span className="font-semibold text-emerald-600 dark:text-emerald-400">{o.status}</span>
                                             </p>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-3 shrink-0">
                                         <span className="text-[11px] text-slate-400 hidden sm:inline">{o.date}</span>
-                                        <Link href="/orders" className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition-colors">
+                                        <Link href="/orders" className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-lg transition-colors">
                                             View Details
                                         </Link>
                                     </div>
@@ -509,7 +509,7 @@ export default function BuyerDashboardPage() {
                 {/* Need something specific? Post a Request (Image 2 Left) */}
                 <div className="bg-[#0B0F19] text-white rounded-2xl p-6 flex flex-col justify-between shadow-sm space-y-6 border border-white/5 relative overflow-hidden">
                     <div className="space-y-3 z-10">
-                        <div className="w-10 h-10 rounded-xl bg-[#FF5500]/15 text-[#FF5500] flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-xl bg-[#FF6200]/15 text-[#FF6200] flex items-center justify-center">
                             <Sparkles className="h-5 w-5" />
                         </div>
                         <h3 className="text-base font-bold text-white">
@@ -522,13 +522,13 @@ export default function BuyerDashboardPage() {
                     <div className="z-10">
                         <Link
                             href="/marketplace"
-                            className="inline-flex items-center justify-center w-full py-3 bg-[#FF5500] hover:bg-[#FF6611] text-white font-bold text-xs rounded-xl transition-all shadow-md shadow-[#FF5500]/30 active:scale-95"
+                            className="inline-flex items-center justify-center w-full py-3 bg-[#FF6200] hover:bg-[#E55800] text-white font-bold text-xs rounded-xl transition-all shadow-md shadow-[#FF6200]/30 active:scale-95"
                         >
                             Post a Request
                         </Link>
                     </div>
 
-                    <div className="absolute top-0 right-0 w-48 h-48 bg-[#FF5500]/10 rounded-full blur-3xl pointer-events-none" />
+                    <div className="absolute top-0 right-0 w-48 h-48 bg-[#FF6200]/10 rounded-full blur-3xl pointer-events-none" />
                 </div>
             </div>
         </div>

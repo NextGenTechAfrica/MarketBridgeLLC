@@ -67,7 +67,7 @@ export function Sidebar({ items, quickActions, title, className }: SidebarProps)
                             className={cn(
                                 "flex items-center gap-3.5 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
                                 isActive
-                                    ? "bg-[#FF5500] text-white font-semibold shadow-md shadow-[#FF5500]/25"
+                                    ? "bg-[#FF6200] text-white font-semibold shadow-md shadow-[#FF6200]/25"
                                     : "text-slate-400 hover:text-white hover:bg-white/5"
                             )}
                         >
@@ -81,7 +81,7 @@ export function Sidebar({ items, quickActions, title, className }: SidebarProps)
                                     "ml-auto text-[11px] font-bold rounded-full px-2 py-0.5 min-w-[20px] text-center",
                                     isActive
                                         ? "bg-white/25 text-white"
-                                        : "bg-[#FF5500]/15 text-[#FF5500]"
+                                        : "bg-[#FF6200]/15 text-[#FF6200]"
                                 )}>
                                     {item.badge}
                                 </span>
@@ -103,7 +103,7 @@ export function Sidebar({ items, quickActions, title, className }: SidebarProps)
                                     href={qa.href}
                                     className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.07] border border-white/5 transition-all group"
                                 >
-                                    <div className="w-8 h-8 rounded-lg bg-orange-500/10 text-[#FF5500] flex items-center justify-center shrink-0 group-hover:bg-[#FF5500] group-hover:text-white transition-colors">
+                                    <div className="w-8 h-8 rounded-lg bg-orange-500/10 text-[#FF6200] flex items-center justify-center shrink-0 group-hover:bg-[#FF6200] group-hover:text-white transition-colors">
                                         <qa.icon className="h-4 w-4" />
                                     </div>
                                     <div className="flex flex-col min-w-0">
@@ -125,7 +125,7 @@ export function Sidebar({ items, quickActions, title, className }: SidebarProps)
             <div className="mt-auto px-3 pt-3 border-t border-white/5">
                 {user && (
                     <div className="mb-2 px-3 py-2.5 rounded-xl flex items-center gap-3 bg-white/[0.04] border border-white/5">
-                        <div className="h-9 w-9 rounded-full bg-gradient-to-tr from-[#FF5500] to-amber-400 flex items-center justify-center text-xs font-bold text-white shrink-0 shadow-sm">
+                        <div className="h-9 w-9 rounded-full bg-gradient-to-tr from-[#FF6200] to-amber-400 flex items-center justify-center text-xs font-bold text-white shrink-0 shadow-sm">
                             {(user.displayName || user.email || 'U').charAt(0).toUpperCase()}
                         </div>
                         <div className="flex-1 min-w-0">

@@ -8,13 +8,16 @@ import { useToast } from '@/contexts/ToastContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ShieldCheck, Zap, Loader2, ArrowLeft, Building2, UploadCloud, CheckCircle2 } from 'lucide-react';
+import {
+    ShieldCheck, Zap, Loader2, ArrowLeft, Building2,
+    UploadCloud, CheckCircle2, Copy, Check, Clock, Info, AlertCircle
+} from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 
 const Separator = ({ className }: { className?: string }) => (
-    <div className={cn("h-[1px] w-full", className)} />
+    <div className={cn("h-[1px] w-full bg-border", className)} />
 );
 
 const supabase = createClient();
@@ -27,17 +30,17 @@ export default function CheckoutPage() {
 
     const [actionLoading, setActionLoading] = useState(false);
     const [uploading, setUploading] = useState(false);
+    const [copiedAccount, setCopiedAccount] = useState(false);
 
     // Form State
     const [paymentRef, setPaymentRef] = useState('');
     const [proofUrl, setProofUrl] = useState<string | null>(null);
     const [agreed, setAgreed] = useState(false);
     const [useCoins, setUseCoins] = useState(false);
-    const [coinsToUse, setCoinsToUse] = useState(0);
 
     const maxRedeemable = Math.min(user?.coins_balance || 0, total);
 
-    // Bank Details State (Default: Moniepoint)
+    // Bank Details State (Default: Moniepoint Escrow Account)
     const [bankDetails, setBankDetails] = useState({
         account_number: '9022858358',
         bank_name: 'Moniepoint MFB',
@@ -46,7 +49,7 @@ export default function CheckoutPage() {
 
     useEffect(() => {
         if (!authLoading && !user) {
-            router.push('/login');
+            router.push('/login?redirect=/checkout');
         }
         if (!authLoading && items.length === 0) {
             router.push('/cart');
@@ -68,6 +71,15 @@ export default function CheckoutPage() {
         };
         fetchSettings();
     }, []);
+
+    const handleCopyAccount = () => {
+        if (typeof navigator !== 'undefined') {
+            navigator.clipboard.writeText(bankDetails.account_number);
+            setCopiedAccount(true);
+            toast('Account number copied to clipboard', 'success');
+            setTimeout(() => setCopiedAccount(false), 2500);
+        }
+    };
 
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!e.target.files || e.target.files.length === 0) return;
@@ -94,6 +106,7 @@ export default function CheckoutPage() {
                 .getPublicUrl(filePath);
 
             setProofUrl(data.publicUrl);
+            toast('Receipt uploaded successfully!', 'success');
         } catch (error) {
             console.error('Error uploading receipt:', error);
             toast('Failed to upload receipt. Please try again.', 'error');
@@ -105,7 +118,7 @@ export default function CheckoutPage() {
     const handleConfirmPayment = async () => {
         if (!user || items.length === 0) return;
         if (!paymentRef || !proofUrl || !agreed) {
-            toast('Please complete all payment verification steps.', 'error');
+            toast('Please complete all verification fields and confirm transfer.', 'error');
             return;
         }
 
@@ -138,7 +151,7 @@ export default function CheckoutPage() {
             const data = await response.json();
 
             clearCart();
-            toast('Order placed successfully! Pending admin verification.', 'success');
+            toast('Order submitted successfully! Escrow verification underway.', 'success');
             router.push(`/orders?new=${data.orderId}`);
 
         } catch (err: any) {
@@ -151,85 +164,124 @@ export default function CheckoutPage() {
 
     if (authLoading || (items.length === 0 && !authLoading)) {
         return (
-            <div className="min-h-screen bg-black flex items-center justify-center">
+            <div className="min-h-screen bg-background flex flex-col items-center justify-center space-y-4">
                 <Loader2 className="h-10 w-10 animate-spin text-[#FF6200]" />
+                <p className="text-xs font-semibold text-muted-foreground animate-pulse">Loading secure checkout...</p>
             </div>
         );
     }
 
-    return (
-        <div className="min-h-screen bg-black text-white selection:bg-[#FF6200] selection:text-black pt-32 pb-20">
-            <div className="fixed inset-0 bg-[url('/grid-pattern.svg')] opacity-10 pointer-events-none z-0" />
+    const payableTotal = useCoins ? Math.max(0, total - maxRedeemable) : total;
 
-            <div className="container relative z-10 max-w-6xl mx-auto px-6">
+    return (
+        <div className="min-h-screen bg-background text-foreground py-8 md:py-12">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 space-y-8">
+
                 {/* Back Button */}
-                <div className="mb-8">
+                <div>
                     <button
                         type="button"
                         onClick={() => router.back()}
-                        className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-sm font-semibold text-white/80 hover:text-white border border-white/10 transition-all active:scale-95"
+                        className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-card border border-border text-xs sm:text-sm font-semibold text-foreground/80 hover:text-foreground hover:bg-muted/60 transition-all shadow-sm active:scale-95 cursor-pointer"
                     >
-                        <ArrowLeft className="h-4 w-4 text-[#FF6200]" /> Back to Cart
+                        <ArrowLeft className="h-4 w-4 text-[#FF6200]" />
+                        <span>Back to Cart</span>
                     </button>
                 </div>
 
-                <div className="text-center space-y-6 mb-16">
-                    <div className="flex items-center justify-center gap-3">
-                        <span className="h-1.5 w-1.5 rounded-full bg-[#FF6200] animate-pulse" />
-                        <span className="text-[10px] font-black uppercase tracking-[0.4em] text-white/40 font-heading leading-tight">Secure Handshake System</span>
+                {/* Page Title & Escrow Explanation */}
+                <div className="text-center max-w-2xl mx-auto space-y-3">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FF6200]/10 border border-[#FF6200]/20 text-[#FF6200] text-xs font-bold">
+                        <ShieldCheck className="h-4 w-4" />
+                        <span>Zero-Fraud Escrow Transfer</span>
                     </div>
-                    <h1 className="text-5xl md:text-7xl font-black uppercase tracking-tighter italic font-heading">
-                        Order <span className="text-[#FF6200]">Verification</span>
+
+                    <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-foreground font-heading">
+                        Order <span className="text-[#FF6200]">Escrow Checkout</span>
                     </h1>
-                    <p className="text-white/40 font-medium max-w-2xl mx-auto italic lowercase leading-relaxed">
-                        To guarantee 0% transaction fees, please transfer the exact amount directly to our secure escrow account. <span className="text-[#FF6200] font-black uppercase tracking-wider">Funds are held in secure escrow</span> and will only be released to the seller after you confirm receipt (release on delivery).
+
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                        To ensure 0% buyer transaction fees, transfer the exact order amount directly to our verified escrow account.
+                        Funds remain safely locked until you inspect and receive your items on campus.
                     </p>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
-                    {/* Bank Details & Upload Form */}
-                    <div className="lg:col-span-7 space-y-8">
-                        <div className="glass-card rounded-[3rem] p-10 border-white/5 space-y-10">
+                {/* Main 2-Column Grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start pt-2">
 
-                            {/* Bank Details Card */}
-                            <div className="bg-zinc-900 border border-white/10 rounded-3xl p-8 relative overflow-hidden group">
-                                <div className="absolute top-0 right-0 p-6 opacity-10">
-                                    <Building2 className="h-32 w-32 text-white" />
-                                </div>
-                                <div className="relative z-10 space-y-4">
-                                    <h3 className="text-xs font-black uppercase tracking-widest text-[#FF6200]">MarketBridge Escrow Account</h3>
-                                    <div className="space-y-1">
-                                        <p className="text-3xl font-black tracking-tighter text-white">{bankDetails.account_number}</p>
-                                        <p className="text-sm font-bold text-white/60">{bankDetails.bank_name}</p>
+                    {/* Left Column: Escrow Bank Details & Payment Proof */}
+                    <div className="lg:col-span-7 space-y-6">
+
+                        {/* Escrow Bank Account Card */}
+                        <div className="bg-card border border-border rounded-3xl p-6 sm:p-8 shadow-sm space-y-6 relative overflow-hidden">
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs font-black uppercase tracking-wider text-[#FF6200]">
+                                    MarketBridge Escrow Account
+                                </span>
+                                <span className="text-[10px] font-bold text-emerald-600 bg-emerald-500/10 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                    <CheckCircle2 className="h-3 w-3" /> 0% Fee
+                                </span>
+                            </div>
+
+                            <div className="p-5 rounded-2xl bg-zinc-50 dark:bg-white/5 border border-border space-y-4">
+                                <div>
+                                    <span className="text-xs text-muted-foreground">Account Number</span>
+                                    <div className="flex items-center justify-between mt-1">
+                                        <p className="text-3xl font-black text-foreground tracking-tight font-mono">
+                                            {bankDetails.account_number}
+                                        </p>
+                                        <Button
+                                            type="button"
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={handleCopyAccount}
+                                            className="rounded-xl border-border text-xs font-bold gap-1.5"
+                                        >
+                                            {copiedAccount ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
+                                            {copiedAccount ? 'Copied' : 'Copy'}
+                                        </Button>
                                     </div>
-                                    <div className="pt-4 border-t border-white/5">
-                                        <p className="text-[10px] font-mono text-white/40 uppercase">Account Name</p>
-                                        <p className="text-sm font-bold text-white">{bankDetails.account_name}</p>
+                                </div>
+
+                                <Separator />
+
+                                <div className="grid grid-cols-2 gap-4 text-xs">
+                                    <div>
+                                        <span className="text-muted-foreground">Bank Name</span>
+                                        <p className="font-bold text-foreground text-sm mt-0.5">{bankDetails.bank_name}</p>
+                                    </div>
+                                    <div>
+                                        <span className="text-muted-foreground">Account Name</span>
+                                        <p className="font-bold text-foreground text-sm mt-0.5">{bankDetails.account_name}</p>
                                     </div>
                                 </div>
                             </div>
 
-                            <Separator className="bg-white/5" />
-
                             {/* Verification Form */}
-                            <div className="space-y-6">
-                                <h3 className="text-xl font-black uppercase tracking-tight font-heading italic">Proof of Payment</h3>
+                            <div className="space-y-5 pt-2">
+                                <h3 className="text-base font-black text-foreground font-heading">
+                                    Payment Verification
+                                </h3>
 
                                 <div className="space-y-4">
                                     <div className="space-y-2">
-                                        <Label htmlFor="ref" className="text-xs uppercase font-bold text-white/40">Transaction Reference / Sender Name</Label>
+                                        <Label htmlFor="ref" className="text-xs font-bold text-foreground">
+                                            Transaction Reference or Sender Name
+                                        </Label>
                                         <Input
                                             id="ref"
                                             value={paymentRef}
                                             onChange={(e) => setPaymentRef(e.target.value)}
-                                            placeholder="e.g. Ref: 123456789 or John Doe"
-                                            className="bg-black border-white/10 h-12 text-white focus:border-[#FF6200] focus:ring-1 focus:ring-[#FF6200]"
+                                            placeholder="e.g. Ref: 20261010-XYZ or John Doe"
+                                            className="h-12 rounded-xl text-sm bg-background border-border"
                                         />
                                     </div>
 
                                     <div className="space-y-2">
-                                        <Label className="text-xs uppercase font-bold text-white/40">Upload Receipt (Screenshot)</Label>
-                                        <div className="border-2 border-dashed border-white/10 rounded-xl p-8 text-center hover:border-[#FF6200]/50 transition-colors cursor-pointer relative">
+                                        <Label className="text-xs font-bold text-foreground">
+                                            Upload Transfer Receipt (Screenshot)
+                                        </Label>
+                                        <div className="border-2 border-dashed border-border rounded-2xl p-6 text-center hover:border-[#FF6200]/50 transition-colors cursor-pointer relative bg-zinc-50/50 dark:bg-white/5">
                                             <input
                                                 type="file"
                                                 accept="image/*"
@@ -238,153 +290,150 @@ export default function CheckoutPage() {
                                                 disabled={uploading}
                                             />
                                             {uploading ? (
-                                                <Loader2 className="h-8 w-8 text-[#FF6200] animate-spin mx-auto" />
+                                                <div className="flex flex-col items-center gap-2">
+                                                    <Loader2 className="h-8 w-8 text-[#FF6200] animate-spin" />
+                                                    <p className="text-xs font-bold text-[#FF6200]">Uploading receipt...</p>
+                                                </div>
                                             ) : proofUrl ? (
                                                 <div className="flex flex-col items-center gap-2">
-                                                    <CheckCircle2 className="h-8 w-8 text-[#FF6200]" />
-                                                    <p className="text-xs font-bold text-[#FF6200]">Receipt Uploaded</p>
-                                                    <a href={proofUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] underline text-white/40 z-10 relative">View</a>
+                                                    <CheckCircle2 className="h-8 w-8 text-emerald-500" />
+                                                    <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400">Receipt Attached</p>
+                                                    <a href={proofUrl} target="_blank" rel="noopener noreferrer" className="text-[11px] underline text-[#FF6200] z-10 relative">
+                                                        Preview uploaded image
+                                                    </a>
                                                 </div>
                                             ) : (
-                                                <div className="flex flex-col items-center gap-2 text-white/40">
-                                                    <UploadCloud className="h-8 w-8" />
-                                                    <p className="text-xs font-bold">Click to upload screenshot</p>
+                                                <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                                                    <UploadCloud className="h-8 w-8 text-[#FF6200]" />
+                                                    <p className="text-xs font-bold text-foreground">Click or drag screenshot here</p>
+                                                    <p className="text-[10px] text-muted-foreground">PNG, JPG or JPEG up to 5MB</p>
                                                 </div>
                                             )}
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center gap-3 pt-4">
-                                        <div
-                                            className={cn(
-                                                "h-5 w-5 rounded border flex items-center justify-center cursor-pointer transition-colors",
-                                                agreed ? "bg-[#FF6200] border-[#FF6200]" : "border-zinc-700 hover:border-zinc-500"
-                                            )}
-                                            onClick={() => setAgreed(!agreed)}
-                                        >
-                                            {agreed && <CheckCircle2 className="h-3.5 w-3.5 text-black" />}
-                                        </div>
-                                        <p className="text-xs text-white/40 cursor-pointer select-none" onClick={() => setAgreed(!agreed)}>
-                                            I confirm I have transferred <span className="text-white font-bold">₦{(useCoins ? total - maxRedeemable : total).toLocaleString()}</span> to the account above.
-                                        </p>
+                                    {/* Agreement Checkbox */}
+                                    <div className="flex items-start gap-3 pt-2">
+                                        <input
+                                            type="checkbox"
+                                            id="agree"
+                                            checked={agreed}
+                                            onChange={(e) => setAgreed(e.target.checked)}
+                                            className="mt-1 h-4 w-4 rounded border-border text-[#FF6200] focus:ring-[#FF6200] cursor-pointer"
+                                        />
+                                        <label htmlFor="agree" className="text-xs text-muted-foreground leading-snug cursor-pointer select-none">
+                                            I confirm that I have transferred exactly <strong className="text-foreground">₦{payableTotal.toLocaleString()}</strong> to the MarketBridge Escrow account above.
+                                        </label>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="flex items-center justify-between px-8">
-                            <Button variant="ghost" onClick={() => router.back()} className="text-white/30 hover:text-white text-[10px] font-black uppercase tracking-widest">
-                                <ArrowLeft className="mr-2 h-4 w-4" /> Go Back
-                            </Button>
-                        </div>
                     </div>
 
-                    {/* Summary & Execution */}
-                    <div className="lg:col-span-5 space-y-8">
-                        <div className="glass-card rounded-[3rem] p-10 border-[#FF6200]/20 bg-gradient-to-br from-[#FF6200]/5 to-transparent relative overflow-hidden">
-                            <div className="absolute top-0 right-0 p-8 opacity-5">
-                                <ShieldCheck className="h-40 w-40 text-[#FF6200]" />
+                    {/* Right Column: Order Summary & Place Order */}
+                    <div className="lg:col-span-5 space-y-6 lg:sticky lg:top-24">
+                        <div className="bg-card border border-border rounded-3xl p-6 shadow-xl space-y-6">
+                            <div>
+                                <h3 className="text-xl font-black text-foreground font-heading">
+                                    Summary of Staged Items
+                                </h3>
+                                <p className="text-xs text-muted-foreground mt-0.5">
+                                    {items.length} product listing{items.length !== 1 ? 's' : ''} in this order
+                                </p>
                             </div>
 
-                            <div className="relative z-10 space-y-10">
-                                <div className="space-y-1">
-                                    <h3 className="text-2xl font-black uppercase tracking-tighter font-heading italic">Order Summary</h3>
-                                    <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest italic">Manual Verification Campus</p>
-                                </div>
-
-                                <div className="space-y-6">
-                                    <div className="flex justify-between items-center text-white/60">
-                                        <span className="text-[10px] font-black uppercase tracking-widest font-heading">Subtotal</span>
-                                        <span className="text-sm font-bold">₦{total.toLocaleString()}</span>
-                                    </div>
-                                    <div className="flex justify-between items-center text-white/60">
-                                        <span className="text-[10px] font-black uppercase tracking-widest font-heading">Fees (0%)</span>
-                                        <span className="text-sm font-black text-[#FF6200] uppercase tracking-tighter italic">WAIVED</span>
-                                    </div>
-
-                                    {user?.coins_balance && user.coins_balance > 0 && (
-                                        <div className="p-4 bg-white/5 border border-white/10 rounded-2xl space-y-3">
-                                            <div className="flex justify-between items-center">
-                                                <div className="flex items-center gap-2">
-                                                    <Zap className="h-3 w-3 text-[#FF6200]" />
-                                                    <span className="text-[9px] font-black uppercase tracking-widest text-white/60">Redeem {user.coins_balance} MC</span>
-                                                </div>
-                                                <div
-                                                    className={cn(
-                                                        "h-5 w-10 rounded-full bg-zinc-800 p-1 cursor-pointer transition-colors relative",
-                                                        useCoins ? "bg-[#FF6200]" : "bg-zinc-800"
-                                                    )}
-                                                    onClick={() => setUseCoins(!useCoins)}
-                                                >
-                                                    <div className={cn(
-                                                        "h-3 w-3 rounded-full bg-white transition-all transform",
-                                                        useCoins ? "translate-x-5" : "translate-x-0"
-                                                    )} />
-                                                </div>
-                                            </div>
-                                            {useCoins && (
-                                                <div className="flex justify-between items-center text-[#FF6200]">
-                                                    <span className="text-[9px] font-black uppercase tracking-widest">Coin Discount</span>
-                                                    <span className="text-sm font-black">-₦{maxRedeemable.toLocaleString()}</span>
-                                                </div>
+                            {/* Items list preview */}
+                            <div className="space-y-3 max-h-56 overflow-y-auto pr-1">
+                                {items.map((item) => (
+                                    <div key={item.listingId} className="flex items-center gap-3.5 p-2.5 rounded-2xl bg-zinc-50 dark:bg-white/5 border border-border/70">
+                                        <div className="h-12 w-12 rounded-xl bg-muted overflow-hidden relative shrink-0">
+                                            {item.image ? (
+                                                <Image src={item.image} alt={item.title} fill className="object-cover" />
+                                            ) : (
+                                                <Building2 className="h-6 w-6 text-muted-foreground m-auto" />
                                             )}
                                         </div>
-                                    )}
-
-                                    <Separator className="bg-white/5" />
-
-                                    <div className="flex flex-col space-y-2">
-                                        <span className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em] font-heading">Total To Send</span>
-                                        <span className="text-5xl font-black text-[#FF6200] tracking-tighter italic font-heading">
-                                            ₦{(useCoins ? total - maxRedeemable : total).toLocaleString()}
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <div className="pt-6">
-                                    <Button
-                                        onClick={handleConfirmPayment}
-                                        disabled={actionLoading || uploading || !proofUrl || !paymentRef || !agreed}
-                                        className="w-full h-20 bg-[#FF6200] text-black hover:bg-[#FF7A29] rounded-2xl font-black uppercase tracking-[0.2em] transition-all font-heading shadow-[0_15px_45px_rgba(255,98,0,0.3)] border-none relative group scale-100 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
-                                    >
-                                        {actionLoading ? (
-                                            <Loader2 className="h-6 w-6 animate-spin" />
-                                        ) : (
-                                            <>
-                                                Verify & Place Order
-                                                <Zap className="ml-3 h-4 w-4 fill-black group-hover:scale-125 transition-transform" />
-                                            </>
-                                        )}
-                                    </Button>
-                                    <p className="text-[8px] text-white/30 font-bold uppercase tracking-widest text-center mt-6 italic">
-                                        Your order will be processed once payment is confirmed. Funds are held in secure escrow and released only on delivery.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Items Preview (Compact) */}
-                        <div className="glass-card p-6 rounded-3xl border-white/5 space-y-4">
-                            <h4 className="text-xs font-black uppercase tracking-widest text-white/40">Items ({items.length})</h4>
-                            <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
-                                {items.map(item => (
-                                    <div key={item.listingId} className="flex items-center gap-4">
-                                        <div className="h-10 w-10 rounded bg-zinc-800 overflow-hidden shrink-0">
-                                            {item.image && <img src={item.image} className="w-full h-full object-cover" />}
-                                        </div>
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-[10px] font-bold text-white truncate">{item.title}</p>
-                                            <p className="text-[9px] text-white/40">Qty: {item.quantity}</p>
+                                            <p className="text-xs font-bold text-foreground truncate">{item.title}</p>
+                                            <p className="text-[10px] text-muted-foreground">Qty: {item.quantity}</p>
                                         </div>
-                                        <p className="text-xs font-bold text-[#FF6200]">₦{item.price.toLocaleString()}</p>
+                                        <p className="text-xs font-black text-[#FF6200] font-heading shrink-0">
+                                            ₦{(item.price * item.quantity).toLocaleString()}
+                                        </p>
                                     </div>
                                 ))}
                             </div>
+
+                            <Separator />
+
+                            {/* MarketCoins Discount if available */}
+                            {user?.coins_balance && user.coins_balance > 0 ? (
+                                <div className="p-3 rounded-2xl bg-orange-500/5 dark:bg-orange-500/10 border border-[#FF6200]/20 space-y-2">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-1.5 text-xs font-bold text-foreground">
+                                            <Zap className="h-3.5 w-3.5 text-[#FF6200]" />
+                                            <span>Redeem MarketCoins ({user.coins_balance} MC)</span>
+                                        </div>
+                                        <input
+                                            type="checkbox"
+                                            checked={useCoins}
+                                            onChange={(e) => setUseCoins(e.target.checked)}
+                                            className="h-4 w-4 rounded border-border text-[#FF6200] focus:ring-[#FF6200] cursor-pointer"
+                                        />
+                                    </div>
+                                    {useCoins && (
+                                        <div className="flex justify-between items-center text-xs text-[#FF6200] font-bold pt-1">
+                                            <span>Coin Discount</span>
+                                            <span>-₦{maxRedeemable.toLocaleString()}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            ) : null}
+
+                            {/* Total Breakdown */}
+                            <div className="space-y-2 text-xs">
+                                <div className="flex justify-between text-muted-foreground">
+                                    <span>Items Subtotal</span>
+                                    <span className="font-bold text-foreground">₦{total.toLocaleString()}</span>
+                                </div>
+                                <div className="flex justify-between text-muted-foreground">
+                                    <span>Escrow Processing</span>
+                                    <span className="font-bold text-emerald-600 dark:text-emerald-400">Free (0%)</span>
+                                </div>
+                                <div className="flex justify-between items-baseline pt-2 border-t border-border">
+                                    <span className="text-sm font-bold text-foreground">Total To Transfer</span>
+                                    <span className="text-3xl font-black text-[#FF6200] font-heading">
+                                        ₦{payableTotal.toLocaleString()}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Submit Button */}
+                            <div className="pt-2">
+                                <Button
+                                    type="button"
+                                    onClick={handleConfirmPayment}
+                                    disabled={actionLoading || uploading || !proofUrl || !paymentRef || !agreed}
+                                    className="w-full h-14 bg-[#FF6200] hover:bg-[#E55800] text-white rounded-2xl font-black text-sm uppercase tracking-wider transition-all shadow-lg shadow-[#FF6200]/30 active:scale-95 disabled:opacity-50 cursor-pointer"
+                                >
+                                    {actionLoading ? (
+                                        <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                                    ) : (
+                                        <ShieldCheck className="h-5 w-5 mr-2" />
+                                    )}
+                                    Submit Escrow Payment
+                                </Button>
+                                <p className="text-[10px] text-muted-foreground text-center mt-3 leading-relaxed">
+                                    Moderators verify the transfer immediately and notify the student seller to arrange campus delivery.
+                                </p>
+                            </div>
                         </div>
                     </div>
+
                 </div>
+
             </div>
         </div>
     );
 }
-

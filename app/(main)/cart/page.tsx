@@ -2,27 +2,29 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useCart } from '@/contexts/CartContext';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Trash2, ShoppingBag, ArrowRight, ArrowLeft } from 'lucide-react';
+import {
+    Trash2, ShoppingBag, ArrowRight, ArrowLeft, ShieldCheck,
+    Minus, Plus, Store, Truck, Sparkles, CheckCircle2
+} from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
 import { useRouter } from 'next/navigation';
 
 export default function CartPage() {
-    const { items, removeFromCart, clearCart, total, itemCount } = useCart();
+    const { items, updateQuantity, removeFromCart, clearCart, total, itemCount } = useCart();
     const router = useRouter();
 
     if (itemCount === 0) {
         return (
-            <div className="min-h-screen pt-40 pb-20 px-4 relative flex flex-col items-center">
-                <div className="fixed inset-0 bg-[url('/grid-pattern.svg')] opacity-10 pointer-events-none z-0" />
-                <div className="container mx-auto max-w-lg relative z-10 pt-16">
+            <div className="min-h-[80vh] flex items-center justify-center px-4 py-16 bg-background">
+                <div className="container mx-auto max-w-md text-center">
                     <EmptyState
                         icon={<ShoppingBag className="w-12 h-12 text-[#FF6200]" />}
-                        title="Cart Empty"
-                        description="No active items in your cart."
+                        title="Your Cart is Empty"
+                        description="Explore campus listings and find great deals on textbooks, gadgets, and food."
                         actionLabel="Browse Marketplace"
                         actionHref="/marketplace"
                     />
@@ -32,132 +34,220 @@ export default function CartPage() {
     }
 
     return (
-        <div className="min-h-screen pt-40 pb-20 bg-black text-white relative selection:bg-[#FF6200] selection:text-black">
-            <div className="fixed inset-0 bg-[url('/grid-pattern.svg')] opacity-10 pointer-events-none z-0" />
+        <div className="min-h-screen bg-background text-foreground py-8 md:py-12">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-8">
 
-            <div className="container px-6 mx-auto relative z-10 space-y-8">
-                {/* Back Button */}
-                <div>
+                {/* Back Button & Breadcrumbs */}
+                <div className="flex items-center justify-between">
                     <button
                         type="button"
                         onClick={() => router.back()}
-                        className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-sm font-semibold text-white/80 hover:text-white border border-white/10 transition-all active:scale-95"
+                        className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-card border border-border text-xs sm:text-sm font-semibold text-foreground/80 hover:text-foreground hover:bg-muted/60 transition-all shadow-sm active:scale-95 cursor-pointer"
                     >
-                        <ArrowLeft className="h-4 w-4 text-[#FF6200]" /> Back to Marketplace
+                        <ArrowLeft className="h-4 w-4 text-[#FF6200]" />
+                        <span>Continue Shopping</span>
                     </button>
+
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={clearCart}
+                        className="text-xs text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-xl"
+                    >
+                        Clear Cart
+                    </Button>
                 </div>
 
-                {/* Header Section */}
-                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-white/5 pb-12">
-                    <div className="space-y-4">
-                        <div className="flex items-center gap-3">
-                            <span className="h-2 w-2 rounded-full bg-[#FF6200] animate-pulse" />
-                            <span className="text-[10px] font-black uppercase tracking-[0.4em] text-white/40 font-heading">Asset Staging Dashboard</span>
-                        </div>
-                        <h1 className="text-5xl md:text-7xl font-black uppercase tracking-tighter italic font-heading">
-                            Acquisition <span className="text-[#FF6200]">Cart</span>
+                {/* Title Section */}
+                <div className="border-b border-border pb-6 flex flex-col sm:flex-row sm:items-baseline justify-between gap-2">
+                    <div>
+                        <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-foreground font-heading">
+                            Shopping Cart
                         </h1>
-                        <p className="text-white/40 font-medium max-w-xl italic">
-                            Reviewing <span className="text-white font-bold">{itemCount} staged assets</span> for immediate deployment.
+                        <p className="text-sm text-muted-foreground mt-1">
+                            You have <strong className="text-foreground">{itemCount} item{itemCount !== 1 ? 's' : ''}</strong> staged for campus escrow checkout
                         </p>
                     </div>
 
-                    <div className="flex items-center gap-4">
-                        <Button variant="outline" onClick={clearCart} className="h-14 px-8 border-white/10 text-white/40 hover:text-[#FF6200] hover:border-[#FF6200]/30 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all font-heading">
-                            Purge Dashboard
-                        </Button>
+                    <div className="flex items-center gap-2 text-xs text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-500/10 px-3 py-1.5 rounded-full border border-emerald-500/20 self-start sm:self-auto">
+                        <ShieldCheck className="h-4 w-4" />
+                        <span>Zero-Fraud Escrow Protection</span>
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-                    {/* Cart Items */}
-                    <div className="lg:col-span-2 space-y-6">
+                {/* 2-Column Responsive Layout */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+
+                    {/* Left Column: Cart Items List */}
+                    <div className="lg:col-span-8 space-y-4">
                         {items.map((item) => (
-                            <div key={item.listingId} className="glass-card p-6 flex flex-col sm:flex-row gap-8 group transition-all duration-500 hover:border-[#FF6200]/20">
-                                <div className="h-32 w-32 shrink-0 rounded-2xl overflow-hidden border border-white/5 relative bg-zinc-900">
-                                    {item.image ? (
-                                        <img src={item.image} alt={item.title} className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                                    ) : (
-                                        <div className="h-full w-full flex items-center justify-center">
-                                            <ShoppingBag className="h-8 w-8 text-white/10" />
-                                        </div>
-                                    )}
-                                </div>
-                                <div className="flex-1 flex flex-col justify-between">
-                                    <div className="flex justify-between items-start">
-                                        <div className="space-y-1">
-                                            <h3 className="text-2xl font-black uppercase tracking-tighter font-heading italic line-clamp-1">{item.title}</h3>
-                                            <p className="text-[10px] font-black text-white/40 uppercase tracking-widest font-heading">Qty: 0{item.quantity}</p>
-                                        </div>
-                                        <div className="text-right">
-                                            <p className="text-2xl font-black text-[#FF6200] italic font-heading">₦{item.price.toLocaleString()}</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex justify-end pt-4 border-t border-white/5 mt-4">
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-[#FF6200] transition-colors py-2 px-4 group/remove"
-                                            onClick={() => removeFromCart(item.listingId)}
+                            <div
+                                key={item.listingId}
+                                className="bg-card border border-border hover:border-[#FF6200]/30 rounded-3xl p-4 sm:p-6 transition-all duration-300 shadow-sm flex flex-col sm:flex-row gap-5 items-start sm:items-center justify-between"
+                            >
+                                <div className="flex items-center gap-4 sm:gap-5 flex-1 min-w-0">
+                                    {/* Thumbnail */}
+                                    <Link
+                                        href={`/listings/${item.listingId}`}
+                                        className="h-24 w-24 sm:h-28 sm:w-28 shrink-0 rounded-2xl overflow-hidden border border-border relative bg-muted group block"
+                                    >
+                                        {item.image ? (
+                                            <Image
+                                                src={item.image}
+                                                alt={item.title}
+                                                fill
+                                                className="object-cover group-hover:scale-105 transition-transform duration-300"
+                                            />
+                                        ) : (
+                                            <div className="h-full w-full flex items-center justify-center text-muted-foreground">
+                                                <Store className="h-8 w-8 opacity-30" />
+                                            </div>
+                                        )}
+                                    </Link>
+
+                                    {/* Details */}
+                                    <div className="space-y-1.5 min-w-0 flex-1">
+                                        <Link
+                                            href={`/listings/${item.listingId}`}
+                                            className="font-bold text-base sm:text-lg text-foreground hover:text-[#FF6200] transition-colors line-clamp-1 font-heading block"
                                         >
-                                            <Trash2 className="h-3 w-3 mr-2 group-hover:scale-110 transition-transform" />
-                                            De-authorize
-                                        </Button>
+                                            {item.title}
+                                        </Link>
+                                        <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                                            <Truck className="h-3.5 w-3.5 text-[#FF6200]" />
+                                            Campus Delivery / Hostel Pickup Available
+                                        </p>
+                                        <p className="text-sm font-black text-[#FF6200] font-heading">
+                                            ₦{item.price.toLocaleString()}
+                                            <span className="text-[11px] font-normal text-muted-foreground ml-1">each</span>
+                                        </p>
                                     </div>
+                                </div>
+
+                                {/* Quantity & Actions */}
+                                <div className="flex items-center justify-between sm:justify-end gap-5 w-full sm:w-auto pt-3 sm:pt-0 border-t sm:border-t-0 border-border">
+                                    {/* Quantity Controls */}
+                                    <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-zinc-100 dark:bg-zinc-900 border border-border">
+                                        <button
+                                            type="button"
+                                            onClick={() => updateQuantity(item.listingId, item.quantity - 1)}
+                                            className="w-7 h-7 rounded-xl bg-card border border-border flex items-center justify-center text-foreground hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+                                            aria-label="Decrease quantity"
+                                        >
+                                            <Minus className="h-3 w-3" />
+                                        </button>
+                                        <span className="w-8 text-center font-bold text-sm text-foreground">
+                                            {item.quantity}
+                                        </span>
+                                        <button
+                                            type="button"
+                                            onClick={() => updateQuantity(item.listingId, item.quantity + 1)}
+                                            className="w-7 h-7 rounded-xl bg-card border border-border flex items-center justify-center text-foreground hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+                                            aria-label="Increase quantity"
+                                        >
+                                            <Plus className="h-3 w-3" />
+                                        </button>
+                                    </div>
+
+                                    {/* Item Total */}
+                                    <div className="text-right min-w-[90px]">
+                                        <p className="text-base font-black text-foreground font-heading">
+                                            ₦{(item.price * item.quantity).toLocaleString()}
+                                        </p>
+                                    </div>
+
+                                    {/* Remove Button */}
+                                    <button
+                                        type="button"
+                                        onClick={() => removeFromCart(item.listingId)}
+                                        className="p-2 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-colors cursor-pointer"
+                                        title="Remove item"
+                                        aria-label="Remove item"
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </button>
                                 </div>
                             </div>
                         ))}
-                    </div>
 
-                    {/* Order Summary */}
-                    <div className="lg:col-span-1">
-                        <div className="glass-card p-10 rounded-[3rem] sticky top-32 space-y-10 border-[#FF6200]/10">
-                            <div className="space-y-1">
-                                <h3 className="text-2xl font-black uppercase tracking-tighter font-heading italic">Cycle Summary</h3>
-                                <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest italic">Authorization pending</p>
-                            </div>
-
-                            <div className="space-y-6">
-                                <div className="flex justify-between items-center">
-                                    <span className="text-[10px] font-black text-white/40 uppercase tracking-widest font-heading">Gross Value</span>
-                                    <span className="text-sm font-bold">₦{total.toLocaleString()}</span>
-                                </div>
-                                <div className="flex justify-between items-center">
-                                    <span className="text-[10px] font-black text-white/40 uppercase tracking-widest font-heading">System Fees</span>
-                                    <span className="text-sm font-black text-[#FF6200] uppercase tracking-tighter italic">0.0% (WAVED)</span>
-                                </div>
-                                <div className="flex justify-between items-center">
-                                    <span className="text-[10px] font-black text-white/40 uppercase tracking-widest font-heading">Checkout Routing</span>
-                                    <span className="text-sm font-black text-[#FF6200] uppercase tracking-tighter italic">DIRECTED</span>
-                                </div>
-
-                                <Separator className="bg-white/5" />
-
-                                <div className="flex justify-between items-end">
-                                    <span className="text-[10px] font-black text-white/60 uppercase tracking-widest font-heading mb-1">Total Payload</span>
-                                    <span className="text-4xl font-black text-[#FF6200] tracking-tighter italic font-heading">₦{total.toLocaleString()}</span>
-                                </div>
-                            </div>
-
-                            <div className="space-y-4 pt-6">
-                                <Button
-                                    className="w-full h-16 bg-[#FF6200] text-black hover:bg-[#FF7A29] rounded-2xl font-black uppercase tracking-widest transition-all font-heading shadow-[0_10px_40px_rgba(255,98,0,0.2)] border-none"
-                                    onClick={() => router.push('/checkout')}
-                                    disabled={items.length === 0}
-                                >
-                                    Verify & Proceed
-                                    <ArrowRight className="ml-2 h-4 w-4" />
-                                </Button>
-                                <Button variant="ghost" className="w-full h-14 text-white/40 font-black uppercase tracking-widest text-[10px] transition-all hover:text-white" asChild>
-                                    <Link href="/listings">
-                                        <ArrowLeft className="mr-2 h-3 w-3" />
-                                        Continue Scanning
-                                    </Link>
-                                </Button>
+                        {/* Safety Note */}
+                        <div className="p-4 rounded-2xl bg-orange-500/5 dark:bg-orange-500/10 border border-[#FF6200]/20 flex items-start gap-3">
+                            <ShieldCheck className="h-5 w-5 text-[#FF6200] shrink-0 mt-0.5" />
+                            <div className="text-xs text-muted-foreground leading-relaxed">
+                                <strong className="text-foreground">Zero-Fraud Campus Guarantee:</strong> Every payment on MarketBridge is held securely in escrow. Sellers are only paid once you confirm that your item has been delivered in good condition.
                             </div>
                         </div>
                     </div>
+
+                    {/* Right Column: Order Summary (Sticky) */}
+                    <div className="lg:col-span-4 lg:sticky lg:top-24 space-y-4">
+                        <div className="bg-card border border-border rounded-3xl p-6 shadow-xl space-y-6">
+                            <div>
+                                <h2 className="text-xl font-black text-foreground font-heading">
+                                    Order Summary
+                                </h2>
+                                <p className="text-xs text-muted-foreground mt-0.5">
+                                    Review total and proceed to escrow payment
+                                </p>
+                            </div>
+
+                            <div className="space-y-3.5 text-sm">
+                                <div className="flex justify-between items-center text-muted-foreground">
+                                    <span>Items Subtotal ({itemCount})</span>
+                                    <span className="font-bold text-foreground">₦{total.toLocaleString()}</span>
+                                </div>
+
+                                <div className="flex justify-between items-center text-muted-foreground">
+                                    <span>Campus Delivery / Meetup</span>
+                                    <span className="font-bold text-emerald-600 dark:text-emerald-400">Campus Drop-off</span>
+                                </div>
+
+                                <div className="flex justify-between items-center text-muted-foreground">
+                                    <span>Escrow Protection Fee</span>
+                                    <span className="font-bold text-emerald-600 dark:text-emerald-400">Free (0%)</span>
+                                </div>
+
+                                <Separator />
+
+                                <div className="flex justify-between items-baseline pt-1">
+                                    <span className="text-base font-bold text-foreground">Estimated Total</span>
+                                    <span className="text-3xl font-black text-[#FF6200] font-heading">
+                                        ₦{total.toLocaleString()}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div className="space-y-3 pt-2">
+                                <Button
+                                    className="w-full h-13 bg-[#FF6200] hover:bg-[#E55800] text-white rounded-2xl font-black text-sm uppercase tracking-wider transition-all shadow-lg shadow-[#FF6200]/25 active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+                                    onClick={() => router.push('/checkout')}
+                                    disabled={items.length === 0}
+                                >
+                                    <span>Proceed to Escrow Checkout</span>
+                                    <ArrowRight className="h-4 w-4" />
+                                </Button>
+
+                                <Button
+                                    variant="outline"
+                                    asChild
+                                    className="w-full h-11 rounded-2xl text-xs font-bold border-border"
+                                >
+                                    <Link href="/marketplace">
+                                        <ArrowLeft className="h-3.5 w-3.5 mr-1.5" />
+                                        Continue Browsing
+                                    </Link>
+                                </Button>
+                            </div>
+
+                            <div className="pt-2 border-t border-border flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                                <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                                <span>100% Refundable until order confirmed</span>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
+
             </div>
         </div>
     );
